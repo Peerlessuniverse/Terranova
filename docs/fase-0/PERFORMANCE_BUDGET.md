@@ -27,3 +27,12 @@ D14 memakai satu kartu petak dan ilustrasi ringan yang dimuat saat dibuka. Targe
 - **DWE (node & peta).** Batasi 20–50 node kota pada fase beta dengan daftar terpaginasi dan snapshot cache ber-versi; jangan membuat satu baris per kantong atau timer per rumah. Update global dari agregat worker, bukan hot-row write per aksi.
 - **DLE (jalan & sungai hidup).** Usulan cap visual simultan: maksimal 4 NPC pejalan kaki + 2 kendaraan + 3 insiden aktif. Gunakan object pooling, fixed waypoint, viewport culling, depth sorting berbasis anchor kaki, dan **satu scheduler renderer** (tanpa timer terpisah per sprite dan tanpa physics engine). Hentikan animasi, audio, dan polling saat `document.hidden` (tab tersembunyi). Mode `prefers-reduced-motion` menampilkan perubahan state tanpa animasi lempar/berjalan. Tidak ada traffic server per frame.
 - **Aset referensi.** Gambar di `docs/fase-0/references/` hanya untuk dokumentasi pengembang dan dilarang masuk ke bundle publik/runtime. Seluruh angka cap di atas adalah target profiling [U] dan wajib diukur pada Android 2 GB + desktop sebelum rilis.
+
+---
+
+## Sinkronisasi Feature Freeze v1.0 (27 November 2026)
+
+> Sumber: `docs/TERRA_NOVA_FEATURE_FREEZE/docs/fase-0/PERFORMANCE_BUDGET_SYNC_v1.0.md` (digabung tanpa menimpa histori Fase 0).
+
+# Performance budget — proposed synchronization
+Preserve targets: shell JS ≤250 KB compressed; initial factory assets ≤1 MB; opening ≤1.6 MB; initial gameplay total ≤3 MB; snapshot ≤20 KB; JS heap ≤100 MB; Eco 30 FPS; API p95 ≤500ms. Baseline reported sprite 3.5 MB, background 321 KB, opening 4 MB; not remeasured. Compression before additional assets; no quality claim without visual comparison. One scene, paginated catalog 24 entries [U], lazy icons/images/audio/video, cap visible sprites, pause background, no per-item polling. Measure transfer, decoded image memory, heap/GPU separately, cold/warm, Android 2 GB/iOS/desktop, 30 min soak, resize, background resume, weak network, large inventory. Report exact bytes and p95 sample size. No paid fal.ai generation without explicit approval.

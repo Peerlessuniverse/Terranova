@@ -20,3 +20,12 @@ Semua tahap sesudah Fase 0 menunggu keputusan pemilik. Batas waktu berbasis gate
 - **Fase 0 · Gate review (wajib sebelum Fase 1):** Tetapkan keputusan D03–D08, D14–D19 (Kebun & DWE), dan D21 (parameter DLE). Bukti reproduksibilitas dan pengujian model DWE+DLE tersedia pada `hasil/dwe_dle_*.csv`.
 - **Fase 1 · Prototipe solo (setelah izin):** (1) Spike renderer 2D pixel art isometrik (satu lahan, gerbang, jalan aspal, sungai) + HUD responsif (Q20–Q21/Q24); (2) Loop solo DWE 3 node privat (Permukiman, Pasar, Sungai), WCS gerobak, pilah, kompos/plastik, Neraca Massa (Q01/Q02/Q05/Q26); (3) DLE jalan & sungai hidup (NPC litter + sayur jatuh) dengan klaim atomik & list fallback (Q27); (4) Onboarding eco-fantasy + tutorial ≤3 menit (Q13/Q22/Q23) dan Kebun Gaia (Q19/Q25) setelah loop solo stabil.
 - **Fase 2–5 · Alpha hingga Season 1:** Migrasi DWE/DLE dari fixture privat ke stok kota bersama per node pada Fase 3 (tanpa menyalin insiden sama ke semua akun dan tanpa menggandakan kontribusi global), penambahan event timbulan (D19), dan kohort returned materials (D17) pada fase lanjutan sesuai gate QA Q01–Q28.
+
+---
+
+## Sinkronisasi Feature Freeze v1.0 (27 November 2026)
+
+> Sumber: `docs/TERRA_NOVA_FEATURE_FREEZE/docs/fase-0/IMPLEMENTATION_ROADMAP_SYNC_v1.0.md` (digabung tanpa menimpa histori Fase 0).
+
+# Roadmap — gated implementation
+G0 read repository, verify actual documents and code, conflict register G1–G12 and D03–D21, backup and test baseline. G1 seed/normalize material and machinery, realistic economy, mass ledger. G2 NPC market/transport and used recovery. G3 garden/vitality. G4 missions/GSG, household WtE/DRES. G5 modular overlay, river and asset optimization. G6 radio/celebration/journal/knowledge/admin/feedback/support, topup/rank/profile/card fixture. G7 regression, 90/180-day simulation, device benchmarks, security, local playable owner review. Do not equate catalog visibility with executable recipes. Beta conditional on funding and owner approval: production auth, privacy, migration, async multiplayer, payment gate, leaderboard, profile and verified shares, sponsor contracts; beta security/load test. Commercial after evidence; final Chosen selection separate owner decision. No public deployment, server procurement or paid generation in this contract. Each gate commit on review branch, tests and rollback instructions; stop on critical fail. Deliver screenshots, run instructions, catalog validation, raw test/simulation outputs and blockers. No schedule/cost promise.

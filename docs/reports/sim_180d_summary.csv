@@ -1,0 +1,7 @@
+scenario,starter_gc,day90_koin,day90_tier,day90_pulih_kg,day180_koin,day180_earned_gc,day180_tier,day180_pulih_kg,day180_waste_kwh,day180_renew_kwh,god_day,deadlock_days,self_made,chosen_candidate_provisional,chosen_final_active
+modest_1M_nopay,1000000,2726650,Ascendant,137.05,7627200,3177600,God,241.2,10.8,161.1,142,0,True,True,False
+modest_100k_stress,100000,1826650,Ascendant,137.05,6727200,3177600,God,241.2,10.8,152.1,142,0,True,True,False
+industrial_1M_nopay,1000000,2859750,Titan,189.5,7350950,3882900,God,303.25,10.8,161.1,156,0,True,True,False
+paid_sandbox_1M_plus_5M,1000000,7726650,Ascendant,137.05,12627200,3177600,God,241.2,10.8,161.1,142,0,False,True,False
+low_activity_1M,1000000,2037850,Guardian,55.1,2037850,1022900,Guardian,55.1,1.2,0.0,NOT_REACHED,0,True,False,False
+cash_exhaustion_recovery,1000000,1983150,Ascendant,137.05,6883700,3177600,God,241.2,10.8,156.6,142,0,True,True,False

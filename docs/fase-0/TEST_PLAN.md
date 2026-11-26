@@ -43,3 +43,41 @@ Q19 [P] • Jalankan kasus kebun, gudang, ledger, unlock langka dan akses silang
 | Q26 M/P | DWE: overflow stok node ke lingkungan/TPA, komposisi 100%, dua pemain/tab berebut stok terakhir, expiry reservasi sebelum muat, kargo tiba saat gudang penuh, B3 ditolak dari olah umum. | Konservasi gram terpenuhi (`simulasi_dwe_dle.py` lulus model); hanya satu klaim stok berhasil; kargo `in_transit` tidak hilang; tidak ada kredit ganda saat transfer/olah ulang. |
 | Q27 M/P | DLE: reload & dua tab pada slot sama, klaim ganda dua tab, sumber kosong, cap harian 6 insiden / 12 kg UTC, expiry 15 menit ke backlog, offline >8 jam, gudang penuh, reduced motion. | RNG deterministik tidak meroll ulang saat reload; pickup hanya sukses sekali; expiry memindahkan massa ke backlog tanpa menghapus gram; gudang penuh menolak pickup tanpa mengubah sprite/stok. |
 | Q28 M/P | Simulasi 90 hari terintegrasi DWE + DLE (dengan vs tanpa bonus DLE) + Kebun Gaia pada 5 benih (`simulasi_dwe_dle.py`). | CSV `dwe_dle_ringkasan.csv`, `dwe_dle_harian.csv`, `dwe_dle_uji_batas.csv` reproducible; bonus DLE tidak mengalahkan kontrak utama; pencegahan menurunkan insiden tanpa mematikan ekonomi. |
+
+---
+
+## Sinkronisasi Feature Freeze v1.0 (27 November 2026)
+
+> Sumber: `docs/TERRA_NOVA_FEATURE_FREEZE/docs/fase-0/TEST_PLAN_SYNC_v1.0.md` (digabung tanpa menimpa histori Fase 0).
+
+# Test Plan — acceptance additions (not executed)
+Preserve existing Q01–Q32; merge after reading actual repo tests. IDs FF01–FF24.
+
+| ID | Required acceptance |
+|---|---|
+| FF01 | Existing onboarding 120s, replay, grant once, existing account unchanged |
+| FF02 | Catalog 282 materials, 307 machines, canonical 288/19 aliases, no duplicate inventory |
+| FF03 | Quotes, negative value disposal, stale price, cash/stock nonnegative |
+| FF04 | Spawn source/expiry river/downstream balance, caps and safe access |
+| FF05 | Transport reserve/receive retry, fee vs purchase, deadline and capacity |
+| FF06 | All 15 crops, growth timers, harvest once, full storage |
+| FF07 | Vitality no offline decay, rare boost capped, no sale loop |
+| FF08 | Mass balance includes residual emissions and external inputs |
+| FF09 | Energy net source provenance, battery loss, no duplicate credits |
+| FF10 | GT01–09, old badge IDs, reward once, no forced industrial tier |
+| FF11 | 90/180d no-pay modest God path and paid comparison |
+| FF12 | Chosen provisional only, no award even threshold met |
+| FF13 | Modular collision and road/river preserved, mobile screenshots |
+| FF14 | Celebration skip/replay/queue, fallback and no reward twice |
+| FF15 | Radio auto/manual/shuffle/mute, autoplay fallback and no leak |
+| FF16 | NPC market all categories, search and locked technology |
+| FF17 | Used sale/lease recovery, no cash deadlock or arbitrage |
+| FF18 | Event schedule reproducible, timezone, no waste creation |
+| FF19 | Admin config validation, audit, permissions, rollback |
+| FF20 | Support URL missing safe, sponsorship expiry/label, no donor bonus |
+| FF21 | Sandbox payment retry; beta real payment gate, refund/dispute |
+| FF22 | Ranking fixture vs server, ties, provenance, privacy, visit read-only |
+| FF23 | Card export 3 sizes, no PII, local label, beta QR verification/revoke |
+| FF24 | Feedback, backup/restore, security, profiling and regression |
+
+Record build hash, seed, device, expected/actual, evidence, PASS/FAIL/BLOCKED. No beta release with critical failures, unverified local state, privacy/payment/legal blockers. Simulations must include failed scenarios and raw CSV, not only favorable averages.

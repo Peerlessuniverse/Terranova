@@ -244,10 +244,14 @@ const $ = id => document.getElementById(id);
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() :
   'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
 let username = '';
-let gender = 'pria';
-document.querySelectorAll('.pick button').forEach(b => b.onclick = () => {
-  gender = b.dataset.gender;
-  document.querySelectorAll('.pick button').forEach(x => x.setAttribute('aria-checked', String(x === b)));
+let gender = sessionStorage.getItem('tn_gender') || 'pria';
+document.querySelectorAll('.pick button').forEach(b => {
+  b.setAttribute('aria-checked', String(b.dataset.gender === gender));
+  b.onclick = () => {
+    gender = b.dataset.gender;
+    sessionStorage.setItem('tn_gender', gender);
+    document.querySelectorAll('.pick button').forEach(x => x.setAttribute('aria-checked', String(x === b)));
+  };
 });
 
 async function postJSON(url, body) {

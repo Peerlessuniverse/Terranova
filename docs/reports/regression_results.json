@@ -1,0 +1,243 @@
+{
+  "passed": 39,
+  "failed": 0,
+  "total": 39,
+  "p95_ms": 35.82,
+  "snapshot_bytes": 15840,
+  "results": [
+    {
+      "ff": "FF01",
+      "status": "PASS",
+      "name": "Opening cinematic 120s runtime served 200",
+      "detail": ""
+    },
+    {
+      "ff": "FF01",
+      "status": "PASS",
+      "name": "Register new account sets session",
+      "detail": ""
+    },
+    {
+      "ff": "FF01",
+      "status": "PASS",
+      "name": "Starter realistic_v1 = 1.000.000 GC, 500 kg, 3 seeds (2 CR01 + 1 CR02)",
+      "detail": ""
+    },
+    {
+      "ff": "FF01",
+      "status": "PASS",
+      "name": "Idempotent replay grant once",
+      "detail": ""
+    },
+    {
+      "ff": "FF01",
+      "status": "PASS",
+      "name": "Existing v0.9 account balance preserved without forced overwrite",
+      "detail": ""
+    },
+    {
+      "ff": "FF02",
+      "status": "PASS",
+      "name": "Catalog exact counts 282 mat / 307 mch (288 canon + 19 alias)",
+      "detail": "{'materials_raw': 163, 'materials_output': 119, 'materials_total': 282, 'machines_rows': 307, 'machines_canonical': 288, 'machines_aliases': 19, 'machines_active_validated': 22, 'crops_total': 15}"
+    },
+    {
+      "ff": "FF02",
+      "status": "PASS",
+      "name": "Paginated /catalog returns 24 items/page",
+      "detail": ""
+    },
+    {
+      "ff": "FF02",
+      "status": "PASS",
+      "name": "Educational risk machine WTE-001 rejected for purchase",
+      "detail": ""
+    },
+    {
+      "ff": "FF02",
+      "status": "PASS",
+      "name": "Locked machine HME-001 rejected for purchase",
+      "detail": ""
+    },
+    {
+      "ff": "FF03",
+      "status": "PASS",
+      "name": "Server quote returns version, net_gc, expires_at",
+      "detail": ""
+    },
+    {
+      "ff": "FF03",
+      "status": "PASS",
+      "name": "Hazardous material HZ01 blocked from free NPC trade",
+      "detail": ""
+    },
+    {
+      "ff": "FF04",
+      "status": "PASS",
+      "name": "All 10 TITIK_POHON strictly outside fence & above river",
+      "detail": "bad=[]"
+    },
+    {
+      "ff": "FF04",
+      "status": "PASS",
+      "name": "River floating trash spawns & conserves missed mass to backlog",
+      "detail": "saw_spawn=True, backlog=2420g"
+    },
+    {
+      "ff": "FF05",
+      "status": "PASS",
+      "name": "Angkut Pasar 10kg charges 1300 GC & sets 2000 GC service comp",
+      "detail": ""
+    },
+    {
+      "ff": "FF05",
+      "status": "PASS",
+      "name": "Terima kargo preserves real Pasar fraction (~77% organik > 7500g, not hardcoded 50%)",
+      "detail": "organik=7726g"
+    },
+    {
+      "ff": "FF05",
+      "status": "PASS",
+      "name": "Pilah splits according to real node composition (>=7500g organik)",
+      "detail": "organik_g=7726g"
+    },
+    {
+      "ff": "FF06",
+      "status": "PASS",
+      "name": "All 15 crops seeded (CR01-CR15)",
+      "detail": ""
+    },
+    {
+      "ff": "FF06",
+      "status": "PASS",
+      "name": "Plant CR01 Kangkung on Kebun Gaia",
+      "detail": ""
+    },
+    {
+      "ff": "FF07",
+      "status": "PASS",
+      "name": "Buy & consume staple food restores vitality & tracks food group",
+      "detail": ""
+    },
+    {
+      "ff": "FF07",
+      "status": "PASS",
+      "name": "Vitality does NOT decay offline",
+      "detail": ""
+    },
+    {
+      "ff": "FF08",
+      "status": "PASS",
+      "name": "Mass balance tracks kompos, uap_terkendali, residu, neraca_valid",
+      "detail": ""
+    },
+    {
+      "ff": "FF09",
+      "status": "PASS",
+      "name": "Household biogas WtE records 1.2 kWh net waste-origin & energy audit",
+      "detail": ""
+    },
+    {
+      "ff": "FF10",
+      "status": "PASS",
+      "name": "Claim GT01 Awaken succeeds & pushes celebration + journal",
+      "detail": ""
+    },
+    {
+      "ff": "FF10",
+      "status": "PASS",
+      "name": "8 legacy badges intact; Saudagar Hijau not auto-unlocked by 1M starter",
+      "detail": ""
+    },
+    {
+      "ff": "FF12",
+      "status": "PASS",
+      "name": "Gaia's Chosen final_selection_active is strictly False",
+      "detail": ""
+    },
+    {
+      "ff": "FF13",
+      "status": "PASS",
+      "name": "Modular placement blocks overlap on occupied slot S1",
+      "detail": ""
+    },
+    {
+      "ff": "FF13",
+      "status": "PASS",
+      "name": "Modular placement succeeds on free slot S5",
+      "detail": ""
+    },
+    {
+      "ff": "FF17",
+      "status": "PASS",
+      "name": "Used machine buyback < buy price (no arbitrage)",
+      "detail": ""
+    },
+    {
+      "ff": "FF19",
+      "status": "PASS",
+      "name": "Admin config publish creates v2",
+      "detail": ""
+    },
+    {
+      "ff": "FF19",
+      "status": "PASS",
+      "name": "Admin config rollback creates v3 with v1 values",
+      "detail": ""
+    },
+    {
+      "ff": "FF20",
+      "status": "PASS",
+      "name": "Support URLs null safe by default",
+      "detail": ""
+    },
+    {
+      "ff": "FF21",
+      "status": "PASS",
+      "name": "Sandbox top-up marks self_made_provisional=False & gives 0 XP",
+      "detail": ""
+    },
+    {
+      "ff": "FF22",
+      "status": "PASS",
+      "name": "Leaderboard returns 14 boards with LOCAL_FIXTURE_ONLY label & no email",
+      "detail": ""
+    },
+    {
+      "ff": "FF24",
+      "status": "PASS",
+      "name": "Feedback stored locally in SQLite",
+      "detail": ""
+    },
+    {
+      "ff": "FF24",
+      "status": "PASS",
+      "name": "Security: path traversal blocked (404)",
+      "detail": ""
+    },
+    {
+      "ff": "FF24",
+      "status": "PASS",
+      "name": "Perf: API p95=35.8ms (<=500ms), shell_gz=34.4KB (<=250KB), snapshot=15.5KB",
+      "detail": ""
+    },
+    {
+      "ff": "FF24",
+      "status": "PASS",
+      "name": "JS syntax OK: web/landing.html",
+      "detail": ""
+    },
+    {
+      "ff": "FF24",
+      "status": "PASS",
+      "name": "JS syntax OK: web/index.html",
+      "detail": ""
+    },
+    {
+      "ff": "FF24",
+      "status": "PASS",
+      "name": "JS syntax OK: web/assets/ff_modules.js",
+      "detail": ""
+    }
+  ]
+}

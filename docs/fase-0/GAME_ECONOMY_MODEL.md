@@ -65,3 +65,14 @@ Jalankan `python3 simulasi_dwe_dle.py` dari direktori ini (deterministik terhada
 - Seluruh 15 lintasan (3 skenario × 5 benih) menutup neraca massa tepat hingga **0 gram** dan lulus 6 uji batas (`dle_deterministik_reload`, `dle_dua_tab_klaim_sekali`, `dle_gudang_penuh_tolak`, `dle_b3_ditolak`, `wcs_reservasi_expiry_dan_kargo`, `dle_tidak_mengalahkan_kontrak`).
 - Porsi material bonus DLE hanya **4,38%** dari total pasokan sehingga tidak mengalahkan kontrak WCS utama; saat pencegahan meningkat, insiden turun ke **1,93%** tanpa mematikan ekonomi pemain.
 - Hasil ini melengkapi model kota v0.6; penutupan C1–C4 (dominasi God termal di kota bersama 20 agen dan satu definisi upacara D08) tetap menunggu penetapan pemilik sebelum gate Fase 1.
+
+---
+
+## Sinkronisasi Feature Freeze v1.0 (27 November 2026)
+
+> Sumber: `docs/TERRA_NOVA_FEATURE_FREEZE/docs/fase-0/GAME_ECONOMY_MODEL_SYNC_v1.0.md` (digabung tanpa menimpa histori Fase 0).
+
+# Economy model — calibration contract
+Realistic_v1 sole target; prototype_v09 historical fixture. 1M starter test and 100k stress, free starter entitlements once. Prices 02 and 09 v1.2 intact, 12 crops. Unit normalization, no null price interpreted zero; quote price version and stock. Negative-value disposal fee is not negative purchase arbitrage. Operating margin = sales + valid service fee − material purchases − transport − energy/water/labor − maintenance − disposal − lease; account for inventory and capex separately. Use 01 and 05–07 formulas only when recipe validated. NPC spread and daily demand/stock budget; no unlimited instant repeat sale, used buyback below purchase after condition and fee. Crop fast timers require demand cap, no unlimited boost stacking. Reward ledger single tier grant; no topup environmental XP, milestone earned GC separate. Topup scenario 100 GC/IDR test; examine inflation and competitive advantage, no direct real conversion. Candidate net worth and peak proposal 10, no final criteria. WMCI nondecreasing valid final mass, no waste creation; supply decline pending. GSG 14/60-day options U, test household and partner access.
+
+Simulation design 90 and 180 days: 100k/1M, modest/industrial/energy/community, low activity, no pay, paid capital, prevention, cash exhaustion and season supply decline. Seed reproducible, identical starting environment per comparison. Record daily cash, assets, debt, inventory, mass and energy conservation, kg unique, useful waste kWh, cash deadlock, time tier, badge, margin, price inflation, GSG pass reasons, relative paid advantage. Compare baseline, changed prices and demand/boost caps. No simulation result claimed; need actual recipe map and code. Require free modest path reaches God within feasible calibrated horizon, no forced F3 or topup; if not, adjust thresholds/availability not safety. Candidate remains exploratory.

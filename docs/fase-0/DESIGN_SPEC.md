@@ -1,4 +1,4 @@
-# TERRA NOVA — DESIGN_SPEC v1.4
+# TERRA NOVA — DESIGN_SPEC v1.5
 Peradaban Bumi Baru · Chapter I — The Calling of Gaia · 26 November 2026
 
 Status: [D] arah visual yang disetujui pemilik dalam percakapan; [R] rancangan implementasi; [U] target/parameter uji; [P] sudah diimplementasikan di prototipe lokal. **v1.4** menyelaraskan desain dengan prototipe yang dimainkan pemilik (landing, cinematic, lahan isometrik ilustratif, Evaluasi 1–2) pada §19–§25 dan pasangan GAME_SPEC v0.9 §30–§36. Bila §1–§12 bertentangan dengan §19–§25, bagian baru yang berlaku. Tidak mengesahkan D03–D14 atau membuka gate Fase 1. GAME_SPEC v0.6 tetap baseline mekanik; v0.7 memuat amendemen DWE untuk review. Bagian 13–16 memperinci DWE; bagian 17–18 menambahkan DLE (GAME_SPEC v0.8). Mockup bukan sumber angka ekonomi. Bila konflik, gunakan aturan induk yang disahkan dan catat keputusan.
@@ -276,3 +276,10 @@ Dibuat dengan `tools/gen_assets_fal.py` (nano-banana/edit US$0,0398/gambar + bir
 7. Tempat keterangan "ilustrasi" untuk gambar AI di luar video (kredit / Tentang).
 
 **Changelog v1.4 (26 November 2026):** §1 arah visual ilustratif; §2 alur baru; §3 modal & koordinat; §5 intro; §19 landing & cinematic; §20 lahan; §21 intro; §22 sprite & kendaraan; §23 HUD/menu; §24 QA; §25 celah.
+
+## 26. Amendemen visual pengendali v1.5
+Bagian 26–28 berlaku jika konflik. Starter 1M GC uji utama, 500kg, tiga benih. Pertahankan yard_iso.webp dan koordinat 1672×941; slot overlay dahulu, clean plate jika bangunan perlu dipindah. Asset Bible mengatur anchor, collision, z-sort, alpha, skala. Nav tetap. Pasar NPC list/filter/search/beli/jual, ensiklopedia semua katalog termasuk locked; kebun 15 tanaman, vitality, energy center, jurnal, misi, achievement overlay. Tidak preload gambar katalog. River polyline dan akses tepi aman, animasi kosmetik.
+## 27. UI sosial dan monetisasi
+Menu Dukung, Radio, Replay Opening, Feedback, Knowledge, Profil. Beta Global Ranking, profil publik opt-in, visit read-only, Google avatar opsional, unggah aman. Share/download PNG 1080 square, 1080×1920, 1200×628; QR verified beta, prototype label lokal. Chosen frame/seal/banner/Sacred Tree kosmetik saja, Hall of Eternity tanpa ranking internal; tidak aktif sebelum keputusan final. Sponsor dilabeli; store demo lokal, real beta setelah gate. Jangan tampilkan email/usia/pembayaran. 
+## 28. Acceptance
+Uji mobile, reduced motion, fallback static, no preload, accessibility, replay no reward, asset budget, share privacy, no hidden purchase advantage in environmental scoring. Lihat TEST_PLAN dan VISUAL_ASSET_BIBLE.

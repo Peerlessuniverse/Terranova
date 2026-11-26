@@ -244,13 +244,23 @@ body.cine #top,body.cine #nav,body.cine #gaiaBar,body.cine #status,body.cine #sh
     <button class="ib" id="bSfx" type="button" title="Efek suara" aria-label="Efek suara">🔊</button>
   </div>
   <div class="chips">
-    <div class="chip" title="Gaia Coin"><img src="/assets/img/ui_coin.png" alt="Coin"><span id="tCoin">10.000</span></div>
+    <div class="chip" title="Gaia Coin"><img src="/assets/img/ui_coin.png" alt="Coin"><span id="tCoin">1.000.000</span></div>
+    <div class="chip" title="Vitalitas (efek manual 60–110%, tidak turun offline)"><span>⚡</span><span id="tVit">100%</span></div>
     <div class="chip" title="Poin hijau"><img src="/assets/img/ui_leaf.png" alt="Poin"><span id="tPoin">0</span></div>
     <div class="chip" title="Gudang"><img src="/assets/img/ui_box.png" alt="Gudang"><span id="tGudang">0/500 kg</span></div>
   </div>
 </header>
 
 <div id="status" role="status" aria-live="polite">Memuat lahan Terra Nova…</div>
+<div id="celBar" hidden style="position:fixed;top:calc(var(--top) + 46px);left:50%;transform:translateX(-50%);z-index:45;width:min(540px,calc(100vw - 24px));background:linear-gradient(#2c5e3b,#143524);border:2px solid var(--gold);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px #000c">
+  <span style="font-size:26px">🌟</span>
+  <div style="flex:1"><b id="celTitle" style="color:var(--gold);display:block"></b><small id="celSub" style="color:#e7f3df"></small></div>
+  <button type="button" id="celSkip" style="min-height:36px;padding:4px 10px">Tutup</button>
+</div>
+<div id="replayBox" hidden style="position:fixed;inset:0;z-index:210;background:#030808">
+  <button type="button" id="replayClose" style="position:fixed;top:14px;right:16px;z-index:220;background:#000c;border:1px solid var(--gold);border-radius:20px;padding:6px 14px">✕ Tutup Replay</button>
+  <iframe id="replayFrame" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay; fullscreen"></iframe>
+</div>
 
 
 <!-- Contextual Gaia Dialog + BHI -->
@@ -287,8 +297,10 @@ body.cine #top,body.cine #nav,body.cine #gaiaBar,body.cine #status,body.cine #sh
   </div>
 </div>
 
+<script src="/assets/ff_modules.js"></script>
 <script>
 const el = id => document.getElementById(id);
+const esc = s => (window.TN_FF ? window.TN_FF.esc(s) : String(s ?? ''));
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let state = null, meta = null, received = 0, busy = false, tab = 'home', sheetMode = null;
 
@@ -318,8 +330,8 @@ function musicTick() {
   o.connect(g).connect(c.destination); o.start(t); o.stop(t + .9); step++;
 }
 el('bMus').onclick = () => {
-  musOn = !musOn; ctx().resume(); el('bMus').style.opacity = musOn ? 1 : .5;
-  clearInterval(musTimer); if (musOn) musTimer = setInterval(musicTick, 480);
+  musOn = window.TN_FF ? window.TN_FF.radio.toggle(sheetMode || 'pabrik') : !musOn;
+  el('bMus').style.opacity = musOn ? 1 : .5;
 };
 el('bMus').style.opacity = .5;
 el('bSfx').onclick = () => { sfxOn = !sfxOn; el('bSfx').textContent = sfxOn ? '🔊' : '🔈'; el('bSfx').style.opacity = sfxOn ? 1 : .5; };
@@ -372,8 +384,9 @@ const litter = () => (state && state.sampah_liar) || [];
 
 function nextGuidance(s) {
   if (!s || !s.diterima) return { tab: null, text: 'Terima panggilan Gaia untuk memulai.' };
-  if (s.dle_events && s.dle_events.length > 0) return { tab: 'dle', text: s.dle_events[0].pesan };
-  if ((s.stat || {}).pungut < 3 && litter().length) return { tab: null, text: 'Ketuk sampah yang berserakan, di dalam maupun di luar pagar. Karaktermu akan berjalan dan memungutnya (+2 koin tiap sampah).' };
+  if (s.dle_events && s.dle_events.length > 0) return { tab: 'menu', text: s.dle_events[0].pesan };
+  if ((s.sampah_sungai || []).length > 0) return { tab: null, text: 'Ada sampah terapung di sungai! Ketuk dari tepi sungai untuk mengamankannya sebelum hanyut ke hilir.' };
+  if ((s.stat || {}).pungut < 3 && litter().length) return { tab: null, text: 'Ketuk sampah yang berserakan di dalam/luar pagar. Karaktermu akan berjalan dan memungutnya.' };
   if (s.job && s.job.status === 'arrived') return { tab: 'angkut', text: 'Gerobak sudah tiba di gerbang! Terima kargo ke area pilah.' };
   if (s.job && s.job.status === 'in_transit') return { tab: 'angkut', text: 'Gerobak sedang menuju sumber sampah…' };
   const plots = [s, ...(s.petak || [])];
@@ -437,6 +450,17 @@ function renderSheet() {
   let body = '';
   const closeBtn = '<button type="button" id="shClose" class="sh-x">✕ Tutup</button>';
   const back = '<button type="button" class="sh-back" data-open="menu">‹ Menu</button>';
+  window.TN_SCENE = sheetMode || 'pabrik';
+  window.TN_STATE = s;
+  window.TN_SEND = send;
+
+  const ffBody = window.TN_FF ? window.TN_FF.renderFFSheet(sheetMode, s, meta, closeBtn, back) : null;
+  if (ffBody !== null) {
+    sh.innerHTML = ffBody;
+    sh.hidden = false;
+    if (el('shClose')) el('shClose').onclick = () => { sheetMode = null; renderUI(); };
+    return;
+  }
 
   if (sheetMode === 'pabrik') {
     body = `<div class="sh-head"><h3>🏭 Pabrik Pengolahan (${s.kota})</h3>${closeBtn}</div>
@@ -457,95 +481,127 @@ function renderSheet() {
       </div>`;
   } else if (sheetMode === 'kebun') {
     const plots = [{ nama: '🌿 Kebun Gaia', p: s, i: 0 }, ...(s.petak || []).map((p, k) => ({ nama: `🌱 Petak ${k + 2}`, p, i: k + 1 }))];
-    body = `<div class="sh-head"><h3>🌱 Kebun &amp; Petak Tanam</h3>${closeBtn}</div>
-      <p class="sh-note">Benih: <b>${s.benih}</b>${s.misi ? ` · ${s.varietas}: <b>${s.stok_langka}</b>` : ''} · Kompos: <b>${fmtKg(s.kompos_g)}</b></p>
+    const bmap = s.benih_map || {}, pmap = s.panen_map || {}, fg = s.pangan_map || {};
+    const benihList = Object.entries(bmap).filter(([, v]) => v > 0);
+    const panenList = Object.entries(pmap).filter(([, v]) => v > 0);
+    const foodList = Object.entries(fg).filter(([, v]) => v > 0);
+    body = `<div class="sh-head"><h3>🌱 Kebun 15 Tanaman &amp; Vitalitas (${s.vitality ?? 100}%)</h3>${closeBtn}</div>
+      <p class="sh-note">Benih tersedia: <b>${benihList.map(([k, v]) => `${k}×${v}`).join(', ') || 'kosong'}</b> · Kompos: <b>${fmtKg(s.kompos_g)}</b>${s.rare_boost ? ` · ✨ Bonus jual +${s.rare_boost.pct}% aktif` : ''}</p>
       <div class="grid">${plots.map(({ nama, p, i }) => {
         const left = Math.ceil(plotLeft(p));
-        const txt = p.ditanam ? `${p.tanaman} · ${left ? left + ' dtk lagi' : 'Siap dipanen!'}` : 'Petak kosong';
+        const txt = p.ditanam ? `${esc(p.tanaman)} · ${left ? left + ' dtk lagi' : 'Siap dipanen!'}` : 'Petak kosong';
         return `<div class="card-box"><b>${nama}</b><small>${txt}${p.dipupuk ? ' · sudah dipupuk' : ''}</small>
-          ${!p.ditanam ? `<button class="act" data-a="tanam" data-petak="${i}">Tanam Benih<small>Stok: ${s.benih}</small></button>` : ''}
-          ${!p.ditanam && s.misi ? `<button class="act" data-a="tanam_langka" data-petak="${i}">Tanam ${s.varietas}<small>Stok: ${s.stok_langka}</small></button>` : ''}
+          ${!p.ditanam && benihList.length ? benihList.slice(0, 3).map(([cid, cnt]) => `<button class="act" data-a="tanam_crop" data-crop="${cid}" data-petak="${i}">Tanam ${cid}<small>Stok: ${cnt}</small></button>`).join('') : ''}
+          ${!p.ditanam && !benihList.length ? `<button class="act" data-open="katalog">Beli Benih (15 Varietas)</button>` : ''}
           ${p.ditanam && left > 0 && !p.dipupuk ? `<button class="act" data-a="pupuk" data-petak="${i}">Pupuk 1 kg Kompos<small>-25% sisa waktu</small></button>` : ''}
           ${p.ditanam && left <= 0 ? `<button class="act hint" data-a="panen" data-petak="${i}">Panen Sayur<small>Masuk gudang</small></button>` : ''}
         </div>`;
       }).join('')}
-        <div class="card-box"><b>Benih</b><small>2 Gaia Coin per benih</small>
-          <button class="act" data-a="beli">Beli Benih Biasa<small>2 Gaia Coin</small></button>
-          ${s.misi ? `<button class="act" data-a="beli_langka">Beli Benih Langka<small>2 Gaia Coin</small></button>` : ''}
-          ${meta.harga_petak ? `<button class="act" data-open="lahan">Tambah Petak Tanam<small>${meta.harga_petak} Gaia Coin</small></button>` : ''}
+        <div class="card-box"><b>🍽️ Makan &amp; Vitalitas</b><small>Vitalitas: ${s.vitality ?? 100}% · Kelompok hari ini: ${(s.food_groups_today || []).length}/3</small>
+          ${foodList.map(([fid, cnt]) => `<button class="act" data-a="makan" data-item="${fid}">Konsumsi ${fid}<small>Stok: ${cnt}</small></button>`).join('')}
+          ${panenList.slice(0, 2).map(([cid, gr]) => `<button class="act" data-a="makan" data-item="${cid}">Makan Panen ${cid}<small>${gr} g tersedia</small></button>`).join('')}
+          <button class="act" data-open="katalog">Beli Benih / Pangan NPC<small>15 tanaman + beras/tempe/telur/air</small></button>
         </div>
       </div>`;
   } else if (sheetMode === 'angkut') {
+    const tr = meta.tr_aktif || {};
     const jobBox = s.job ? `<div class="card-box job-box">
-      <b>🛒 Status Gerobak · ${s.job.nama_node} (${fmtKg(s.job.muat_g)})</b>
+      <b>🛒 Status Gerobak MCH-002 · ${esc(s.job.nama_node)} (${fmtKg(s.job.muat_g)})</b>
       <small>${s.job.status === 'arrived' ? 'Sudah tiba di depan gerbang! Terima untuk memindahkan ke Area Pilah.' : 'Sedang dalam perjalanan…'}</small>
-      <button class="act ${s.job.status === 'arrived' ? 'hint' : ''}" data-a="terima_kargo" ${s.job.status !== 'arrived' ? 'disabled' : ''}>Terima Kargo ke Area Pilah</button>
+      <button class="act ${s.job.status === 'arrived' ? 'hint' : ''}" data-a="terima_kargo" ${s.job.status !== 'arrived' ? 'disabled' : ''}>Terima Kargo (+${(s.job.kompensasi_gc || 0).toLocaleString('id-ID')} GC jasa)</button>
     </div>` : '';
+    const trBox = tr.id ? `<div class="card-box" style="margin-bottom:8px;border-color:var(--gold)"><b>⏰ Misi Berkala Aktif: ${esc(tr.nama)}</b><small>Target: ${esc(tr.node)} ≥ ${tr.min_kg} kg · Bonus sekali/window: +${Number(tr.bonus_gc || 0).toLocaleString('id-ID')} GC</small></div>` : '';
     const nodesHtml = Object.entries(meta.nodes_info).map(([kode, n]) => `
-      <div class="card-box"><b>${n.nama}</b>
-        <small>Stok tersedia: ${fmtKg(n.tersedia_g)} / ${fmtKg(n.kapasitas_g)}</small>
-        <small>Jarak ${n.jarak_km} km · Tarif ${n.tarif} Coin · Gerobak 10 kg</small>
-        <button class="act" data-node="${kode}" ${s.job ? 'disabled' : ''}>Kirim Gerobak (10 kg)<small>Biaya ${n.tarif} Gaia Coin</small></button>
+      <div class="card-box"><b>${esc(n.nama)}</b>
+        <small>Stok: ${fmtKg(n.tersedia_g)} / ${fmtKg(n.kapasitas_g)} · Jarak PP ${n.jarak_km} km</small>
+        <small>Biaya 10 kg: ${(n.tarif_10kg || 0).toLocaleString('id-ID')} GC · Jasa: ${(n.kompensasi_per_kg * 10).toLocaleString('id-ID')} GC · ETA ${n.eta_detik} dtk</small>
+        <button class="act" data-node="${kode}" ${s.job ? 'disabled' : ''}>Kirim Gerobak (10 kg)<small>Komposisi fraksi asli dipertahankan</small></button>
       </div>`).join('');
-    body = `<div class="sh-head"><h3>🛒 Angkut · Sumber Sampah Kota</h3>${closeBtn}</div>${jobBox}<div class="grid">${nodesHtml}</div>`;
+    body = `<div class="sh-head"><h3>🛒 Angkut Realistis (5 Node &amp; Misi Berkala)</h3>${closeBtn}</div>${trBox}${jobBox}<div class="grid">${nodesHtml}</div>`;
   } else if (sheetMode === 'pasar') {
+    const hp = meta.harga_produk || {};
     const items = [
-      ['kompos', 'Kompos (1 kg)', 5, fmtKg(s.kompos_g)], ['pelet', 'Pelet Plastik (850 g)', 12, fmtKg(s.pelet_g)],
-      ['pot', 'Pot Daur Ulang (850 g)', 14, fmtKg(s.pot_g)], ['kertas', 'Kertas Terpilah (1 kg)', 9, fmtKg(s.kertas_g)],
-      ['logam', 'Logam/Kaca (1 kg)', 12, fmtKg(s.logam_kaca_g)], ['panen', 'Sayur Kebun (1 ikat)', 24, s.panen + ' ikat'],
-      ['panen_langka', (s.varietas || 'Sayur Langka') + ' (1 ikat)', 24, s.panen_langka + ' ikat'],
+      ['kompos', 'Kompos (1 kg)', (hp.kompos || {}).gc || 3500, fmtKg(s.kompos_g)],
+      ['pelet', 'Pelet Plastik (850 g)', (hp.pelet || {}).gc || 9500, fmtKg(s.pelet_g)],
+      ['pot', 'Pot Daur Ulang (850 g)', (hp.pot || {}).gc || 14000, fmtKg(s.pot_g)],
+      ['kertas', 'Kertas Terpilah (1 kg)', (hp.kertas || {}).gc || 2400, fmtKg(s.kertas_g)],
+      ['logam', 'Logam/Kaca (1 kg)', (hp.logam || {}).gc || 6500, fmtKg(s.logam_kaca_g)],
     ];
-    body = `<div class="sh-head"><h3>🏪 Pasar Kota</h3>${closeBtn}</div>
-      <div class="grid">${items.map(([k, n, h, stk]) => `<button class="act" data-a="jual_${k}"><b>${n}</b><small>+${h} Coin · Punya ${stk}</small></button>`).join('')}</div>`;
+    const cropsHave = Object.entries(s.panen_map || {}).filter(([, g]) => g > 0);
+    body = `<div class="sh-head"><h3>🏪 Pasar Kota (Realistic_v1)</h3>${closeBtn}</div>
+      <div class="menu-row" style="margin:0 0 10px"><button type="button" data-open="katalog">📚 Buka Pasar NPC &amp; Katalog Lengkap (589+ item)</button><button type="button" data-open="lahan">🔧 Jual Mesin Bekas / Recovery Kas</button></div>
+      <div class="grid">${items.map(([k, n, h, stk]) => `<button class="act" data-a="jual_${k}"><b>${n}</b><small>+${h.toLocaleString('id-ID')} GC · Punya ${stk}</small></button>`).join('')}
+      ${cropsHave.map(([cid, gr]) => `<button class="act" data-a="jual_panen_crop" data-crop="${cid}"><b>Panen ${cid} (${gr} g)</b><small>Jual ke NPC Pasar Tani (ber-cap harian)</small></button>`).join('')}</div>`;
   } else if (sheetMode === 'menu') {
+    const gtDone = (s.gt_claimed || []).length, prDone = (s.pr_claimed || []).length;
     const tiles = [
-      ['misi', '📋', 'Misi', `${missions(s).filter(m => m[1]).length}/${missions(s).length} selesai`],
+      ['misi', '📋', 'Misi & Tier (GT/PR)', `GT ${gtDone}/9 · PR ${prDone}/10`],
       ['capai', '🏅', 'Pencapaian', `${meta.pencapaian.filter(p => p.ok).length}/${meta.pencapaian.length} lencana`],
-      ['profil', '👤', 'Profil Pemain', s.nama],
-      ['pabrik', '🏭', 'Pabrik', 'Pilah & olah'], ['kebun', '🌱', 'Kebun', `${1 + (s.petak || []).length} petak`],
-      ['lahan', '🏗️', 'Kembangkan Lahan', meta.harga_petak ? `Petak ${meta.harga_petak} koin` : 'Petak maksimal'],
-      ['angkut', '🛒', 'Angkut', 'Sumber sampah kota'], ['pasar', '🏪', 'Pasar Kota', 'Jual hasil'],
+      ['profil', '👤', 'Profil & Kota', esc(s.nama)],
+      ['energi', '⚡', 'Energy Center', `${((s.energy || {}).waste_origin_used_wh / 1000 || 0).toFixed(1)} kWh WtE`],
+      ['katalog', '📚', 'Ensiklopedia', '282 Mat · 307 Mesin'],
+      ['lahan', '🏗️', 'Lahan & Mesin', `${(s.machines_owned || []).length} alat`],
       ['neraca', '⚖️', 'Gudang & Neraca', `${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(s.gudang_kap_g)}`],
+      ['radio', '📻', 'Gaia Radio', window.TN_FF && window.TN_FF.radio.playing ? 'Memutar' : 'Siap'],
+      ['jurnal', '📖', 'Jurnal & Kartu PNG', 'Unduh 3 ukuran'],
+      ['knowledge', '🎓', 'Knowledge Center', 'Edukasi & fakta'],
+      ['leaderboard', '🏆', 'Peringkat Lokal', 'Fixture 14 papan'],
+      ['sandbox_store', '🧪', 'Toko GC Sandbox', 'Uji lokal (bukan uang)'],
+      ['dukung', '💚', 'Dukung Terra Nova', 'Sukarela · non-bonus'],
+      ['admin', '🛠️', 'Admin Config', `v${meta.config_version || 1} lokal`],
+      ['feedback', '💬', 'Feedback', 'Kirim masukan'],
       ['cara', '❓', 'Cara Bermain', 'Panduan singkat'],
-      ['kota', '🗺️', 'Kota Bersama', '🔒 Fase berikutnya'], ['bumi', '🌍', 'Bumi Global', '🔒 Fase berikutnya'],
     ];
-    body = `<div class="sh-head"><h3>☰ Menu</h3>${closeBtn}</div>
+    body = `<div class="sh-head"><h3>☰ Menu Terpadu (Feature Freeze v1.0)</h3>${closeBtn}</div>
       <div class="menu-grid">${tiles.map(([m, i, t, d]) => `<button type="button" class="tile" data-open="${m}"><span>${i}</span><b>${t}</b><small>${d}</small></button>`).join('')}</div>
       <div class="menu-row">
-        <button type="button" data-act="musik">${musOn ? '🎵 Musik: aktif' : '🎵 Musik: mati'}</button>
+        <button type="button" data-act="replay_opening">🎬 Ulang Opening</button>
         <button type="button" data-act="sfx">${sfxOn ? '🔊 Suara: aktif' : '🔈 Suara: mati'}</button>
         <button type="button" data-act="reset">↺ Mulai ulang</button>
         <button type="button" data-act="keluar">⎋ Keluar</button>
       </div>`;
   } else if (sheetMode === 'misi') {
-    body = `<div class="sh-head">${back}<h3>📋 Misi</h3>${closeBtn}</div>` + renderMissions(s);
+    const gts = meta.gt_missions || [], prs = meta.pr_missions || [], gsg = meta.gsg || {}, ch = meta.chosen_eval || {};
+    body = `<div class="sh-head">${back}<h3>📋 Misi Tier (GT01–09), PR01–10 &amp; GSG</h3>${closeBtn}</div>
+      <p class="sh-note">God dicapai melalui <b>GSG</b> (pulih ${gsg.pulih_kg || 0}/200 kg · waste-origin ${gsg.waste_kwh || 0}/10 kWh · ${gsg.clean_days || 0}/10 hari bersih) — tanpa syarat pabrik besar atau top-up. <i>${esc(ch.note)}</i></p>
+      <div class="grid">${gts.map(m => `<div class="card-box ${m.claimed ? 'ok' : ''}"><b>${m.id} · ${m.tier} (${m.badge})</b><small>${esc(m.desc)}</small>
+        <small>Hibah sekali: ${m.grant_gc.toLocaleString('id-ID')} GC</small>
+        ${m.claimed ? '<small>✓ Selesai</small>' : m.can_claim ? `<button class="act hint" data-a="klaim_gt" data-id="${m.id}">Klaim ${m.tier}</button>` : '<small>🔒 Belum terpenuhi</small>'}</div>`).join('')}</div>
+      <h4 class="sh-sub">Misi Tambahan (PR01–PR10)</h4>
+      <div class="grid">${prs.map(m => `<div class="card-box"><b>${m.id} · ${esc(m.judul)}</b><small>${esc(m.desc)} (+${m.grant_gc.toLocaleString('id-ID')} GC · ${esc(m.badge)})</small>
+        ${m.claimed ? '<small>✓ Selesai</small>' : m.can_claim ? `<button class="act hint" data-a="klaim_pr" data-id="${m.id}">Klaim ${m.id}</button>` : '<small>⏳ Berjalan</small>'}</div>`).join('')}</div>
+      <h4 class="sh-sub">Insiden &amp; Panduan Cepat</h4>` + renderMissions(s);
   } else if (sheetMode === 'capai') {
     body = `<div class="sh-head">${back}<h3>🏅 Pencapaian</h3>${closeBtn}</div>
       <div class="badge-grid big">${meta.pencapaian.map(p => badgeHtml(p, true)).join('')}</div>`;
   } else if (sheetMode === 'profil') {
+    const w = s.wallet || {};
     body = `<div class="sh-head">${back}<h3>👤 Profil Pemain</h3>${closeBtn}</div>
       <div class="profile"><img src="/assets/sprites/${pose().idle}.png" alt="">
-        <div><b class="pname">${s.nama}</b><small>${s.kota} · Tier ${s.tier} · Karma ${s.karma}% · ${s.poin.toLocaleString('id-ID')} poin</small>
-        <small>Sampah dipungut: <b>${st.pungut || 0}</b> · Dipilah: <b>${fmtKg(st.pilah_g || 0)}</b> · Kompos: <b>${st.kompos || 0}</b> · Panen: <b>${st.panen || 0}</b> · Koin dari penjualan: <b>${(st.koin_jual || 0).toLocaleString('id-ID')}</b></small></div></div>
-      <h4 class="sh-sub">Karakter</h4>
+        <div><b class="pname">${esc(s.nama)}</b><small>${esc(s.kota)} · Tier ${esc(s.tier)} · Vitalitas ${s.vitality ?? 100}% · Self-Made: ${w.self_made_provisional ? 'Ya (Provisional)' : 'Sandbox'}</small>
+        <small>Dipungut: <b>${st.pungut || 0}</b> · Sungai Apung: <b>${st.sungai_apung || 0}</b> · Pulih Unik: <b>${fmtKg(st.pulih_unik_g || 0)}</b> · Laba Operasi: <b>${(w.operating_profit_gc || 0).toLocaleString('id-ID')} GC</b></small></div></div>
+      <h4 class="sh-sub">Karakter &amp; Kota (K1)</h4>
       <div class="char-pick">
         <button type="button" class="${s.gender !== 'wanita' ? 'on' : ''}" data-a="ganti_karakter" data-gender="pria"><img src="/assets/sprites/player_5.png" alt="">Pria</button>
         <button type="button" class="${s.gender === 'wanita' ? 'on' : ''}" data-a="ganti_karakter" data-gender="wanita"><img src="/assets/sprites/playerf_4.png" alt="">Wanita</button>
+        <select id="kotaPick" style="background:#0b1d14;border:1px solid #4d7a5c;border-radius:8px;padding:6px">${['Bandung', 'Jakarta', 'Surabaya', 'Yogyakarta', 'Semarang', 'Medan', 'Makassar', 'Kota lainnya'].map(k => `<option value="${k}" ${s.kota === k ? 'selected' : ''}>${k}</option>`).join('')}</select>
       </div>
       <h4 class="sh-sub">Lencana</h4>
       <div class="badge-grid">${meta.pencapaian.map(p => badgeHtml(p, false)).join('')}</div>`;
   } else if (sheetMode === 'lahan') {
-    const np = (s.petak || []).length;
-    body = `<div class="sh-head">${back}<h3>🏗️ Kembangkan Lahan</h3>${closeBtn}</div>
-      <p class="sh-note">Koinmu: <b>${s.koin.toLocaleString('id-ID')}</b> Gaia Coin. Koin didapat dari memungut, mengolah, dan menjual.</p>
+    const np = (s.petak || []).length, owned = s.machines_owned || [], slots = meta.yard_slots || [];
+    body = `<div class="sh-head">${back}<h3>🏗️ Kembangkan Lahan &amp; Tata Mesin</h3>${closeBtn}</div>
+      <p class="sh-note">Saldo: <b>${s.koin.toLocaleString('id-ID')} GC</b> · Tempatkan alat pada slot modular tanpa overlap (jalan &amp; sungai aman).</p>
       <div class="grid">
         <div class="card-box"><img class="up-img" src="/assets/sprites/garden_${np < 3 ? 4 : 3}.png" alt=""><b>Petak tanam baru</b>
-          <small>${np}/3 petak tambahan dimiliki. Petak baru dibangun di sisi kanan lahan.</small>
-          ${meta.harga_petak ? `<button class="act" data-a="beli_petak">Bangun Petak<small>${meta.harga_petak} Gaia Coin</small></button>` : '<small>✓ Semua petak sudah dibangun</small>'}</div>
-        <div class="card-box"><b>📦 Perluasan gudang</b><small>Kapasitas sekarang ${fmtKg(s.gudang_kap_g)}. Tiap perluasan +250 kg.</small>
-          ${meta.harga_gudang ? `<button class="act" data-a="tambah_gudang">Perluas Gudang<small>${meta.harga_gudang} Gaia Coin</small></button>` : '<small>✓ Gudang sudah maksimal</small>'}</div>
-        <div class="card-box locked-box"><b>🔒 Mesin pencacah plastik</b><small>Segera hadir pada fase berikutnya.</small></div>
-        <div class="card-box locked-box"><b>🔒 Rumah kompos</b><small>Segera hadir pada fase berikutnya.</small></div>
+          <small>${np}/3 petak tambahan dimiliki.</small>
+          ${meta.harga_petak ? `<button class="act" data-a="beli_petak">Bangun Petak<small>${meta.harga_petak.toLocaleString('id-ID')} GC</small></button>` : '<small>✓ Semua petak sudah dibangun</small>'}</div>
+        <div class="card-box"><b>📦 Perluasan gudang</b><small>Kapasitas sekarang ${fmtKg(s.gudang_kap_g)} (+250 kg/tahap).</small>
+          ${meta.harga_gudang ? `<button class="act" data-a="tambah_gudang">Perluas Gudang<small>${meta.harga_gudang.toLocaleString('id-ID')} GC</small></button>` : '<small>✓ Gudang maksimal</small>'}</div>
+        ${owned.map(m => `<div class="card-box"><b>${esc(m.canonical_id)} ${m.starter ? '(Starter)' : ''}</b>
+          <small>Kondisi ${m.condition}% · Slot: ${m.slot || 'Gudang'}</small>
+          ${!m.slot ? slots.slice(0, 2).map(sl => `<button class="act" data-a="pasang_mesin" data-uid="${esc(m.uid)}" data-slot="${sl.id}">Pasang di ${sl.id}</button>`).join('') : ''}
+          ${!m.starter ? `<button class="act warn" data-a="jual_mesin_bekas" data-uid="${esc(m.uid)}">Jual Bekas (Recovery Kas)</button>` : ''}</div>`).join('')}
       </div>`;
   } else if (sheetMode === 'cara') {
     body = `<div class="sh-head">${back}<h3>❓ Cara Bermain</h3>${closeBtn}</div>${howtoHtml()}`;
@@ -553,13 +609,16 @@ function renderSheet() {
     body = `<div class="sh-head">${back}<h3>⚖️ Gudang &amp; Neraca Massa</h3>${closeBtn}</div>
       <table class="tbl">
         <tr><th>Kategori</th><th>Massa</th><th>Keterangan</th></tr>
-        <tr><td>Total Masuk</td><td><b>${fmtKg(s.total_masuk_g)}</b></td><td>Sampah dipungut, kargo, dan insiden</td></tr>
-        <tr><td>Gudang Aktif</td><td>${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(s.gudang_kap_g)}</td><td>Campuran, 6 fraksi, dan produk jadi</td></tr>
+        <tr><td>Total Masuk</td><td><b>${fmtKg(s.total_masuk_g)}</b></td><td>Sampah dipungut, sungai apung, kargo, &amp; insiden</td></tr>
+        <tr><td>Gudang Aktif</td><td>${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(s.gudang_kap_g)}</td><td>Campuran, 6 fraksi, produk jadi &amp; panen</td></tr>
+        <tr><td>Terjual di Pasar</td><td>${fmtKg(s.terjual_g || 0)}</td><td>Keluar sah melalui penjualan NPC</td></tr>
+        <tr><td>Dipakai di Kebun</td><td>${fmtKg(s.dipakai_kebun_g || 0)}</td><td>Kompos untuk pemupukan (biomassa panen: ${fmtKg(s.biomassa_panen_g || 0)})</td></tr>
         <tr><td>Aliran Terkendali (Air/Gas)</td><td>${fmtKg(s.uap_terkendali_g)}</td><td>Tercatat dalam neraca massa, tidak hilang</td></tr>
         <tr><td>Residu Tersimpan</td><td>${fmtKg(s.residu_g)}</td><td>Belum dimusnahkan; memengaruhi BHI</td></tr>
         <tr><td>B3 Diserahkan Khusus</td><td>${fmtKg(s.b3_serah_g)}</td><td>Jalur pengolah berizin</td></tr>
-        <tr><td>Backlog Lingkungan/TPA</td><td>${fmtKg(s.backlog_tpa_g)}</td><td>Limpasan node &amp; insiden kedaluwarsa</td></tr>
-      </table>`;
+        <tr><td>Backlog Lingkungan/TPA</td><td>${fmtKg(s.backlog_tpa_g)}</td><td>Limpasan node, insiden &amp; sungai hilir kedaluwarsa</td></tr>
+      </table>
+      <div class="menu-row"><button type="button" class="act hint" data-a="audit_neraca">✓ Jalankan Audit Neraca Massa (${st.neraca_valid || 0}× valid)</button></div>`;
   } else if (sheetMode === 'kota' || sheetMode === 'bumi') {
     body = `<div class="sh-head">${back}<h3>${sheetMode === 'kota' ? '🗺️ Kota Bersama' : '🌍 Bumi Global'}</h3>${closeBtn}</div>
       <div class="lock-box"><b>🔒 Fitur terkunci · fase multiplayer berikutnya</b>
@@ -585,9 +644,21 @@ function renderUI() {
   el('tKarma').textContent = 'Karma ' + s.karma + '%';
   el('tKarmaBar').style.width = Math.max(0, Math.min(100, s.karma)) + '%';
   el('tCoin').textContent = s.koin.toLocaleString('id-ID');
+  if (el('tVit')) el('tVit').textContent = (s.vitality ?? 100) + '%';
   el('tPoin').textContent = s.poin.toLocaleString('id-ID');
   el('tGudang').textContent = `${Math.round(meta.gudang_terpakai_g / 1000)}/${Math.round(s.gudang_kap_g / 1000)} kg`;
   el('tBhi').textContent = meta.bhi + '%';
+  // Celebration queue banner (priority God > tier > badge > coin > mission)
+  const cel = (s.celebrations || [])[0];
+  window.TN_DUCK = Boolean(cel);
+  if (cel && !cine) {
+    el('celTitle').textContent = cel.title;
+    el('celSub').textContent = cel.subtitle;
+    el('celBar').hidden = false;
+    el('celSkip').onclick = () => send({ aksi: 'tutup_selebrasi', id: cel.id });
+  } else if (el('celBar')) {
+    el('celBar').hidden = true;
+  }
   const avSrc = '/assets/sprites/' + pose().idle + '.png';
   if (el('tAva').firstElementChild.getAttribute('src') !== avSrc) el('tAva').firstElementChild.setAttribute('src', avSrc);
   const nb = meta.pencapaian.filter(p => p.ok).length;
@@ -621,6 +692,11 @@ document.addEventListener('click', e => {
     if (a === 'sfx') el('bSfx').click();
     if (a === 'keluar') logout();
     if (a === 'reset') resetAkun();
+    if (a === 'replay_opening') {
+      el('replayFrame').src = '/intro/?embed=1&autostart=1';
+      el('replayBox').hidden = false;
+      sheetMode = null;
+    }
     renderSheet();
     return;
   }
@@ -628,6 +704,15 @@ document.addEventListener('click', e => {
     const p = { aksi: btn.dataset.a };
     if (btn.dataset.petak !== undefined) p.petak = Number(btn.dataset.petak);
     if (btn.dataset.gender) p.gender = btn.dataset.gender;
+    if (btn.dataset.crop) p.crop_id = btn.dataset.crop;
+    if (btn.dataset.food) p.food_id = btn.dataset.food;
+    if (btn.dataset.item) p.item_id = btn.dataset.item;
+    if (btn.dataset.mid) p.machine_id = btn.dataset.mid;
+    if (btn.dataset.uid) p.uid = btn.dataset.uid;
+    if (btn.dataset.slot) p.slot = btn.dataset.slot;
+    if (btn.dataset.sumber) p.sumber = btn.dataset.sumber;
+    if (btn.dataset.id) p.id = btn.dataset.id;
+    if (btn.dataset.sku) p.sku = btn.dataset.sku;
     send(p);
     return;
   }
@@ -641,6 +726,10 @@ document.addEventListener('click', e => {
 });
 el('bMenu').onclick = () => { sheetMode = sheetMode === 'menu' ? null : 'menu'; renderUI(); };
 el('tProfil').onclick = () => { sheetMode = sheetMode === 'profil' ? null : 'profil'; renderUI(); };
+el('replayClose').onclick = () => { el('replayBox').hidden = true; el('replayFrame').src = ''; };
+document.addEventListener('change', e => {
+  if (e.target.id === 'kotaPick') send({ aksi: 'ganti_kota', kota: e.target.value });
+});
 async function logout() {
   await fetch('/keluar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
   location.href = '/';
@@ -769,6 +858,7 @@ function route(from, to) {
 const av = { x: YARD_C[0], y: YARD_C[1], path: [], onArrive: null, flip: false, back: false, step: 0 };
 function walkTo(x, y, onArrive = null) {
   if (cine) return;
+  picking = null;
   camFree = false;
   av.path = route([av.x, av.y], [x, y]);
   av.onArrive = onArrive;
@@ -793,12 +883,12 @@ function spawnBurst(x, y, col) {
 }
 let picking = null;
 function pickUp(item) {
-  picking = item.id;
   walkTo(item.x, item.y + 6, async () => {
     spawnBurst(item.x, item.y - 20, '#9be37f');
     await send({ aksi: 'pungut', id: item.id });
     picking = null;
   });
+  picking = item.id;
 }
 
 // ---- cosmetic pedestrians & vehicles (DLE pools, capped at 4 NPC + 2 vehicles per DESIGN_SPEC v1.3 §18)
@@ -825,7 +915,7 @@ const newCar = (lane, x) => { const k = pickVeh(lane); return { k, lane, x: x ??
 const CARS = [newCar('R', 200), newCar('L', 1300)];
 let dropCars = [];            // vehicles scheduled by the server to drop litter
 const TREES = [               // trunk-side litter spot (server TITIK_POHON) -> crown centre
-  [[190, 150], [160, 47]], [[440, 195], [407, 100]], [[590, 258], [560, 153]], [[280, 345], [247, 233]], [[140, 482], [107, 373]],
+  [[190, 150], [160, 47]], [[440, 195], [407, 100]], [[465, 255], [435, 150]], [[280, 345], [247, 233]], [[140, 482], [107, 373]],
   [[700, 140], [740, 47]], [[1195, 152], [1167, 47]], [[1560, 125], [1580, 40]], [[1440, 270], [1467, 147]], [[1630, 600], [1600, 467]],
 ];
 let leaves = [];              // falling leaf particles
@@ -881,6 +971,19 @@ cv.addEventListener('click', e => {
   const wy = (e.clientY - r.top - VW.y0) / VW.sc;
   const item = litter().find(t => Math.hypot(wx - t.x, wy - (t.y - 20)) <= 48);
   if (item) { if (picking !== item.id) pickUp(item); return; }
+  // Floating river trash: safe riverbank pickup (avatar stays on bank, never enters water)
+  const srvNow = (meta ? meta.server_time : 0) + (Date.now() - received) / 1000;
+  for (const rv of (state.sampah_sungai || [])) {
+    const prog = Math.max(0, Math.min(1, (srvNow - rv.start_at) / Math.max(1, rv.end_at - rv.start_at)));
+    const rx = 60 + prog * (WORLD_W - 120), ry = riverTop(rx) + 28;
+    if (Math.hypot(wx - rx, wy - ry) <= 58) {
+      walkTo(Math.min(Math.max(rx, 40), WORLD_W - 40), riverTop(rx) - 18, async () => {
+        spawnBurst(rx, ry - 10, '#7bd8ff');
+        await send({ aksi: 'pungut_sungai', id: rv.id });
+      });
+      return;
+    }
+  }
   for (const ev of (state.dle_events || [])) {
     const a = DLE_ANCHORS[ev.anchor] || DLE_ANCHORS.road_shoulder;
     if (Math.hypot(wx - a.x, wy - (a.y - 30)) <= 60) { walkTo(a.x, a.y - 14); sheetMode = 'dle:' + ev.id; renderUI(); return; }
@@ -1067,9 +1170,30 @@ function drawWorld() {
     const bob = V.bob && !REDUCED ? Math.abs(Math.sin(c.x / 9)) * V.bob : 0;   // pedalling / horse gait
     D.push({ y, f: () => drawSpr(V.s, c.x, y - bob, V.w, L.dir !== V.face, 1, true, ROAD_ANGLE) });
   });
+  // Floating river trash (interpolated along RIVER polyline)
+  const srvNowR = (meta ? meta.server_time : 0) + (Date.now() - received) / 1000;
+  (s.sampah_sungai || []).forEach(rv => {
+    const prog = Math.max(0, Math.min(1, (srvNowR - rv.start_at) / Math.max(1, rv.end_at - rv.start_at)));
+    const rx = 60 + prog * (WORLD_W - 120), ry = riverTop(rx) + 28 + (REDUCED ? 0 : Math.sin(T / 8 + rx / 40) * 3);
+    D.push({ y: ry, f: () => {
+      const sprName = TRASH_SPR[rv.jenis] || 'trash_6';
+      drawSpr(sprName, rx, ry, 58, false, 0.96, true);
+      g.strokeStyle = 'rgba(200,245,255,.75)'; g.lineWidth = 2;
+      g.beginPath(); g.ellipse(rx, ry + 2, 24, 7, 0, 0, Math.PI * 2); g.stroke();
+    } });
+  });
+  // Placed modular machines on yard slots
+  const slotsMap = Object.fromEntries(((meta && meta.yard_slots) || []).map(sl => [sl.id, sl]));
+  (s.machines_owned || []).forEach(m => {
+    if (!m.slot || !slotsMap[m.slot]) return;
+    const sl = slotsMap[m.slot];
+    D.push({ y: sl.y, f: () => drawTag('⚙️ ' + m.canonical_id, sl.x, sl.y - 12, false) });
+  });
   if (s.job && s.job.status === 'in_transit') {
-    const cx = 900 + ((T * 3) % 760), cy = ROAD_Y(cx) - 8;
-    D.push({ y: cy, f: () => drawSpr('veh_gerobak_1', cx, cy, 120, false, 1, true, ROAD_ANGLE) });
+    const p = Math.max(0, Math.min(1, 1 - (s.job.tiba_pada - srvNowR) / Math.max(1, 30)));
+    const cx = p < 0.5 ? (860 + p * 2 * 760) : (1620 - (p - 0.5) * 2 * 760);
+    const cy = ROAD_Y(cx) + (p < 0.5 ? -8 : 26);
+    D.push({ y: cy, f: () => drawSpr('veh_gerobak_1', cx, cy, 120, p >= 0.5, 1, true, ROAD_ANGLE) });
   }
   if (cine) {
     const e = (performance.now() - cine.t0) / 1000;

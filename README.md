@@ -42,9 +42,15 @@ Buka http://127.0.0.1:8765 di browser. Progres tersimpan atomik pada `gaia.sqlit
 
 ## Evaluasi 2
 - **Karakter wanita** (`playerf_*.png`, pose sama dengan pria). Dipilih saat daftar (landing) dan bisa diganti di Profil (`ganti_karakter`).
-- **Kendaraan tampak samping** (`vehicles2_*.png`): pikap sayur, truk boks, motor, sepeda, becak, delman, motor sampah (gerobak saat angkut). Sprite dicerminkan sesuai arah dan dimiringkan mengikuti jalan. Pikap & truk hanya lajur atas (ke kanan), delman lajur bawah.
+- **Kendaraan tampak samping** (`veh_*_1.png`, `vehicles2_3/4`): pikap sayur, truk boks, motor, sepeda, becak, delman, motor sampah (gerobak saat angkut). Semua jenis berjalan di kedua lajur (`RL`), dicerminkan sesuai arah, dan dimiringkan mengikuti jalan.
 - **Sampah jatuh dari kendaraan:** server menjadwalkan secara acak (slot 40 detik, peluang 45%, maks 5 di jalan) dengan jenis kendaraan, arah, dan isi. Klien menampilkan kendaraan itu melintas dan sampah muncul tepat saat dijatuhkan.
 - **Sampah organik dari pohon:** daun kering, ranting, dahan patah, buah busuk (`pohon_*.png`) jatuh di dekat 10 pohon sekitar lahan (slot 60 detik, maks 6), dengan animasi daun berguguran; daun tunggal juga berguguran sesekali sebagai suasana.
+
+## Final Feature Freeze v1.0 (27 November 2026 · branch `dev/feature-freeze`)
+- **Ekonomi Realistis (`Realistic_v1`):** Modal uji utama 1.000.000 GC (dan opsi stress test 100.000 GC), 500 kg gudang, 3 benih starter (`CR01` ×2, `CR02` ×1), akun v0.9 lama dipertahankan tanpa menimpa saldo historis.
+- **Katalog Canonical Utuh (`data/catalog_seed.json`):** 282 material/produk, 307 mesin & energi (288 canonical + 19 alias), 15 tanaman (`CR01–CR15`), 4 pangan pokok NPC. Semua dapat dicari & dipelajari (paginated 24/halaman); mesin tanpa resep tervalidasi dan `WTE-001` (edukasi risiko) terkunci aman.
+- **Gameplay Lengkap:** Misi Tier `GT01–GT09` + `GSG` (God tanpa wajib pabrik besar / top-up), misi tambahan `PR01–PR10`, angkut realistis 5 node + misi berkala `TR01–TR05` (WIB + rotasi 3 jam), sampah sungai mengalir (`pungut_sungai` + backlog hilir), 15 tanaman + Vitalitas (0–100, tidak turun offline), Energy Center rumahan (`WTE-002`, `WTE-015`, `DRE-001..005`, `DRE-030`, `DRE-075..077`), penempatan mesin modular 6 slot, pasar mesin bekas & sewa, Gaia Radio, Selebrasi, Jurnal & Export Kartu PNG (3 ukuran), Knowledge Center, Replay Opening (tanpa hadiah), Admin Config Lokal + Audit + Rollback, Feedback lokal, Sandbox Top-Up & Fixture Leaderboard 14 papan. Seleksi akhir *Gaia's Chosen* sengaja tidak diaktifkan.
+- **Pengujian & Simulasi:** Jalankan `py -3 tools/test_feature_freeze.py` (39/39 PASS) dan `py -3 tools/simulate_economy_180d.py` (simulasi 90 & 180 hari, 6 skenario). Laporan lengkap di `docs/reports/FINAL_VALIDATION_AND_BETA_READINESS.md`.
 
 ## Menaruh di domain (mis. teranova.id)
 Server ini terikat ke `127.0.0.1:8765`. Untuk domain publik, jalankan di VPS dan pasang reverse proxy HTTPS (Caddy atau Nginx) yang meneruskan ke `127.0.0.1:8765` serta mengirim header `X-Forwarded-Proto` dan `X-Forwarded-For`. Tanpa HTTPS, cookie sesi tidak diberi flag `Secure`. `ThreadingHTTPServer` + SQLite cukup untuk uji coba tertutup; untuk peluncuran publik tetap mengikuti rencana infrastruktur produksi di bawah.
