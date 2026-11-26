@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d2a1f">
+<title>TERRA NOVA · Peradaban Bumi Baru</title>
+<meta name="description" content="TERRA NOVA: Peradaban Bumi Baru. Chapter I — The Calling of Gaia. Bangun pabrik daur ulang, pulihkan kota, dan selamatkan Bumi.">
+<link rel="preload" href="/assets/landing/hero.webp" as="image" type="image/webp">
+<style>
+:root{
+  --bg:#0b241a;--bg2:#103426;--panel:#123a2b;--line:#2f5f45;--gold:#e8c56e;--gold2:#c99b3c;
+  --cream:#fbf6e8;--ink:#1d2a22;--muted:#5b6b60;--txt:#f3f7ef;--leaf:#2f8a4a;
+  --serif:Georgia,"Times New Roman",serif;--sans:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 var(--sans)}
+a{color:inherit}
+button,input{font:inherit}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- top navigation ---------- */
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:20px;padding:8px clamp(14px,6vw,120px);
+  background:linear-gradient(#0f2e22f2,#0c261cf2);border-bottom:1px solid #ffffff14;backdrop-filter:blur(6px)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand img{width:44px;height:44px;object-fit:contain}
+.brand b{font:600 26px/1 var(--serif);letter-spacing:.02em;color:#fff;white-space:nowrap}
+.links{display:flex;gap:6px;margin:0 auto}
+.links a{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:999px;text-decoration:none;color:#e9f1e6;font-weight:600}
+.links a:hover{background:#ffffff12}
+.links a.on{border:2px solid var(--gold);background:#1d4a35}
+.btn-masuk{flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;padding:8px 18px;border-radius:10px;border:2px solid #e9f1e6aa;background:#0b241a;color:#fff;font-weight:700;cursor:pointer}
+.btn-masuk:hover{border-color:var(--gold)}
+
+/* ---------- hero ---------- */
+/* illustration (Gaia + title) on the left, sign-up card in its own column on the right, as in the design */
+.hero{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;
+  min-height:min(calc(100vh - 190px),780px);
+  background:radial-gradient(ellipse at 85% 30%,#2d6b47 0,#14402d 45%,var(--bg) 100%)}
+.art{position:relative;width:100%;min-height:100%;
+  background:url(/assets/landing/hero.webp) 75% 18%/cover no-repeat}
+.authcol{align-self:center}
+.art::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent 88%,#14402d 100%),linear-gradient(transparent 82%,var(--bg) 100%)}
+.authcol{padding:18px clamp(14px,3vw,48px) 18px 18px}
+
+/* ---------- auth card ---------- */
+.auth{position:relative;z-index:5;width:min(400px,calc(100vw - 28px));
+  background:linear-gradient(#fdf9ee,#f3ecd9);color:var(--ink);border-radius:18px;padding:16px 20px 18px;
+  border:2px solid #e2cf9a;box-shadow:0 18px 50px #0009,inset 0 0 0 1px #fff8}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:#e9e0c8;border-radius:12px;padding:4px;margin-bottom:12px}
+.tabs button{border:0;border-radius:9px;padding:10px;background:transparent;font-weight:700;font-size:16px;color:#2a3a30;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.tabs button[aria-selected="true"]{background:linear-gradient(#2b7a48,#1f5e37);color:#fff;box-shadow:0 2px 6px #0003}
+.auth h2{margin:2px 0 2px;text-align:center;font:700 19px/1.3 var(--sans);color:#14211a}
+.auth .lead{margin:0 0 12px;text-align:center;font-size:14px;color:#3d4a42}
+.field{position:relative;margin-bottom:10px}
+.field svg{position:absolute;left:13px;top:50%;width:20px;height:20px;margin-top:-10px;fill:none;stroke:#3a4a40;stroke-width:1.8}
+.field input{width:100%;min-height:48px;padding:10px 44px 10px 44px;border-radius:10px;border:1.5px solid #cfc6ae;background:#fffdf7;color:#14211a}
+.field input:focus{outline:none;border-color:#2b7a48;box-shadow:0 0 0 3px #2b7a4833}
+.eye{position:absolute;right:6px;top:50%;margin-top:-18px;width:36px;height:36px;border:0;background:transparent;border-radius:8px;cursor:pointer;display:grid;place-items:center}
+.eye svg{position:static;margin:0}
+.go{width:100%;min-height:52px;margin-top:4px;border:2px solid #1b4f2e;border-radius:999px;cursor:pointer;
+  background:linear-gradient(#3e9a54,#22693a);color:#fff;font-weight:800;font-size:18px;box-shadow:inset 0 2px 0 #ffffff40,0 4px 12px #1b4f2e55}
+.go:hover{background:linear-gradient(#47a85d,#267540)}
+.go:disabled{opacity:.6;cursor:progress}
+.or{display:flex;align-items:center;gap:10px;margin:12px 0;color:#5b6b60;font-size:14px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:#cfc6ae}
+.google{width:100%;min-height:48px;border:1.5px solid #cfc6ae;border-radius:10px;background:#fff;color:#14211a;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:not-allowed;opacity:.75}
+.google .g{color:#4285f4;font-size:18px}
+.google small{font-weight:600;color:#7a6a3a;background:#f4e7bf;border-radius:6px;padding:1px 7px;font-size:11px}
+.switch{margin:12px 0 0;text-align:center;font-size:14px;color:#3d4a42}
+.switch button{border:0;background:none;padding:0;color:#1f6b3b;font-weight:700;text-decoration:underline;cursor:pointer}
+.pick{display:flex;align-items:center;gap:8px;margin:2px 0 4px;font-size:14px;color:#3d4a42}
+.pick button{display:flex;align-items:center;gap:6px;padding:4px 12px 4px 6px;border-radius:10px;border:1.5px solid #cfc6ae;background:#fffdf7;color:#14211a;font-weight:700;cursor:pointer}
+.pick button img{height:34px}
+.pick button[aria-checked="true"]{border-color:#2b7a48;background:#e3f2e5;box-shadow:0 0 0 2px #2b7a4833}
+.msg{min-height:20px;margin:2px 0 6px;font-size:13px;color:#b3261e;text-align:center}
+.msg.ok{color:#1f6b3b}
+.auth :focus-visible,.top :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* ---------- feature strip ---------- */
+.strip{position:relative;z-index:4;display:grid;grid-template-columns:repeat(3,1fr) 1.05fr;gap:14px;
+  padding:0 clamp(14px,5vw,90px);margin-top:10px}
+.card{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:16px;
+  background:linear-gradient(#174632ee,#0f3324f2);border:1.5px solid #3e7055;box-shadow:0 10px 30px #0008}
+.card img{width:96px;height:auto;flex:none}
+.card h3{margin:0 0 4px;font:700 22px/1.15 var(--serif);color:#fff}
+.card p{margin:0;font-size:14px;color:#d8e6d6}
+.prog{flex-direction:column;align-items:stretch;gap:8px;border-color:var(--gold2)}
+.prog h3{font:700 17px var(--sans);display:flex;align-items:center;gap:8px}
+.badges{display:flex;justify-content:space-around}
+.badges img{width:78px}
+.prog p{text-align:center;font-size:12.5px}
+.prog p b{color:var(--gold);font-weight:600}
+
+/* ---------- info sections ---------- */
+.info{max-width:1100px;margin:0 auto;padding:64px clamp(16px,5vw,40px) 0}
+.info h2{font:700 clamp(26px,3.4vw,36px)/1.2 var(--serif);color:var(--gold);margin:0 0 12px}
+.info p{color:#dbe7d8;max-width:760px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:18px}
+.step{padding:16px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.step b{display:block;color:#fff;font-size:16px;margin-bottom:4px}
+.step span{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--gold);color:#1d2a22;font-weight:800;margin-bottom:8px}
+.step p{margin:0;font-size:14px}
+footer{margin-top:64px;padding:22px 16px 30px;text-align:center;color:#9fb6a6;font-size:13px;border-top:1px solid #ffffff12}
+
+/* ---------- opening cinematic overlay ---------- */
+#introBox{position:fixed;inset:0;z-index:100;background:#030808;transition:opacity .8s ease}
+#introBox[hidden]{display:none}
+#introBox iframe{transition:opacity .7s ease}
+#introBox.out iframe{opacity:0}
+#introBox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){
+  .strip{grid-template-columns:1fr 1fr;margin-top:16px}
+}
+@media (max-width:860px){
+  .links{display:none}
+  .top{justify-content:space-between}
+  .hero{grid-template-columns:1fr}
+  .hero{min-height:0}
+  .art{min-height:0;aspect-ratio:1240/647;background-position:center 18%}
+  .authcol{padding:0 12px 8px;margin-top:-26px}
+  .auth{margin:0 auto;width:min(440px,100%)}
+  .strip{grid-template-columns:1fr;margin-top:16px}
+  .card img{width:76px}
+}
+@media (max-width:420px){ .brand b{font-size:21px} .brand img{width:36px;height:36px} }
+@media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} #introBox{transition:none} }
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#beranda" aria-label="TERRA NOVA, beranda"><img src="/assets/img/ui_logo.png" alt=""><b>TERRA NOVA</b></a>
+  <nav class="links" aria-label="Menu">
+    <a href="#beranda" class="on">🏠 Beranda</a>
+    <a href="#tentang">🌿 Tentang</a>
+    <a href="#cerita">📖 Cerita</a>
+    <a href="#cara-bermain">🎮 Cara Bermain</a>
+  </nav>
+  <button class="btn-masuk" id="topMasuk" type="button">👤 Masuk</button>
+</header>
+
+<main>
+  <section class="hero" id="beranda">
+    <div class="art" role="img" aria-label="Dewi Gaia mengulurkan tangan; di kiri timbunan sampah dan cerobong asap, di kanan kota hijau dengan pabrik daur ulang, sungai jernih dan panel surya"></div>
+    <h1 class="sr-only">TERRA NOVA — Peradaban Bumi Baru. Chapter I — The Calling of Gaia. One Earth. One Destiny. A New Civilization.</h1>
+
+    <div class="authcol"><div class="auth" id="auth">
+      <div class="tabs" role="tablist" aria-label="Daftar atau masuk">
+        <button type="button" role="tab" id="tabDaftar" aria-selected="true" aria-controls="formDaftar">👥 Daftar</button>
+        <button type="button" role="tab" id="tabLogin" aria-selected="false" aria-controls="formLogin">↪ Login</button>
+      </div>
+
+      <form id="formDaftar" role="tabpanel" aria-labelledby="tabDaftar" novalidate>
+        <h2>Mulai perjalananmu bersama Gaia</h2>
+        <p class="lead">Buat akun dan bangun peradaban baru di Terra Nova.</p>
+        <div class="field">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+          <input id="dUser" name="username" autocomplete="username" placeholder="Nama Pengguna" aria-label="Nama pengguna" required minlength="3" maxlength="24">
+        </div>
+        <div class="field">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
+          <input id="dEmail" name="email" type="email" autocomplete="email" placeholder="Email" aria-label="Email" required maxlength="254">
+        </div>
+        <div class="field">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <input id="dPass" name="password" type="password" autocomplete="new-password" placeholder="Kata Sandi (min. 8 karakter)" aria-label="Kata sandi" required minlength="8" maxlength="128">
+          <button class="eye" type="button" data-eye="dPass" aria-label="Tampilkan kata sandi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+        <div class="pick" role="radiogroup" aria-label="Pilih karakter">
+          <span>Karakter:</span>
+          <button type="button" role="radio" aria-checked="true" data-gender="pria"><img src="/assets/sprites/player_5.png" alt="">Pria</button>
+          <button type="button" role="radio" aria-checked="false" data-gender="wanita"><img src="/assets/sprites/playerf_4.png" alt="">Wanita</button>
+        </div>
+        <p class="msg" id="dMsg" role="alert"></p>
+        <button class="go" id="dGo" type="submit">Daftar Sekarang ›</button>
+        <div class="or">atau</div>
+        <button class="google" type="button" disabled aria-disabled="true"><b class="g">G</b> Daftar dengan Google <small>segera hadir</small></button>
+        <p class="switch">Sudah punya akun? <button type="button" data-tab="login">Masuk</button></p>
+      </form>
+
+      <form id="formLogin" role="tabpanel" aria-labelledby="tabLogin" hidden novalidate>
+        <h2>Selamat datang kembali</h2>
+        <p class="lead">Lanjutkan perjalananmu bersama Gaia.</p>
+        <div class="field">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+          <input id="lUser" name="login" autocomplete="username" placeholder="Nama Pengguna atau Email" aria-label="Nama pengguna atau email" required>
+        </div>
+        <div class="field">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <input id="lPass" name="password" type="password" autocomplete="current-password" placeholder="Kata Sandi" aria-label="Kata sandi" required>
+          <button class="eye" type="button" data-eye="lPass" aria-label="Tampilkan kata sandi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+        <p class="msg" id="lMsg" role="alert"></p>
+        <button class="go" id="lGo" type="submit">Masuk ›</button>
+        <div class="or">atau</div>
+        <button class="google" type="button" disabled aria-disabled="true"><b class="g">G</b> Masuk dengan Google <small>segera hadir</small></button>
+        <p class="switch">Belum punya akun? <button type="button" data-tab="daftar">Daftar</button></p>
+      </form>
+    </div></div>
+  </section>
+
+  <section class="strip" aria-label="Fitur utama">
+    <article class="card"><img src="/assets/landing/ic_pabrik.webp" alt=""><div><h3>Bangun Pabrik</h3><p>Kelola limbah, daur ulang, dan ubahnya menjadi sumber daya berharga.</p></div></article>
+    <article class="card"><img src="/assets/landing/ic_kota.webp" alt=""><div><h3>Pulihkan Kota</h3><p>Bersihkan, kembangkan, dan hidupkan kembali kota-kota di Bumi.</p></div></article>
+    <article class="card"><img src="/assets/landing/ic_bumi.webp" alt=""><div><h3>Selamatkan Bumi</h3><p>Kurangi polusi, seimbangkan ekosistem, dan wujudkan Bumi yang lestari.</p></div></article>
+    <article class="card prog">
+      <h3>📊 Sistem Progres Game</h3>
+      <div class="badges"><img src="/assets/landing/b_bhi.webp" alt="BHI"><img src="/assets/landing/b_zwm.webp" alt="ZWM"><img src="/assets/landing/b_tier.webp" alt="Tier"></div>
+      <p>Kembangkan nilaimu (BHI, ZWM) dan naikkan <b>Tier</b> untuk membuka lebih banyak fasilitas dan teknologi!</p>
+    </article>
+  </section>
+
+  <section class="info" id="tentang">
+    <h2>Tentang Terra Nova</h2>
+    <p>Terra Nova adalah game simulasi pengelolaan sampah. Kamu memulai dari lahan kecil berpagar di depan jalan dan sungai: mengangkut sampah dari permukiman, pasar, dan tepi sungai, memilahnya menjadi enam fraksi, lalu mengolahnya menjadi kompos, pelet plastik, dan pot daur ulang. Setiap gram tercatat dalam neraca massa, tidak ada sampah yang hilang begitu saja.</p>
+  </section>
+
+  <section class="info" id="cerita">
+    <h2>Cerita: The Calling of Gaia</h2>
+    <p>Bumi memiliki siklusnya sendiri, namun kota tumbuh dan sampah terus menumpuk. Gaia, jiwa Bumi, telah menyaksikan perjalanan peradaban manusia dan merasakan setiap luka di tanah, sungai, dan udara. Ia tidak membutuhkan lebih banyak janji, ia membutuhkan tindakan. Hari ini Gaia memanggilmu untuk membangun peradaban baru, dimulai dari kotamu sendiri.</p>
+  </section>
+
+  <section class="info" id="cara-bermain">
+    <h2>Cara Bermain</h2>
+    <div class="steps">
+      <div class="step"><span>1</span><b>Daftar &amp; terima panggilan</b><p>Buat akun, saksikan opening cinematic, lalu terima panggilan Gaia.</p></div>
+      <div class="step"><span>2</span><b>Angkut sampah</b><p>Kirim gerobak ke permukiman, pasar, atau tepi sungai dan bawa muatannya ke gerbang.</p></div>
+      <div class="step"><span>3</span><b>Pilah &amp; olah</b><p>Pilah menjadi enam fraksi, serahkan B3 ke jalur khusus, olah organik dan plastik.</p></div>
+      <div class="step"><span>4</span><b>Tanam, panen, jual</b><p>Rawat Kebun Gaia dengan kompos buatanmu dan jual hasilnya di Pasar Kota.</p></div>
+    </div>
+  </section>
+</main>
+<footer>TERRA NOVA · Peradaban Bumi Baru · Chapter I — The Calling of Gaia</footer>
+
+<!-- opening cinematic: plays right after sign-up, ends with "Aku menerima panggilanmu" / "Ulangi cinematic" -->
+<div id="introBox" hidden></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() :
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
+let username = '';
+let gender = 'pria';
+document.querySelectorAll('.pick button').forEach(b => b.onclick = () => {
+  gender = b.dataset.gender;
+  document.querySelectorAll('.pick button').forEach(x => x.setAttribute('aria-checked', String(x === b)));
+});
+
+async function postJSON(url, body) {
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) });
+  let data = {};
+  try { data = await res.json(); } catch {}
+  return { ok: res.ok, data };
+}
+
+/* ---- tabs ---- */
+function showTab(which) {
+  const login = which === 'login';
+  $('tabDaftar').setAttribute('aria-selected', String(!login));
+  $('tabLogin').setAttribute('aria-selected', String(login));
+  $('formDaftar').hidden = login;
+  $('formLogin').hidden = !login;
+  (login ? $('lUser') : $('dUser')).focus({ preventScroll: true });
+}
+$('tabDaftar').onclick = () => showTab('daftar');
+$('tabLogin').onclick = () => showTab('login');
+document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+$('topMasuk').onclick = () => { showTab('login'); $('auth').scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+document.querySelectorAll('[data-eye]').forEach(b => b.onclick = () => {
+  const inp = $(b.dataset.eye), show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  b.setAttribute('aria-label', show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+});
+
+/* ---- sign up -> cinematic plays immediately ---- */
+$('formDaftar').onsubmit = async e => {
+  e.preventDefault();
+  const u = $('dUser').value.trim(), m = $('dEmail').value.trim(), p = $('dPass').value;
+  const msg = $('dMsg'); msg.className = 'msg';
+  if (!/^[A-Za-z0-9_.]{3,24}$/.test(u)) { msg.textContent = 'Nama pengguna 3–24 karakter: huruf, angka, titik atau garis bawah.'; $('dUser').focus(); return; }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(m)) { msg.textContent = 'Alamat email tidak valid.'; $('dEmail').focus(); return; }
+  if (p.length < 8) { msg.textContent = 'Kata sandi minimal 8 karakter.'; $('dPass').focus(); return; }
+  // open the cinematic inside this click so the browser lets it play with sound
+  openIntro();
+  $('dGo').disabled = true;
+  const { ok, data } = await postJSON('/daftar', { username: u, email: m, password: p });
+  $('dGo').disabled = false;
+  if (!ok) { closeIntro(); msg.textContent = data.pesan || 'Pendaftaran gagal. Coba lagi.'; return; }
+  username = data.username;
+};
+
+/* ---- log in: returning players go straight to their yard ---- */
+$('formLogin').onsubmit = async e => {
+  e.preventDefault();
+  const msg = $('lMsg'); msg.className = 'msg';
+  if (!$('lUser').value.trim() || !$('lPass').value) { msg.textContent = 'Isi nama pengguna/email dan kata sandi.'; return; }
+  $('lGo').disabled = true;
+  const { ok, data } = await postJSON('/masuk', { login: $('lUser').value.trim(), password: $('lPass').value });
+  $('lGo').disabled = false;
+  if (!ok) { msg.textContent = data.pesan || 'Gagal masuk. Coba lagi.'; return; }
+  username = data.username;
+  if (data.diterima) { location.href = '/'; return; }
+  openIntro();   // signed up earlier but never accepted Gaia's call
+};
+
+/* ---- opening cinematic ---- */
+function openIntro() {
+  const box = $('introBox');
+  if (!box.hidden) return;
+  box.innerHTML = '<iframe id="introFrame" src="/intro/?embed=1&autostart=1" title="Opening cinematic TERRA NOVA" allow="autoplay; fullscreen" allowfullscreen></iframe>';
+  box.hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('introFrame').focus();
+}
+function closeIntro() {
+  const box = $('introBox');
+  box.hidden = true; box.innerHTML = ''; document.body.style.overflow = '';
+}
+let accepted = null;
+async function acceptCall() {
+  // "Langsung ke lahan": the starter character and city use the defaults; the name is the username
+  return postJSON('/aksi', { key: uuid(), aksi: 'terima', nama: (username || 'Penjaga Bumi').slice(0, 24), gender,
+    avatar: { rambut: 'pendek', baju: 'hijau', topi: 'rimba', aksesori: 'tanpa' }, kota: 'Bandung' });
+}
+addEventListener('message', async e => {
+  if (e.origin !== location.origin || !e.data) return;
+  if (e.data.type === 'terranova:intro-accepted' && !accepted) accepted = acceptCall();
+  if (e.data.type === 'terranova:intro-done') {
+    if (!accepted) accepted = acceptCall();
+    await accepted;
+    $('introBox').classList.add('out');
+    setTimeout(() => { location.href = '/'; }, 700);
+  }
+});
+
+/* ---- a signed-in player who has not accepted yet (e.g. reloaded during the film) sees the cinematic again ---- */
+fetch('/akun', { credentials: 'same-origin' }).then(r => r.json()).then(a => {
+  if (a.masuk && !a.diterima) { username = a.username; openIntro(); }
+  else if (a.masuk && a.diterima) location.href = '/';
+}).catch(() => {});
+
+/* ---- highlight the menu item of the section in view ---- */
+const navLinks = [...document.querySelectorAll('.links a')];
+const io = new IntersectionObserver(es => es.forEach(en => {
+  if (en.isIntersecting) navLinks.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id));
+}), { rootMargin: '-45% 0px -50% 0px' });
+['beranda', 'tentang', 'cerita', 'cara-bermain'].forEach(id => io.observe($(id)));
+</script>
+</body>
+</html>

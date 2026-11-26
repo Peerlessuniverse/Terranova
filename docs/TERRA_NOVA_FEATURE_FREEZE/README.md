@@ -1,0 +1,2 @@
+# TERRA NOVA — Feature Freeze package
+Start with 00_FEATURE_FREEZE.md, then docs/TERRA_NOVA_GAME_SPEC_v0.10.md and docs/fase-0/DESIGN_SPEC_v1.5.md, Constitution v2.0 in docs/catalogs. Original catalogs and prior specs included; history preserved. Companion *_SYNC documents are proposals to merge with actual repo originals, not drop-in replacements. No code, source asset images or music, database, simulation output, or deployment included. Original reference links may resolve only inside repository. Do not replace repo wholesale. Read ANTIGRAVITY_HANDOFF.md.

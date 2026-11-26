@@ -1,0 +1,22 @@
+# Roadmap persetujuan dan peluncuran
+Semua tahap sesudah Fase 0 menunggu keputusan pemilik. Batas waktu berbasis gate; belum ada estimasi tanggal kalender karena kapasitas tim dan jam tester belum ditentukan.
+
+| Fase | Modul / penanggung jawab usulan | Bukti sebelum bergerak |
+|---|---|---|
+| 0 · review | Pemilik + desainer ekonomi menilai D03–D08. Arsitek dan QA memeriksa transaksi, formula musim dan matriks tes. Editor/pemilik meninjau alur cerita. | Delapan dokumen, konfigurasi, skrip dan hasil tersedia. Gate masih terbuka: putuskan kredit/target, jalur nontermal, starter/pemulihan; simulasikan kembali, rekam keputusan dalam induk, lalu izin eksplisit pemilik. |
+| 1 · prototipe solo | Satu modul per sesi: (1) kontrak/pilah/neraca, (2) kompos/plastik/pasar sistem, (3) tutorial dan prolog motion comic. | Satu pemain dapat bermain tujuh hari simulasi, melihat nasib setiap fraksi dan melakukan penjualan pertama sendiri. Tiga unit awal, data lokal terkontrol. QA Q01/02/05/13. |
+| 2 · alpha privat | Auth + DB/RLS → Lazy Tick dan receipt → misi/tier/Karma → persistensi cerita. | 10–20 tester [U]. Akses silang, race, retry, reset, restoration progres dan gate sains diuji. Bukti Q03–08/11/12. |
+| 3 · beta tertutup | Kota manual, misi lintas kota, snapshot Bumi, visit, ranking normalisasi dan pasar sistem. | 50–100 tester, 20 concurrent [U]. Angka pendidikan terverifikasi; Q09/10/13/18, indikator §12 dan biaya dimonitor. |
+| 4 · beta terbuka | Kota 2D, PWA aset publik, kosmetik, monitoring, donasi opsional setelah rekonsiliasi dan ketentuan penyedia. | Target 500 akun terdaftar, load test 100 concurrent [U]. Q15/16/17. Data umur, klasifikasi, lisensi, privasi, merek dan pemisahan proyek ditinjau sebelum publikasi. |
+| 5 · Season 1 | Musim resmi, Hall of Eternity, perdagangan langsung hanya jika transaksi dan moderasi siap. | Q01–18 yang relevan lulus, rollback/restore terlatih, pemilik operasional dan kanal dukungan ditetapkan. |
+
+**Urutan rilis.** Dev, staging dan prod terpisah. Flag untuk opening, kota, pasar, musim. Uji migrasi kompatibel mundur di staging, backup sebelum rilis, latihan restore dan rekonsiliasi. Saat insiden, hentikan fitur mutasi terdampak lewat flag, pertahankan bukti receipt/ledger, cek saldo dan versi. Rollback aplikasi memakai skema kompatibel; perubahan data dipulihkan lewat restore terkendali atau entri koreksi yang diaudit. Aktifkan kembali sesudah cek konsistensi. Perluas cohort hanya jika error, latensi, biaya dan retensi stabil.
+ 
+**Titik masuk review.** Baca GAME_SPEC_DECISIONS.md → GAME_ECONOMY_MODEL.md → TECHNICAL_DESIGN.md dan DATABASE_SCHEMA.md → OPENING_STORYBOARD.md dan PERFORMANCE_BUDGET.md → TEST_PLAN.md. Pemilik memutuskan perubahan mekanik, editor menandatangani provenance dan sains, QA menyimpan bukti gate, arsitek mencatat versi aturan. Satu modul per sesi sesudah persetujuan. Arsip Fase 0 hanya memuat proposal, simulasi dan hasilnya.
+
+## Penambahan Kebun Gaia, DWE & DLE (v0.8 / DESIGN_SPEC v1.3)
+
+- **Indeks Fase 0 terkini:** Induk `TERRA_NOVA_GAME_SPEC_v0.8.md` (histori v0.6/v0.7), visual `DESIGN_SPEC_v1.3.md` (`DESIGN_SPEC.md`, histori v1.2), `GAME_SPEC_DECISIONS.md` (D01–D21), `REVIEW_FASE_0.md`, `TECHNICAL_DESIGN.md`, `DATABASE_SCHEMA.md`, `GAME_ECONOMY_MODEL.md`, `KEBUN_GAIA.md`, `OPENING_STORYBOARD.md`, `PERFORMANCE_BUDGET.md`, `TEST_PLAN.md` (Q01–Q28), `IMPLEMENTATION_ROADMAP.md`, serta skrip `simulasi.py`, `uji_batas.py`, `simulasi_kebun.py`, `simulasi_dwe_dle.py` dan hasil CSV di `hasil/`.
+- **Fase 0 · Gate review (wajib sebelum Fase 1):** Tetapkan keputusan D03–D08, D14–D19 (Kebun & DWE), dan D21 (parameter DLE). Bukti reproduksibilitas dan pengujian model DWE+DLE tersedia pada `hasil/dwe_dle_*.csv`.
+- **Fase 1 · Prototipe solo (setelah izin):** (1) Spike renderer 2D pixel art isometrik (satu lahan, gerbang, jalan aspal, sungai) + HUD responsif (Q20–Q21/Q24); (2) Loop solo DWE 3 node privat (Permukiman, Pasar, Sungai), WCS gerobak, pilah, kompos/plastik, Neraca Massa (Q01/Q02/Q05/Q26); (3) DLE jalan & sungai hidup (NPC litter + sayur jatuh) dengan klaim atomik & list fallback (Q27); (4) Onboarding eco-fantasy + tutorial ≤3 menit (Q13/Q22/Q23) dan Kebun Gaia (Q19/Q25) setelah loop solo stabil.
+- **Fase 2–5 · Alpha hingga Season 1:** Migrasi DWE/DLE dari fixture privat ke stok kota bersama per node pada Fase 3 (tanpa menyalin insiden sama ke semua akun dan tanpa menggandakan kontribusi global), penambahan event timbulan (D19), dan kohort returned materials (D17) pada fase lanjutan sesuai gate QA Q01–Q28.

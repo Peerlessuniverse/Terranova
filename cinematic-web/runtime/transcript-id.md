@@ -1,0 +1,23 @@
+# TERRA NOVA - Opening Cinematic (transkrip)
+
+- **Narator** (0.4s): Sejak awal, Bumi memiliki siklusnya sendiri.
+- **Narator** (4.4s): Setiap air yang mengalir, setiap daun yang gugur, memiliki tempat dalam perjalanan kehidupan.
+- **Narator** (12.6s): Kota tumbuh. Industri berkembang. Konsumsi meningkat.
+- **Narator** (17.2s): Pada tahun 2023, dunia menghasilkan sekitar 2,1 miliar ton sampah perkotaan.
+- **Narator** (30.4s): Namun manusia tidak tinggal diam.
+- **Narator** (33.5s): Mereka memilah, membersihkan, mendaur ulang, dan mengedukasi.
+- **Narator** (38.9s): Perjuangan itu membawa perubahan.
+- **Narator** (41.6s): Tetapi tantangan yang kita hadapi masih begitu besar.
+- **Narator** (47.9s): Di Indonesia, lebih dari 34 juta ton sampah tercatat pada 2025.
+- **Narator** (55.2s): Setiap tahun, sekitar 19 hingga 23 juta ton plastik memasuki perairan dunia.
+- **Narator** (61.8s): Masihkah ada harapan?
+- **Gaia** (69.2s): Aku adalah Gaia.
+- **Gaia** (71.8s): Aku telah menyaksikan perjalanan peradabanmu.
+- **Gaia** (75.5s): Aku merasakan setiap luka yang tertinggal di tanah, di sungai, dan di udara.
+- **Gaia** (87.3s): Manusia telah berusaha menyembuhkanku.
+- **Gaia** (90.5s): Namun luka-lukaku terus bertambah.
+- **Gaia** (94.1s): Aku tidak membutuhkan lebih banyak janji.
+- **Gaia** (97.7s): Aku membutuhkan tindakan.
+- **Gaia** (103.3s): Bukan kekayaan, kekuatan, atau kedudukanmu yang membuatku memanggilmu.
+- **Gaia** (109.3s): Aku masih percaya manusia dapat berubah.
+- **Gaia** (112.6s): Maukah engkau membantuku?

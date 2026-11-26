@@ -1,0 +1,10 @@
+__pycache__/
+*.sqlite3*
+tools/akun_uji.local.txt
+_backup/
+*.pyc
+gaia.sqlite3
+Terranova-main.zip
+cinematic-motlab/
+Asset/generated/
+cinematic-web/_build/

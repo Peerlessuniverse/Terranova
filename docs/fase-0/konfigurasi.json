@@ -1,0 +1,157 @@
+{
+  "versi": "uji-0.6.1",
+  "hari": 90,
+  "benih": [
+    11,
+    27,
+    43,
+    59,
+    75
+  ],
+  "nama": [
+    "organik",
+    "plastik",
+    "kertas",
+    "logam_kaca",
+    "residu",
+    "B3"
+  ],
+  "profil": [
+    [
+      80,
+      7,
+      5,
+      3,
+      4,
+      1
+    ],
+    [
+      12,
+      65,
+      8,
+      5,
+      9,
+      1
+    ],
+    [
+      50,
+      18,
+      10,
+      7,
+      14,
+      1
+    ],
+    [
+      18,
+      8,
+      6,
+      5,
+      62,
+      1
+    ],
+    [
+      50,
+      18,
+      10,
+      7,
+      14,
+      1
+    ]
+  ],
+  "strategi": [
+    "organik",
+    "plastik",
+    "campuran",
+    "termal",
+    "landfill"
+  ],
+  "kapasitas": [
+    150,
+    100,
+    100,
+    100,
+    120,
+    100
+  ],
+  "opex": [
+    30,
+    80,
+    60,
+    60,
+    160,
+    35
+  ],
+  "produk_persen": [
+    45,
+    85,
+    83,
+    92,
+    18,
+    0
+  ],
+  "aliran_terkendali_persen": [
+    50,
+    10,
+    10,
+    5,
+    80,
+    100
+  ],
+  "harga": [
+    5,
+    14,
+    9,
+    12,
+    7,
+    0
+  ],
+  "permintaan": [
+    430,
+    340,
+    210,
+    140,
+    140,
+    0
+  ],
+  "bobot": [
+    1,
+    3,
+    2,
+    4,
+    6,
+    8
+  ],
+  "tier": [
+    0,
+    500,
+    2000,
+    6000,
+    15000,
+    35000,
+    80000,
+    180000,
+    400000
+  ],
+  "modal": 10000,
+  "gudang_kg": 4000,
+  "pilah_kg_jam": 200,
+  "opex_pilah": 50,
+  "angkut_per_kg": 0.18,
+  "tipping_per_kg": 0.8,
+  "pajak_per_kg": 0.12,
+  "perawatan_harian": 40,
+  "harga_upgrade": 2500,
+  "faktor_level": 1.15,
+  "maks_level": 3,
+  "batas_poin_harian": 6100,
+  "cap_jam": 8,
+  "target_kg_per_aktif": 700,
+  "karma_landfill_per_kg": 0.013,
+  "karma_pulih_per_kg": 0.002,
+  "batas_residu": 0.1,
+  "minimum_pribadi_kg": 6000,
+  "misi_harian_kandidat": 2200,
+  "kemurnian_persen": 90,
+  "ambang_plastik": 80,
+  "efisiensi_filter": 0.95
+}

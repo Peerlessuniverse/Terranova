@@ -1,0 +1,193 @@
+{
+ "title": "TERRA NOVA - Opening Cinematic",
+ "chapter": "Chapter I - The Calling of Gaia",
+ "version": "1.3-web.1",
+ "duration": 120.0,
+ "width": 1920,
+ "height": 1080,
+ "renderer": "canvas2d-realtime",
+ "audio": "audio/opening.m4a",
+ "accept_audio": "audio/accept.m4a",
+ "captions": {
+  "id": "subtitle-id.vtt",
+  "en": "subtitle-en.vtt"
+ },
+ "transcript": "transcript-id.md",
+ "ending_still": "img/ending-gaia.webp",
+ "poster": "img/A01.webp",
+ "scenes": [
+  {
+   "id": "01-A01",
+   "start": 0.0,
+   "total": 4.45,
+   "fade": 0
+  },
+  {
+   "id": "02-A02",
+   "start": 4.0,
+   "total": 4.45,
+   "fade": 0.45
+  },
+  {
+   "id": "03-A03",
+   "start": 8.0,
+   "total": 4.45,
+   "fade": 0.45
+  },
+  {
+   "id": "04-B01",
+   "start": 12.0,
+   "total": 6.4,
+   "fade": 0.45
+  },
+  {
+   "id": "05-B02",
+   "start": 18.0,
+   "total": 6.45,
+   "fade": 0.4
+  },
+  {
+   "id": "06-B03",
+   "start": 24.0,
+   "total": 6.45,
+   "fade": 0.45
+  },
+  {
+   "id": "07-C01",
+   "start": 30.0,
+   "total": 6.4,
+   "fade": 0.45
+  },
+  {
+   "id": "08-C02",
+   "start": 36.0,
+   "total": 6.4,
+   "fade": 0.4
+  },
+  {
+   "id": "09-C03",
+   "start": 42.0,
+   "total": 6.45,
+   "fade": 0.4
+  },
+  {
+   "id": "10-D01",
+   "start": 48.0,
+   "total": 6.45,
+   "fade": 0.45
+  },
+  {
+   "id": "11-D02",
+   "start": 54.0,
+   "total": 6.45,
+   "fade": 0.45
+  },
+  {
+   "id": "12-D03",
+   "start": 60.0,
+   "total": 5.0,
+   "fade": 0.45
+  },
+  {
+   "id": "13-E01",
+   "start": 65.0,
+   "total": 4.5,
+   "fade": 0
+  },
+  {
+   "id": "14-E02",
+   "start": 69.0,
+   "total": 6.45,
+   "fade": 0.5
+  },
+  {
+   "id": "15-E03",
+   "start": 75.0,
+   "total": 6.45,
+   "fade": 0.45
+  },
+  {
+   "id": "16-E04",
+   "start": 81.0,
+   "total": 6.45,
+   "fade": 0.45
+  },
+  {
+   "id": "17-F01",
+   "start": 87.0,
+   "total": 5.45,
+   "fade": 0.45
+  },
+  {
+   "id": "18-F02",
+   "start": 92.0,
+   "total": 6.45,
+   "fade": 0.45
+  },
+  {
+   "id": "19-F03",
+   "start": 98.0,
+   "total": 5.45,
+   "fade": 0.45
+  },
+  {
+   "id": "20-G01",
+   "start": 103.0,
+   "total": 5.45,
+   "fade": 0.45
+  },
+  {
+   "id": "21-G02",
+   "start": 108.0,
+   "total": 5.45,
+   "fade": 0.45
+  },
+  {
+   "id": "22-G03",
+   "start": 113.0,
+   "total": 5.35,
+   "fade": 0.45
+  },
+  {
+   "id": "23-H01",
+   "start": 118.0,
+   "total": 2.0,
+   "fade": 0.35
+  }
+ ],
+ "bytes": {
+  "audio/accept.m4a": 75392,
+  "audio/opening.m4a": 1493115,
+  "captions.json": 3922,
+  "css/player.css": 10308,
+  "img/A01.webp": 62652,
+  "img/A03.webp": 119548,
+  "img/B01.webp": 194920,
+  "img/B02.webp": 169182,
+  "img/B03.webp": 76002,
+  "img/C01.webp": 208922,
+  "img/C02.webp": 158946,
+  "img/C03.webp": 192742,
+  "img/D01.webp": 152514,
+  "img/D02.webp": 44948,
+  "img/D03.webp": 57436,
+  "img/E04_portrait.webp": 129700,
+  "img/F01.webp": 76336,
+  "img/F03_determined.webp": 61168,
+  "img/G01.webp": 100676,
+  "img/G02_yard.webp": 328590,
+  "img/G03_gaia_welcome.webp": 71654,
+  "img/ending-bg.webp": 33276,
+  "img/ending-gaia.webp": 119558,
+  "img/gaia_full_front.webp": 95048,
+  "img/gaia_full_side.webp": 31348,
+  "img/ui_logo.webp": 8908,
+  "index.html": 4622,
+  "js/engine.js": 15852,
+  "js/player.js": 14340,
+  "js/scenes.js": 48309,
+  "subtitle-en.vtt": 1929,
+  "subtitle-id.vtt": 2035,
+  "transcript-id.md": 1560
+ }
+}

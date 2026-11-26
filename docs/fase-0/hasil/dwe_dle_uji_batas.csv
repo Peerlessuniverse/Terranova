@@ -1,0 +1,7 @@
+uji,lulus,detail
+dle_deterministik_reload,True,gram=658 identik saat reload
+dle_dua_tab_klaim_sekali,True,"1 sukses, 1 ditolak, inv=1500g"
+dle_gudang_penuh_tolak,True,status tetap available saat ruang 1000g < 2000g
+dle_b3_ditolak,True,"0g terambil, B3 tetap 5000g di node"
+wcs_reservasi_expiry_dan_kargo,True,reservasi kembali 20kg; kargo in_transit konservatif
+dle_tidak_mengalahkan_kontrak,True,maks rasio DLE=4.66% (<15%)

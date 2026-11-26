@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#030808">
+<title>TERRA NOVA — The Calling of Gaia</title>
+<meta name="description" content="Opening cinematic TERRA NOVA: Peradaban Bumi Baru, Chapter I — The Calling of Gaia.">
+<link rel="preload" href="img/A01.webp" as="image" type="image/webp">
+<link rel="stylesheet" href="css/player.css">
+</head>
+<body>
+<main id="app" class="is-intro" data-login-url="../">
+
+  <!-- 16:9 stage: canvas renders the film in real time from images + audio -->
+  <div class="stage" id="stage">
+    <div class="frame" id="frame">
+      <canvas id="film" width="1920" height="1080" aria-hidden="true"></canvas>
+      <div class="poster" id="poster" style="background-image:url(img/A01.webp)"></div>
+      <div class="spinner" id="spinner" hidden aria-hidden="true"></div>
+    </div>
+    <div class="captions" id="captions" aria-live="polite"></div>
+  </div>
+
+  <!-- Start screen (explicit start, so audio may play) -->
+  <section class="intro" id="intro" aria-labelledby="intro-title">
+    <p class="intro-kicker">Chapter I</p>
+    <h1 id="intro-title">TERRA NOVA</h1>
+    <p class="intro-sub">The Calling of Gaia</p>
+    <div class="intro-actions">
+      <button class="btn btn-primary" id="btn-start" disabled>
+        <span class="btn-label">Memuat…</span>
+      </button>
+      <button class="btn btn-ghost" id="btn-skip-intro">Lewati</button>
+    </div>
+    <div class="load-bar" aria-hidden="true"><span id="load-fill"></span></div>
+    <p class="intro-note">Nyalakan suara untuk pengalaman terbaik · 2 menit · subtitle aktif</p>
+  </section>
+
+  <!-- Player controls -->
+  <div class="controls" id="controls" role="toolbar" aria-label="Kontrol cinematic">
+    <button class="ctl" id="btn-play" aria-label="Jeda" title="Jeda (Spasi)">
+      <svg viewBox="0 0 24 24" class="i-pause"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>
+      <svg viewBox="0 0 24 24" class="i-play"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <div class="progress" id="progress" role="slider" tabindex="0" aria-label="Posisi" aria-valuemin="0" aria-valuemax="120" aria-valuenow="0">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <span class="time" id="time">0:00 / 2:00</span>
+    <button class="ctl" id="btn-mute" aria-label="Bisukan" title="Suara (M)">
+      <svg viewBox="0 0 24 24" class="i-vol"><path d="M4 9v6h4l5 4V5L8 9zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
+      <svg viewBox="0 0 24 24" class="i-muted"><path d="M4 9v6h4l5 4V5L8 9zm16.6 0L19 7.4 16.4 10 13.8 7.4 12.4 9l2.6 2.6-2.6 2.6 1.4 1.4 2.6-2.6 2.6 2.6 1.6-1.4-2.6-2.6z"/></svg>
+    </button>
+    <button class="ctl ctl-text" id="btn-cc" aria-label="Subtitle: Indonesia" title="Subtitle (C)">ID</button>
+    <button class="ctl ctl-text" id="btn-motion" aria-label="Gerak penuh" title="Kurangi gerak">Gerak</button>
+    <button class="ctl" id="btn-fs" aria-label="Layar penuh" title="Layar penuh (F)">
+      <svg viewBox="0 0 24 24"><path d="M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z"/></svg>
+    </button>
+    <button class="ctl ctl-text ctl-skip" id="btn-skip" title="Lewati (S)">Lewati ›</button>
+  </div>
+
+  <!-- H02 interactive hold -->
+  <section class="ending" id="ending" hidden aria-labelledby="end-title">
+    <div class="ending-bg" style="background-image:url(img/ending-bg.webp)"></div>
+    <img class="ending-gaia" src="img/ending-gaia.webp" alt="Dewi Gaia mengulurkan tangannya ke arahmu" loading="lazy" width="522" height="637">
+    <div class="ending-copy">
+      <p class="ending-quote">Bumi tidak membutuhkan penghuni baru.<br>Bumi membutuhkan peradaban baru.</p>
+      <h2 id="end-title">TERRA NOVA <span>— Peradaban Bumi Baru</span></h2>
+      <p class="ending-chapter">Chapter I — The Calling of Gaia</p>
+      <p class="ending-motto">One Earth. One Destiny. A New Civilization.</p>
+      <div class="ending-actions" id="ending-actions">
+        <button class="btn btn-primary" id="btn-accept">Aku menerima panggilanmu</button>
+        <button class="btn btn-ghost" id="btn-replay">Ulangi cinematic</button>
+      </div>
+      <p class="ending-accepted" id="accepted" hidden></p>
+      <a class="ending-login" id="login-link" href="../">Sudah punya akun? Masuk</a>
+    </div>
+  </section>
+
+  <noscript><p class="noscript">Cinematic membutuhkan JavaScript. <a href="transcript-id.md">Baca transkrip</a>.</p></noscript>
+</main>
+<script type="module" src="js/player.js"></script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+{
+ "player": [
+  {
+   "file": "player_1.png",
+   "w": 108,
+   "h": 150
+  },
+  {
+   "file": "player_2.png",
+   "w": 106,
+   "h": 150
+  },
+  {
+   "file": "player_3.png",
+   "w": 69,
+   "h": 150
+  },
+  {
+   "file": "player_4.png",
+   "w": 65,
+   "h": 150
+  },
+  {
+   "file": "player_5.png",
+   "w": 67,
+   "h": 150
+  },
+  {
+   "file": "player_6.png",
+   "w": 65,
+   "h": 150
+  },
+  {
+   "file": "player_7.png",
+   "w": 65,
+   "h": 150
+  },
+  {
+   "file": "player_8.png",
+   "w": 65,
+   "h": 150
+  }
+ ],
+ "npc": [
+  {
+   "file": "npc_1.png",
+   "w": 64,
+   "h": 120
+  },
+  {
+   "file": "npc_2.png",
+   "w": 63,
+   "h": 120
+  },
+  {
+   "file": "npc_3.png",
+   "w": 58,
+   "h": 120
+  },
+  {
+   "file": "npc_4.png",
+   "w": 58,
+   "h": 120
+  },
+  {
+   "file": "npc_5.png",
+   "w": 64,
+   "h": 120
+  },
+  {
+   "file": "npc_6.png",
+   "w": 59,
+   "h": 120
+  },
+  {
+   "file": "npc_7.png",
+   "w": 59,
+   "h": 120
+  }
+ ],
+ "vehicles": [
+  {
+   "file": "vehicles_1.png",
+   "w": 264,
+   "h": 216
+  },
+  {
+   "file": "vehicles_2.png",
+   "w": 300,
+   "h": 284
+  },
+  {
+   "file": "vehicles_3.png",
+   "w": 240,
+   "h": 224
+  }
+ ],
+ "trash": [
+  {
+   "file": "trash_1.png",
+   "w": 196,
+   "h": 140
+  },
+  {
+   "file": "trash_2.png",
+   "w": 176,
+   "h": 164
+  },
+  {
+   "file": "trash_3.png",
+   "w": 200,
+   "h": 172
+  },
+  {
+   "file": "trash_4.png",
+   "w": 192,
+   "h": 128
+  },
+  {
+   "file": "trash_5.png",
+   "w": 204,
+   "h": 140
+  },
+  {
+   "file": "trash_6.png",
+   "w": 160,
+   "h": 192
+  },
+  {
+   "file": "trash_7.png",
+   "w": 196,
+   "h": 136
+  },
+  {
+   "file": "trash_8.png",
+   "w": 224,
+   "h": 168
+  }
+ ],
+ "garden": [
+  {
+   "file": "garden_1.png",
+   "w": 320,
+   "h": 204
+  },
+  {
+   "file": "garden_2.png",
+   "w": 320,
+   "h": 204
+  },
+  {
+   "file": "garden_3.png",
+   "w": 316,
+   "h": 208
+  },
+  {
+   "file": "garden_4.png",
+   "w": 324,
+   "h": 260
+  }
+ ],
+ "badges": [
+  {
+   "file": "badges_1.png",
+   "w": 188,
+   "h": 212
+  },
+  {
+   "file": "badges_2.png",
+   "w": 188,
+   "h": 212
+  },
+  {
+   "file": "badges_3.png",
+   "w": 188,
+   "h": 212
+  },
+  {
+   "file": "badges_4.png",
+   "w": 188,
+   "h": 212
+  },
+  {
+   "file": "badges_5.png",
+   "w": 188,
+   "h": 208
+  },
+  {
+   "file": "badges_6.png",
+   "w": 188,
+   "h": 208
+  },
+  {
+   "file": "badges_7.png",
+   "w": 188,
+   "h": 208
+  },
+  {
+   "file": "badges_8.png",
+   "w": 188,
+   "h": 208
+  }
+ ],
+ "playerf": [
+  {
+   "file": "playerf_1.png",
+   "w": 112,
+   "h": 150
+  },
+  {
+   "file": "playerf_2.png",
+   "w": 113,
+   "h": 150
+  },
+  {
+   "file": "playerf_3.png",
+   "w": 65,
+   "h": 150
+  },
+  {
+   "file": "playerf_4.png",
+   "w": 69,
+   "h": 150
+  },
+  {
+   "file": "playerf_5.png",
+   "w": 67,
+   "h": 150
+  },
+  {
+   "file": "playerf_6.png",
+   "w": 68,
+   "h": 150
+  },
+  {
+   "file": "playerf_7.png",
+   "w": 65,
+   "h": 150
+  },
+  {
+   "file": "playerf_8.png",
+   "w": 65,
+   "h": 150
+  }
+ ],
+ "vehicles2": [
+  {
+   "file": "vehicles2_1.png",
+   "w": 232,
+   "h": 172
+  },
+  {
+   "file": "vehicles2_2.png",
+   "w": 284,
+   "h": 252
+  },
+  {
+   "file": "vehicles2_3.png",
+   "w": 152,
+   "h": 192
+  },
+  {
+   "file": "vehicles2_4.png",
+   "w": 136,
+   "h": 188
+  },
+  {
+   "file": "vehicles2_5.png",
+   "w": 172,
+   "h": 212
+  },
+  {
+   "file": "vehicles2_6.png",
+   "w": 348,
+   "h": 308
+  },
+  {
+   "file": "vehicles2_7.png",
+   "w": 204,
+   "h": 188
+  }
+ ],
+ "pohon": [
+  {
+   "file": "pohon_1.png",
+   "w": 216,
+   "h": 144
+  },
+  {
+   "file": "pohon_2.png",
+   "w": 200,
+   "h": 148
+  },
+  {
+   "file": "pohon_3.png",
+   "w": 240,
+   "h": 152
+  },
+  {
+   "file": "pohon_4.png",
+   "w": 236,
+   "h": 156
+  },
+  {
+   "file": "pohon_5.png",
+   "w": 124,
+   "h": 124
+  },
+  {
+   "file": "pohon_6.png",
+   "w": 108,
+   "h": 132
+  },
+  {
+   "file": "pohon_7.png",
+   "w": 100,
+   "h": 132
+  },
+  {
+   "file": "pohon_8.png",
+   "w": 96,
+   "h": 136
+  }
+ ],
+ "veh_pikap": [
+  {
+   "file": "veh_pikap_1.png",
+   "w": 360,
+   "h": 207
+  }
+ ],
+ "veh_truk": [
+  {
+   "file": "veh_truk_1.png",
+   "w": 360,
+   "h": 190
+  }
+ ],
+ "veh_becak": [
+  {
+   "file": "veh_becak_1.png",
+   "w": 360,
+   "h": 284
+  }
+ ],
+ "veh_delman": [
+  {
+   "file": "veh_delman_1.png",
+   "w": 360,
+   "h": 195
+  }
+ ],
+ "veh_gerobak": [
+  {
+   "file": "veh_gerobak_1.png",
+   "w": 296,
+   "h": 172
+  }
+ ]
+}

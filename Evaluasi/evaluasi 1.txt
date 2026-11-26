@@ -1,0 +1,10 @@
+Evaluasi game:
+1. Karakter dan NPC masih pixel, ubah jadi isometrik begitupun kendaraan yang melintas
+2. Buatkan intro tambahan setelah prolog di awal ketika pemain sudah klik terima panggilan dari gaia, layar memperlihatkan sebuah lahan yang berantakan, kemudian karakter diteleportasikan ke tengah-tengah area lahan tersebut lalu muncul petunjuk dari gaia. karakter terlihat bingung menoleh kiri kanan lalu kemudian berdiri. barulah permainan dimulai dan menu-menu mulai terlihat di layar.
+3. Buat karakter bisa bergerak keluar pagar, untuk dapat membersihkan area sekitar luar pagar dan mengumpulkan sampah-sampah yang berserakan untuk diolah tetapi tidak dapat bergerak melebihi layar.
+4. Berikan koin modal awal sebanyak 1000 saja, pemain harus berpikir dan bekerja keras jika ingin memperbesar dan memperluas area pengolahannya, penambahan koin didapatkan dari hasil mengumpulkan sampah di sekitarnya dan mengelola serta mengolahnya di dalam lahan.
+5. sampah-sampah di sekitar lahan dan diluarnya bermacam-macam dan lengkap berserakan, biarkan pemain berpikir cara untuk membersihkannya dengan memungut sampah yang tersedia lalu mengelolanya sampai dapat menghasilkan penambahan koin. berikan preview badge pencapaian-pencapaian di menu pemain.
+6. Berikan kebebasan pada pemain untuk dapat mengembangkan lahannya seperti menambah area tanam benih. disampaikan juga di awal "cara bermain"
+7. Masukkan misi kedalam menu yang dapat dibuka, jadi buatkan menu nya terintegrasi semua agar pemain dapat melihat keseluruhan fitur-fitur dalam gamenya.
+
+jika evaluasi ini membutuhkan aset-aset tambahan berupa gambar dasar dan lainnya, langsung saja buatkan, jika tidak bisa, silahkan konfirmasikan pada saya apa yang tidak bisa kamu buatkan.

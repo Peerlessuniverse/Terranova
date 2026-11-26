@@ -1,0 +1,1173 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TERRA NOVA · Peradaban Bumi Baru</title>
+<style>
+:root{--bg:#0a1f18;--panel:rgba(11,34,26,.92);--gold:#f3d98b;--gold-b:#c9b25f88;--leaf:#7bd88f;--txt:#fbf5df;--muted:#b9d4c4;--top:62px;--nav:68px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font:14px/1.45 system-ui,-apple-system,sans-serif}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer;min-height:44px;border-radius:10px;border:1px solid #ffffff30;background:#163d2f;padding:8px 12px}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+button:disabled{opacity:.48;cursor:not-allowed}
+
+/* Canvas full-screen pixel art yard */
+#scene{position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:0;touch-action:none;cursor:grab}
+
+/* Top HUD (DESIGN_SPEC v1.3 §4) */
+#top{position:fixed;left:0;right:0;top:0;z-index:20;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 12px;background:linear-gradient(#0d291ff5,#12362ae8);border-bottom:2px solid var(--gold-b)}
+.logo{display:flex;align-items:center;gap:8px}
+.logo img{width:38px;height:38px;object-fit:contain}
+.logo b{font:700 17px/1 Georgia,serif;letter-spacing:.04em;color:var(--gold);display:block}
+.logo small{font-size:11px;color:var(--muted)}
+.pl{display:flex;align-items:center;gap:8px;min-width:0}
+.av-dot{width:38px;height:38px;border-radius:50%;border:2px solid var(--leaf);background:#173d30;display:grid;place-items:center;font-weight:700;font-size:16px;flex:none}
+.pl b{display:block;font-size:14px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl .sub{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--muted)}
+.badge{background:#2d7a4f;color:#fff;border-radius:5px;padding:1px 6px;font-weight:700}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.chip{display:flex;align-items:center;gap:5px;background:#081a14;border:1px solid #ffffff28;border-radius:20px;padding:4px 10px;font-weight:700;font-size:13px;white-space:nowrap}
+.chip small{font-weight:400;color:var(--muted);font-size:11px}
+.ibs{display:flex;gap:6px}
+.ib{width:40px;height:40px;min-height:40px;padding:0;display:grid;place-items:center;background:#081a14;font-size:16px}
+
+/* Toast status */
+#status{position:fixed;top:calc(var(--top) + 8px);left:0;right:0;margin:0 auto;z-index:25;width:fit-content;max-width:min(92vw,540px);background:rgba(10,31,24,.94);border:1px solid var(--gold-b);border-radius:12px;padding:7px 14px;font-size:13px;text-align:center;pointer-events:none;box-shadow:0 6px 20px #0008}
+
+/* Collapsible Mission & DLE Panel (desktop left) */
+#misiWrap{position:fixed;left:12px;top:calc(var(--top) + 12px);z-index:16;width:275px;max-height:calc(100vh - var(--top) - var(--nav) - 100px);overflow:auto;background:var(--panel);border:1px solid #ffffff2a;border-radius:14px;padding:10px 12px}
+#misiWrap h3{margin:0 0 6px;font:700 16px Georgia,serif;color:var(--gold);display:flex;justify-content:space-between;align-items:center}
+.mi{display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-top:1px solid #ffffff16;font-size:13px}
+.mi s{width:18px;height:18px;border:2px solid var(--leaf);border-radius:4px;flex:none;display:grid;place-items:center;text-decoration:none;font-size:12px;color:#0a1f18;margin-top:1px}
+.mi.ok s{background:var(--leaf)}.mi.ok span{opacity:.6;text-decoration:line-through}
+.dle-item{margin-top:6px;padding:8px;border-radius:10px;background:#ca842124;border:1px solid #f3d98b88}
+.dle-item b{display:block;color:var(--gold);font-size:13px}
+.dle-item button{width:100%;margin-top:6px;min-height:38px;background:linear-gradient(#d48f24,#9a6010);border-color:#ffe08a;font-weight:700}
+
+/* Contextual Gaia Dialog Bar */
+#gaiaBar{position:fixed;left:8px;right:8px;bottom:calc(var(--nav) + 8px);margin:0 auto;max-width:740px;z-index:15;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--gold-b);border-radius:14px;padding:8px 12px}
+#gaiaBar .g-ava{width:40px;height:40px;border-radius:50%;background:radial-gradient(#7bd88f,#1c5a39);border:2px solid var(--gold);display:grid;place-items:center;font-size:20px;flex:none}
+#gaiaBar .g-txt{flex:1;min-width:0;font-size:13px;overflow-wrap:anywhere}
+#gaiaBar .g-txt b{color:var(--gold);font-size:12px;letter-spacing:.05em}
+#gaiaBar .g-bhi{text-align:right;font-size:11px;color:var(--muted);flex:none}
+#gaiaBar .g-bhi strong{display:block;font-size:15px;color:var(--leaf)}
+
+/* Action Sheet (Angkut / Pabrik / Pasar / Kota / Bumi / DLE / Neraca) */
+#sheet{position:fixed;left:0;right:0;margin:0 auto;bottom:calc(var(--nav) + 8px);z-index:22;width:min(820px,calc(100vw - 16px));max-height:56vh;overflow:auto;background:rgba(9,29,22,.97);border:1px solid var(--gold);border-radius:16px;padding:14px;box-shadow:0 12px 44px #000c}
+#sheet[hidden]{display:none}
+.sh-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.sh-head h3{margin:0;font:700 18px Georgia,serif;color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px}
+.card-box{background:#ffffff0d;border:1px solid #ffffff22;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.card-box b{color:var(--gold);font-size:14px}
+.card-box small{color:var(--muted);font-size:12px}
+.act{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;text-align:left;background:linear-gradient(#2c784c,#1b5435);border-color:#d9c46f;font-weight:600;width:100%}
+.act small{font-weight:400;color:#e0f0e4;font-size:12px}
+.act.warn{background:linear-gradient(#b5751c,#7e4d0e)}
+.act.hint{box-shadow:0 0 0 2px var(--gold),0 0 14px #f3d98b88}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th,.tbl td{text-align:left;padding:6px 8px;border-bottom:1px solid #ffffff1a}
+.tbl th{color:var(--gold)}
+.lock-box{padding:16px;border-radius:12px;background:#ffffff0a;border:1px dashed #ffffff38;text-align:center}
+
+/* Bottom Navigation (§4: Pabrik, Angkut, Pasar, Kota, Bumi) */
+#nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;gap:6px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:linear-gradient(#12362af2,#081913fa);border-top:2px solid var(--gold-b)}
+#nav button{position:relative;flex:1;min-width:0;max-width:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 2px;min-height:52px;background:#0a1f18;border:1px solid #ffffff26;font-size:12px}
+#nav button span.ic{font-size:19px;line-height:1}
+#nav button.on{background:linear-gradient(#3b8556,#1d5336);border-color:var(--gold);box-shadow:0 0 12px #7bd88f66}
+#nav button.locked{opacity:.72}
+#nav button.dot::after{content:"";position:absolute;top:4px;right:10px;width:10px;height:10px;border-radius:50%;background:#ff5a4a;border:2px solid #0a1f18}
+
+/* Onboarding Eco-Fantasy Overlay (§2) */
+#pre{position:fixed;inset:0;z-index:100;overflow:auto;background:radial-gradient(circle at 20% 10%,#2a6b4a 0,#12362a 48%,#091b15 100%);display:flex;align-items:center;justify-content:center;padding:16px}
+#pre[hidden]{display:none}
+#pre .card{width:min(980px,100%);display:grid;grid-template-columns:1fr 1.05fr;background:rgba(10,31,24,.9);border:1px solid var(--gold-b);border-radius:20px;overflow:hidden;box-shadow:0 20px 60px #000b}
+#pre .art{position:relative;min-height:420px;background:#0a1f18 center/cover no-repeat}
+#pre .art::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 58%,rgba(10,31,24,.94))}
+#pre .body{padding:28px 30px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+#pre h2{font:700 clamp(22px,3.5vw,32px)/1.18 Georgia,serif;margin:0;color:var(--gold)}
+#pre .kick{letter-spacing:.12em;font-size:11px;color:#9fd8a8;font-weight:700}
+#pre p{margin:0;color:#e7efe0}
+#pre .stat{display:flex;gap:10px;align-items:center;background:#ffffff10;border:1px solid #ffffff20;border-radius:10px;padding:8px 12px;font-size:13px}
+#pre .stat b{color:var(--gold);min-width:112px;font-size:15px}
+#pre input,#pre select{width:100%;min-height:44px;background:#ffffff14;color:#fff;border:1px solid #ffffff38;border-radius:10px;padding:8px 12px}
+#pre select option{color:#000}
+#pre .btn{background:linear-gradient(#3fa163,#1f6e43);border:1px solid var(--gold);font-weight:700;font-size:15px}
+#pre .btn.ghost{background:#ffffff14;border-color:#ffffff40;font-weight:500}
+#pre .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#pre .nav{display:flex;align-items:center;justify-content:space-between;margin-top:6px;gap:8px}
+#pre .dots{display:flex;gap:6px}#pre .dots i{width:8px;height:8px;border-radius:50%;background:#ffffff38}#pre .dots i.on{background:var(--leaf)}
+#pre .skip{position:fixed;top:14px;right:16px;z-index:105;background:#000a;border-radius:20px;padding:6px 14px;font-size:13px;min-height:38px}
+.char-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.char-card{padding:12px;border-radius:12px;background:#ffffff0d;border:2px solid #ffffff24;text-align:center;cursor:pointer}
+.char-card.on{border-color:var(--gold);background:#2a6b4a55}
+.char-card canvas{display:block;margin:0 auto 6px;image-rendering:pixelated}
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt-grid label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+
+#status{transition:opacity .5s ease}
+#status.fade{opacity:0}
+/* ===== Evaluasi 1: arrival sequence, menu, badges ===== */
+[hidden]{display:none!important}
+#top,#nav,#gaiaBar,#status{transition:opacity .8s ease}
+body.cine #top,body.cine #nav,body.cine #gaiaBar,body.cine #status,body.cine #sheet{opacity:0;pointer-events:none}
+#misiWrap{display:none}
+#cineSkip{position:fixed;top:14px;right:16px;z-index:60;background:#000a;border-radius:20px;padding:6px 14px;font-size:13px;min-height:38px}
+#cineBox{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:55;width:min(720px,calc(100vw - 20px));display:flex;gap:12px;align-items:center;
+  background:rgba(9,29,22,.96);border:2px solid var(--gold);border-radius:16px;padding:14px 16px;box-shadow:0 12px 40px #000c;animation:rise .5s ease both}
+#cineBox .g-ava{width:52px;height:52px;border-radius:50%;background:radial-gradient(#7bd88f,#1c5a39);border:2px solid var(--gold);display:grid;place-items:center;font-size:26px;flex:none}
+.cine-txt{flex:1}.cine-txt b{color:var(--gold);letter-spacing:.08em;font-size:12px}.cine-txt p{margin:2px 0 0;font:italic 17px/1.45 Georgia,serif;color:#fdf5df}
+#cineNext,#howtoGo{flex:none;background:linear-gradient(#3e9a54,#22693a);border:2px solid #e8f07a;font-weight:800}
+@keyframes rise{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translate(-50%,0)}}
+#howtoBox{position:fixed;inset:0;z-index:58;background:#0009;display:grid;place-items:center;padding:16px}
+.howto-card{width:min(640px,100%);max-height:88vh;overflow:auto;background:linear-gradient(#173f2e,#0f2c20);border:2px solid var(--gold);border-radius:18px;padding:18px 20px}
+.howto-card h2{margin:0 0 8px;font:700 24px Georgia,serif;color:var(--gold)}
+.howto{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:8px}
+.howto li{display:flex;gap:12px;align-items:flex-start;background:#ffffff0d;border:1px solid #ffffff1f;border-radius:12px;padding:9px 12px}
+.howto li span{font-size:24px;line-height:1.2}.howto b{color:#fff}.howto p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+#howtoGo{width:100%}
+.ib-menu{width:auto!important;padding:0 10px!important;gap:6px;display:flex!important;align-items:center;font-weight:700}
+.ib-menu span{font-size:13px}
+.pl{cursor:pointer;border-radius:12px;padding:2px 6px 2px 2px}.pl:hover{background:#ffffff10}
+.bdg-count{font-size:11px;color:#f6d36b;font-weight:700}
+.sh-head{gap:10px}.sh-head h3{flex:1}
+.sh-x,.sh-back{min-height:36px;padding:4px 10px}
+.sh-note{margin:0 0 10px;color:var(--muted);font-size:13px}.sh-sub{margin:14px 0 8px;color:var(--gold)}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;min-height:86px;background:linear-gradient(#24503b,#173a2a);border:1px solid #4d7a5c;border-radius:12px;padding:10px}
+.tile span{font-size:24px}.tile b{font-size:14px;color:#fff}.tile small{font-size:11.5px;color:var(--muted)}
+.tile:hover{border-color:var(--gold)}
+.menu-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.menu-row button{flex:1;min-width:130px}
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.badge-grid.big{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.bdg{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;background:#ffffff0b;border:1px solid #ffffff22;border-radius:12px;padding:10px 8px}
+.bdg img{width:64px;height:64px;object-fit:contain}.bdg b{font-size:13px;color:#fff}.bdg small{font-size:11px;color:var(--muted)}
+.bdg i{display:block;width:100%;height:6px;border-radius:4px;background:#0b1d14;overflow:hidden}.bdg em{display:block;height:100%;background:linear-gradient(90deg,#7bd88f,#f6d36b)}
+.bdg.locked img{filter:grayscale(1) brightness(.75);opacity:.6}.bdg.ok{border-color:#e8c56e88;background:#e8c56e14}
+.profile{display:flex;gap:14px;align-items:center;background:#ffffff0b;border:1px solid #ffffff22;border-radius:12px;padding:10px 12px}
+.profile img{height:96px}.profile .pname{font-size:18px;color:#fff;display:block}.profile small{display:block;color:var(--muted);margin-top:3px}.profile small b{color:#fff}
+.up-img{height:70px;object-fit:contain;align-self:center}
+.char-pick{display:flex;gap:10px}.char-pick button{display:flex;flex-direction:column;align-items:center;gap:4px;width:110px;padding:8px;background:#ffffff0b}
+.char-pick button.on{border-color:var(--gold);background:#e8c56e1f}.char-pick img{height:72px}
+.locked-box{opacity:.65;border-style:dashed}
+.job-box{margin-bottom:10px;border-color:var(--gold)}
+
+/* ===== Opening cinematic overlay ===== */
+#introBox{position:fixed;inset:0;z-index:200;background:#030808;transition:opacity .8s ease}
+#introBox.out{opacity:0;pointer-events:none}
+#introBox iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+
+/* ===== HUD & navigation styled after "Yard UI Comparison" ===== */
+#top{gap:12px;padding:8px 14px;background:linear-gradient(#1d3b2c,#132b20);border-bottom:2px solid #0a1a12;box-shadow:0 3px 0 #2c4f3a,0 8px 18px #0007}
+.logo img{width:44px;height:44px;filter:drop-shadow(0 2px 2px #0008)}
+.logo b{font:800 20px/1 system-ui,sans-serif;letter-spacing:.02em;color:#fff;text-shadow:0 2px 0 #0b1d14}
+.logo small{color:#e7f3df;font-size:12px}
+.av-dot{width:46px;height:46px;border:3px solid #e8c56e;background:#cfe6c4;overflow:hidden;box-shadow:0 2px 0 #0b1d14}
+.av-dot img{width:100%;height:100%;object-fit:cover;display:block}
+.pl b{font-size:16px;color:#fff;text-shadow:0 1px 0 #0b1d14}
+.pl .sub{gap:8px}
+.badge{background:#3c9a3f;border:1px solid #9be37f;border-radius:4px;padding:0 7px;font-size:11px}
+.lvbar{width:96px;height:8px;border-radius:5px;background:#0b1d14;border:1px solid #ffffff2a;overflow:hidden}
+.lvbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7bd88f,#c8f07a);transition:width .4s ease}
+.chip{gap:7px;background:linear-gradient(#0f241a,#0b1c14);border:2px solid #2f5a42;border-radius:22px;padding:3px 12px 3px 5px;font-size:15px;box-shadow:inset 0 1px 0 #ffffff14}
+.chip img{width:24px;height:24px;object-fit:contain;flex:none}
+.ib{width:44px;height:44px;min-height:44px;border-radius:10px;background:linear-gradient(#2a4a38,#1a3326);border:2px solid #4d7a5c;box-shadow:0 2px 0 #0b1d14}
+.ib:hover{border-color:#e8c56e}
+.ib img{width:26px;height:26px;object-fit:contain}
+#misiWrap{background:linear-gradient(#1c3a2b,#132a1f);border:2px solid #3f6b50;border-radius:14px;box-shadow:0 3px 0 #0b1d14,0 10px 24px #0007}
+#misiWrap h3{font:800 18px system-ui,sans-serif;color:#f6d36b;text-shadow:0 2px 0 #0b1d14}
+.mi{font-size:14px;color:#f2f7ee}
+.mi s{border:2px solid #cfe6c4;border-radius:3px}
+#nav{left:50%;right:auto;transform:translateX(-50%);bottom:max(8px,env(safe-area-inset-bottom));width:min(760px,calc(100vw - 16px));gap:4px;padding:5px;border-radius:16px;background:linear-gradient(#1d3b2c,#11281d);border:2px solid #0a1a12;box-shadow:0 0 0 2px #3f6b50,0 10px 26px #000a}
+#nav button{max-width:none;min-height:60px;border-radius:12px;background:linear-gradient(#24443a00,#0000);border:2px solid transparent;font-weight:700;font-size:14px;color:#fff;text-shadow:0 1px 0 #0b1d14}
+#nav button span.ic{font-size:24px;display:grid;place-items:center;height:28px}
+#nav button span.ic img{height:28px;width:auto}
+#nav button.on{background:linear-gradient(#5aa04a,#2f6e2c);border-color:#e8f07a;box-shadow:inset 0 2px 0 #ffffff33,0 0 0 1px #0b1d14}
+#nav button.dot::after{top:-4px;right:6px;width:20px;height:20px;background:#e53935;border:2px solid #fff;content:"!";color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center;line-height:1}
+#gaiaBar{bottom:calc(var(--nav) + 18px)}
+#sheet{bottom:calc(var(--nav) + 18px)}
+
+@media(max-width:760px){
+  #misiWrap{display:none}
+  .lvbar{width:64px}
+  #tKarma{display:none}
+  .bdg-count{display:none}
+  .chip img{width:20px;height:20px}
+  #nav{width:calc(100vw - 8px);bottom:max(4px,env(safe-area-inset-bottom))}
+  #nav button{min-height:54px;font-size:11px}
+  #nav button span.ic{font-size:20px;height:24px}
+  #nav button span.ic img{height:24px}
+  #top{gap:5px;padding:6px 8px}
+  .logo div{display:none}
+  .logo img{width:28px;height:28px}
+  .pl{flex:1;min-width:0}
+  .av-dot{width:32px;height:32px;font-size:14px}
+  .chips{margin-left:0;width:100%;justify-content:space-between;gap:4px}
+  .chip{flex:1;min-width:0;justify-content:center;padding:3px 5px;font-size:11px}
+  .chip small{display:none}
+  .ibs{gap:4px}
+  .ib{width:34px;height:34px;min-height:34px;font-size:14px}
+  #nav{gap:4px;padding:5px 4px calc(5px + env(safe-area-inset-bottom))}
+  #nav button{font-size:11px}
+  #gaiaBar{bottom:calc(var(--nav) + 6px);padding:6px 8px;gap:8px}
+  #gaiaBar .g-ava{width:30px;height:30px;font-size:15px}
+  #gaiaBar .g-txt{font-size:12px}
+  #pre .card{grid-template-columns:1fr}
+  #pre .art{min-height:190px}
+  #pre .art::after{background:linear-gradient(transparent 55%,rgba(10,31,24,.95))}
+  #pre .body{padding:18px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="scene" aria-label="Lahan starter Terra Nova isometrik: gudang, area pilah, kebun Gaia, gerbang, jalan aspal dan sungai"></canvas>
+
+<!-- Top HUD -->
+<header id="top">
+  <div class="logo">
+    <img src="/assets/img/ui_logo.png" alt="Terra Nova" onerror="this.style.display='none'">
+    <div><b>TERRA NOVA</b><small>Peradaban Bumi Baru</small></div>
+  </div>
+  <div class="pl" id="tProfil" role="button" tabindex="0" title="Profil & lencana">
+    <div class="av-dot" id="tAva"><img src="/assets/sprites/player_5.png" alt=""></div>
+    <div>
+      <b id="tName">Penjaga Bumi</b>
+      <div class="sub"><span class="badge" id="tTier">Awaken</span><span class="lvbar" title="Karma"><i id="tKarmaBar"></i></span><span id="tKarma">Karma 0%</span><span class="bdg-count" id="tBadges">🏅 0/8</span></div>
+    </div>
+  </div>
+  <div class="ibs">
+    <button class="ib ib-menu" id="bMenu" type="button" title="Menu: misi, pencapaian, lahan, cara bermain" aria-label="Buka menu"><img src="/assets/img/ui_list.png" alt=""><span>Menu</span></button>
+    <button class="ib" id="bMus" type="button" title="Musik latar" aria-label="Musik latar">🎵</button>
+    <button class="ib" id="bSfx" type="button" title="Efek suara" aria-label="Efek suara">🔊</button>
+  </div>
+  <div class="chips">
+    <div class="chip" title="Gaia Coin"><img src="/assets/img/ui_coin.png" alt="Coin"><span id="tCoin">10.000</span></div>
+    <div class="chip" title="Poin hijau"><img src="/assets/img/ui_leaf.png" alt="Poin"><span id="tPoin">0</span></div>
+    <div class="chip" title="Gudang"><img src="/assets/img/ui_box.png" alt="Gudang"><span id="tGudang">0/500 kg</span></div>
+  </div>
+</header>
+
+<div id="status" role="status" aria-live="polite">Memuat lahan Terra Nova…</div>
+
+
+<!-- Contextual Gaia Dialog + BHI -->
+<div id="gaiaBar">
+  <div class="g-ava">🌿</div>
+  <div class="g-txt"><b>GAIA</b><div id="gaiaMsg">Selamat datang. Dari tempat kecil inilah perjalananmu dimulai. Hilangkan sampahku.</div></div>
+  <div class="g-bhi"><span>BHI (Lokal)</span><strong id="tBhi">100%</strong></div>
+</div>
+
+<!-- Dynamic Sheet -->
+<section id="sheet" hidden aria-label="Panel aksi"></section>
+
+<!-- Bottom Navigation (§4: Pabrik, Angkut, Pasar, Kota, Bumi) -->
+<nav id="nav" aria-label="Navigasi utama">
+  <button data-tab="pabrik" type="button"><span class="ic"><img src="/assets/img/ui_home.png" alt=""></span>Pabrik</button>
+  <button data-tab="kebun" type="button"><span class="ic">🌱</span>Kebun</button>
+  <button data-tab="angkut" type="button"><span class="ic">🛒</span>Angkut</button>
+  <button data-tab="pasar" type="button"><span class="ic">🏪</span>Pasar</button>
+  <button data-tab="menu" type="button"><span class="ic"><img src="/assets/img/ui_list.png" alt=""></span>Menu</button>
+</nav>
+
+<!-- Arrival in the yard (Evaluasi 1 #2): Gaia's guidance, then how to play -->
+<button id="cineSkip" type="button" hidden>Lewati ⏭</button>
+<div id="cineBox" hidden role="dialog" aria-live="polite" aria-label="Pesan Gaia">
+  <div class="g-ava">🌿</div>
+  <div class="cine-txt"><b>GAIA</b><p id="cineText"></p></div>
+  <button id="cineNext" type="button">Lanjut ›</button>
+</div>
+<div id="howtoBox" hidden role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
+  <div class="howto-card">
+    <h2 id="howtoTitle">Cara Bermain</h2>
+    <div id="howtoList"></div>
+    <button id="howtoGo" type="button">Mulai Bermain ›</button>
+  </div>
+</div>
+
+<script>
+const el = id => document.getElementById(id);
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let state = null, meta = null, received = 0, busy = false, tab = 'home', sheetMode = null;
+
+/* ===== AUDIO (Kenney CC0 + WebAudio fallback) ===== */
+let ac, musOn = false, sfxOn = true, musTimer = null, step = 0;
+const sfxCache = {};
+const SFX_MAP = {
+  terima: 'confirmation_002', angkut_node: 'scroll_002', terima_kargo: 'drop_001',
+  ambil_dle: 'maximize_005', pilah: 'scratch_003', olah_kompos: 'switch_002',
+  daur: 'switch_002', kreasi: 'open_002', serah_b3: 'confirmation_001',
+  tanam: 'drop_001', tanam_langka: 'maximize_005', pupuk: 'pluck_002',
+  panen: 'confirmation_003', beli: 'select_003', jual: 'glass_002', err: 'error_004'
+};
+const ctx = () => ac || (ac = new (window.AudioContext || window.webkitAudioContext)());
+function playSfx(aksi, ok) {
+  if (!sfxOn) return;
+  const f = ok ? (SFX_MAP[aksi] || (aksi.startsWith('jual_') ? SFX_MAP.jual : 'click_002')) : SFX_MAP.err;
+  const a = sfxCache[f] || (sfxCache[f] = new Audio('/assets/sfx/' + f + '.wav'));
+  a.currentTime = 0; a.volume = .5; a.play().catch(() => {});
+}
+function musicTick() {
+  if (!musOn || document.hidden) return;
+  const c = ctx(), t = c.currentTime, sc = [261.6, 293.7, 329.6, 392, 440, 523.3, 440, 392];
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = 'triangle'; o.frequency.setValueAtTime(sc[(step * 3) % sc.length], t);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.04, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .85);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t + .9); step++;
+}
+el('bMus').onclick = () => {
+  musOn = !musOn; ctx().resume(); el('bMus').style.opacity = musOn ? 1 : .5;
+  clearInterval(musTimer); if (musOn) musTimer = setInterval(musicTick, 480);
+};
+el('bMus').style.opacity = .5;
+el('bSfx').onclick = () => { sfxOn = !sfxOn; el('bSfx').textContent = sfxOn ? '🔊' : '🔈'; el('bSfx').style.opacity = sfxOn ? 1 : .5; };
+
+/* ===== API CLIENT (Idempotent UUID receipt) ===== */
+async function send(payload) {
+  if (busy) return;
+  busy = true;
+  const req = Object.assign({ key: crypto.randomUUID() }, payload);
+  try {
+    const res = await fetch('/aksi', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req)
+    });
+    if (res.status === 401) { location.href = '/'; return; }
+    const data = await res.json();
+    playSfx(payload.aksi, res.ok);
+    if (data.state) { state = data.state; meta = data.meta; received = Date.now(); onNewLitter(); renderUI(); }
+    el('status').textContent = data.pesan || 'Selesai.';
+    if (res.ok && (payload.aksi === 'panen' || payload.aksi.startsWith('jual_') || payload.aksi === 'ambil_dle')) {
+      spawnBurst(av.x, av.y - 60, payload.aksi.startsWith('jual_') ? '#f4c430' : '#7bd88f');
+    }
+  } catch {
+    el('status').textContent = 'Koneksi ke server lokal terputus. Coba lagi.';
+  } finally {
+    busy = false;
+  }
+}
+
+async function fetchState() {
+  try {
+    const res = await fetch('/state', { credentials: 'same-origin' });
+    if (res.status === 401) { location.href = '/'; return; }
+    const data = await res.json();
+    if (!data.state.diterima) { location.href = '/'; return; }  // landing page plays the cinematic first
+    const first = !state;
+    state = data.state; meta = data.meta; received = Date.now();
+    if (first && !state.intro_selesai) startCine();
+    onNewLitter();
+    renderUI();
+    if (first) el('status').textContent = `Lahan ${state.kota} · Modal awal 1.000 koin · kumpulkan & olah sampah`;
+  } catch {
+    el('status').textContent = 'Gagal memuat state server lokal.';
+  }
+}
+
+/* ===== GAME LOGIC & UI PANELS ===== */
+const fmtKg = g => (g / 1000).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' kg';
+const plotLeft = p => Math.max(0, p.detik - (Date.now() - received) / 1000);
+const litter = () => (state && state.sampah_liar) || [];
+
+function nextGuidance(s) {
+  if (!s || !s.diterima) return { tab: null, text: 'Terima panggilan Gaia untuk memulai.' };
+  if (s.dle_events && s.dle_events.length > 0) return { tab: 'dle', text: s.dle_events[0].pesan };
+  if ((s.stat || {}).pungut < 3 && litter().length) return { tab: null, text: 'Ketuk sampah yang berserakan, di dalam maupun di luar pagar. Karaktermu akan berjalan dan memungutnya (+2 koin tiap sampah).' };
+  if (s.job && s.job.status === 'arrived') return { tab: 'angkut', text: 'Gerobak sudah tiba di gerbang! Terima kargo ke area pilah.' };
+  if (s.job && s.job.status === 'in_transit') return { tab: 'angkut', text: 'Gerobak sedang menuju sumber sampah…' };
+  const plots = [s, ...(s.petak || [])];
+  if (plots.some(p => p.ditanam && plotLeft(p) <= 0)) return { tab: 'kebun', text: 'Ada tanaman yang sudah matang! Buka Kebun untuk panen.' };
+  if (s.campuran_g >= 1000) return { tab: 'pabrik', text: 'Kantong sampah campur menunggu di Area Pilah. Pilah menjadi 6 fraksi sekarang.' };
+  if (s.b3_g >= 100) return { tab: 'pabrik', text: 'Ada baterai bekas (B3). Serahkan ke jalur khusus di Pabrik, jangan dicampur.' };
+  if (s.organik_g >= 2000) return { tab: 'pabrik', text: 'Olah 2 kg bahan organik menjadi kompos.' };
+  if (s.plastik_g >= 1000) return { tab: 'pabrik', text: 'Plastikmu sudah 1 kg. Olah menjadi pelet atau pot daur ulang.' };
+  if (plots.some(p => !p.ditanam) && s.benih > 0 && s.kompos_g >= 1000) return { tab: 'kebun', text: 'Tanam benih di kebun dan pakai kompos buatanmu.' };
+  if (s.panen > 0 || s.kompos_g >= 1000 || s.pelet_g >= 850 || s.pot_g >= 850 || s.kertas_g >= 1000 || s.logam_kaca_g >= 1000)
+    return { tab: 'pasar', text: 'Buka Pasar untuk menjual hasil olahan atau panenmu.' };
+  const dalam = litter().filter(t => t.zona === 'dalam').length;
+  if (dalam > 0) return { tab: null, text: `Masih ada ${dalam} tumpukan sampah di dalam pagar. Bersihkan lahanmu!` };
+  if (meta && meta.harga_petak && s.koin >= meta.harga_petak) return { tab: 'menu', text: `Koinmu cukup untuk petak tanam baru (${meta.harga_petak} koin). Buka Menu → Kembangkan Lahan.` };
+  if (litter().length) return { tab: null, text: 'Sampah baru muncul di luar pagar. Pungut, pilah, olah, lalu jual untuk menambah koin.' };
+  return { tab: 'angkut', text: 'Sekitar lahan sudah bersih. Kirim gerobak ke sumber sampah kota lewat Angkut.' };
+}
+
+function missions(s) {
+  const st = s.stat || {};
+  return [
+    ['Terima panggilan Gaia', !!s.diterima],
+    ['Pungut 5 sampah di sekitar lahan', st.pungut >= 5],
+    ['Bersihkan insiden di jalan atau sungai', s.dle_daily_bonus_g > 0 || st.sungai > 0],
+    ['Pilah kantong sampah campur di Area Pilah', st.pilah_g > 0],
+    ['Olah kompos atau plastik', (s.uap_terkendali_g + s.kompos_g + s.pelet_g + s.pot_g) > 0],
+    ['Jual hasil di Pasar Kota', !!s.pernah_jual],
+    ['Kembangkan lahan: bangun petak tanam baru', (s.petak || []).length > 0],
+    ['Panen berpupuk (buka varietas langka)', !!s.misi],
+  ];
+}
+function renderMissions(s) {
+  let html = missions(s).map(([t, ok]) => `<div class="mi ${ok ? 'ok' : ''}"><s>${ok ? '✓' : ''}</s><span>${t}</span></div>`).join('');
+  if (s.dle_events && s.dle_events.length) {
+    html += s.dle_events.map(ev => {
+      const rem = Math.max(0, Math.ceil((ev.expires_at - (meta.server_time + (Date.now() - received) / 1000)) / 60));
+      return `<div class="dle-item"><b>⚠️ ${ev.judul}</b><small>${ev.mass_g} g · sisa ${rem} mnt · dari ${ev.source_node}</small><button type="button" data-dle="${ev.id}">Bersihkan &amp; Ambil</button></div>`;
+    }).join('');
+  }
+  return html;
+}
+
+const HOWTO = [
+  ['🧤', 'Pungut sampah', 'Ketuk sampah di dalam atau di luar pagar. Karaktermu berjalan dan memungutnya. Tiap sampah +2 koin, dan bahannya masuk gudang.'],
+  ['♻️', 'Pilah', 'Kantong sampah campur masuk Area Pilah dan harus dipilah menjadi 6 fraksi. Baterai (B3) diserahkan ke jalur khusus.'],
+  ['🏭', 'Olah', 'Organik menjadi kompos, plastik menjadi pelet atau pot daur ulang. Semua tercatat di neraca massa.'],
+  ['🏪', 'Jual', 'Jual kompos, pelet, pot, kertas, logam/kaca, dan sayur di Pasar Kota untuk Gaia Coin.'],
+  ['🌱', 'Tanam', 'Tanam benih di kebun, pupuk dengan kompos buatanmu, panen, lalu jual.'],
+  ['🏗️', 'Kembangkan lahan', 'Modal awalmu hanya 1.000 koin. Tabung koin untuk petak tanam baru (250 / 500 / 750) dan perluasan gudang.'],
+  ['🛒', 'Angkut', 'Bila sekitar lahan sudah bersih, kirim gerobak ke permukiman, pasar, atau sungai untuk bahan baru.'],
+];
+const howtoHtml = () => `<ol class="howto">${HOWTO.map(([i, t, d]) => `<li><span>${i}</span><div><b>${t}</b><p>${d}</p></div></li>`).join('')}</ol>`;
+const badgeHtml = (p, big) => `<div class="bdg ${p.ok ? 'ok' : 'locked'}" title="${p.desk}">
+  <img src="/assets/sprites/${p.ikon}" alt=""><b>${p.judul}</b>${big ? `<small>${p.desk}</small>` : ''}
+  <i><em style="width:${Math.round(100 * p.nilai / p.target)}%"></em></i><small>${p.ok ? 'Tercapai' : `${p.nilai.toLocaleString('id-ID')}/${p.target.toLocaleString('id-ID')}`}</small></div>`;
+
+function renderSheet() {
+  const sh = el('sheet');
+  if (!sheetMode || !state || cine) { sh.hidden = true; return; }
+  const s = state, st = s.stat || {};
+  let body = '';
+  const closeBtn = '<button type="button" id="shClose" class="sh-x">✕ Tutup</button>';
+  const back = '<button type="button" class="sh-back" data-open="menu">‹ Menu</button>';
+
+  if (sheetMode === 'pabrik') {
+    body = `<div class="sh-head"><h3>🏭 Pabrik Pengolahan (${s.kota})</h3>${closeBtn}</div>
+      <div class="grid">
+        <div class="card-box"><b>Area Pilah</b><small>Campuran: ${fmtKg(s.campuran_g)}</small>
+          <button class="act" data-a="pilah">Pilah Bahan<small>Maks 10 kg → 6 fraksi</small></button>
+          <button class="act warn" data-a="serah_b3">Serah B3 Khusus<small>Stok B3: ${s.b3_g} g</small></button>
+        </div>
+        <div class="card-box"><b>Pengolahan Organik &amp; Plastik</b><small>Organik ${fmtKg(s.organik_g)} · Plastik ${fmtKg(s.plastik_g)}</small>
+          <button class="act" data-a="olah_kompos">Buat Kompos<small>2 kg organik → 1 kg kompos</small></button>
+          <button class="act" data-a="daur">Buat Pelet Plastik<small>1 kg plastik → 850 g pelet</small></button>
+          <button class="act" data-a="kreasi">Buat Pot Daur Ulang<small>1 kg plastik → 850 g pot</small></button>
+        </div>
+        <div class="card-box"><b>Isi Gudang</b><small>Kertas ${fmtKg(s.kertas_g)} · Logam/kaca ${fmtKg(s.logam_kaca_g)} · Residu ${fmtKg(s.residu_g)}</small>
+          <small>Kompos ${fmtKg(s.kompos_g)} · Pelet ${fmtKg(s.pelet_g)} · Pot ${fmtKg(s.pot_g)}</small>
+          <button class="act" data-open="neraca">Lihat Neraca Massa<small>Gudang ${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(s.gudang_kap_g)}</small></button>
+        </div>
+      </div>`;
+  } else if (sheetMode === 'kebun') {
+    const plots = [{ nama: '🌿 Kebun Gaia', p: s, i: 0 }, ...(s.petak || []).map((p, k) => ({ nama: `🌱 Petak ${k + 2}`, p, i: k + 1 }))];
+    body = `<div class="sh-head"><h3>🌱 Kebun &amp; Petak Tanam</h3>${closeBtn}</div>
+      <p class="sh-note">Benih: <b>${s.benih}</b>${s.misi ? ` · ${s.varietas}: <b>${s.stok_langka}</b>` : ''} · Kompos: <b>${fmtKg(s.kompos_g)}</b></p>
+      <div class="grid">${plots.map(({ nama, p, i }) => {
+        const left = Math.ceil(plotLeft(p));
+        const txt = p.ditanam ? `${p.tanaman} · ${left ? left + ' dtk lagi' : 'Siap dipanen!'}` : 'Petak kosong';
+        return `<div class="card-box"><b>${nama}</b><small>${txt}${p.dipupuk ? ' · sudah dipupuk' : ''}</small>
+          ${!p.ditanam ? `<button class="act" data-a="tanam" data-petak="${i}">Tanam Benih<small>Stok: ${s.benih}</small></button>` : ''}
+          ${!p.ditanam && s.misi ? `<button class="act" data-a="tanam_langka" data-petak="${i}">Tanam ${s.varietas}<small>Stok: ${s.stok_langka}</small></button>` : ''}
+          ${p.ditanam && left > 0 && !p.dipupuk ? `<button class="act" data-a="pupuk" data-petak="${i}">Pupuk 1 kg Kompos<small>-25% sisa waktu</small></button>` : ''}
+          ${p.ditanam && left <= 0 ? `<button class="act hint" data-a="panen" data-petak="${i}">Panen Sayur<small>Masuk gudang</small></button>` : ''}
+        </div>`;
+      }).join('')}
+        <div class="card-box"><b>Benih</b><small>2 Gaia Coin per benih</small>
+          <button class="act" data-a="beli">Beli Benih Biasa<small>2 Gaia Coin</small></button>
+          ${s.misi ? `<button class="act" data-a="beli_langka">Beli Benih Langka<small>2 Gaia Coin</small></button>` : ''}
+          ${meta.harga_petak ? `<button class="act" data-open="lahan">Tambah Petak Tanam<small>${meta.harga_petak} Gaia Coin</small></button>` : ''}
+        </div>
+      </div>`;
+  } else if (sheetMode === 'angkut') {
+    const jobBox = s.job ? `<div class="card-box job-box">
+      <b>🛒 Status Gerobak · ${s.job.nama_node} (${fmtKg(s.job.muat_g)})</b>
+      <small>${s.job.status === 'arrived' ? 'Sudah tiba di depan gerbang! Terima untuk memindahkan ke Area Pilah.' : 'Sedang dalam perjalanan…'}</small>
+      <button class="act ${s.job.status === 'arrived' ? 'hint' : ''}" data-a="terima_kargo" ${s.job.status !== 'arrived' ? 'disabled' : ''}>Terima Kargo ke Area Pilah</button>
+    </div>` : '';
+    const nodesHtml = Object.entries(meta.nodes_info).map(([kode, n]) => `
+      <div class="card-box"><b>${n.nama}</b>
+        <small>Stok tersedia: ${fmtKg(n.tersedia_g)} / ${fmtKg(n.kapasitas_g)}</small>
+        <small>Jarak ${n.jarak_km} km · Tarif ${n.tarif} Coin · Gerobak 10 kg</small>
+        <button class="act" data-node="${kode}" ${s.job ? 'disabled' : ''}>Kirim Gerobak (10 kg)<small>Biaya ${n.tarif} Gaia Coin</small></button>
+      </div>`).join('');
+    body = `<div class="sh-head"><h3>🛒 Angkut · Sumber Sampah Kota</h3>${closeBtn}</div>${jobBox}<div class="grid">${nodesHtml}</div>`;
+  } else if (sheetMode === 'pasar') {
+    const items = [
+      ['kompos', 'Kompos (1 kg)', 5, fmtKg(s.kompos_g)], ['pelet', 'Pelet Plastik (850 g)', 12, fmtKg(s.pelet_g)],
+      ['pot', 'Pot Daur Ulang (850 g)', 14, fmtKg(s.pot_g)], ['kertas', 'Kertas Terpilah (1 kg)', 9, fmtKg(s.kertas_g)],
+      ['logam', 'Logam/Kaca (1 kg)', 12, fmtKg(s.logam_kaca_g)], ['panen', 'Sayur Kebun (1 ikat)', 24, s.panen + ' ikat'],
+      ['panen_langka', (s.varietas || 'Sayur Langka') + ' (1 ikat)', 24, s.panen_langka + ' ikat'],
+    ];
+    body = `<div class="sh-head"><h3>🏪 Pasar Kota</h3>${closeBtn}</div>
+      <div class="grid">${items.map(([k, n, h, stk]) => `<button class="act" data-a="jual_${k}"><b>${n}</b><small>+${h} Coin · Punya ${stk}</small></button>`).join('')}</div>`;
+  } else if (sheetMode === 'menu') {
+    const tiles = [
+      ['misi', '📋', 'Misi', `${missions(s).filter(m => m[1]).length}/${missions(s).length} selesai`],
+      ['capai', '🏅', 'Pencapaian', `${meta.pencapaian.filter(p => p.ok).length}/${meta.pencapaian.length} lencana`],
+      ['profil', '👤', 'Profil Pemain', s.nama],
+      ['pabrik', '🏭', 'Pabrik', 'Pilah & olah'], ['kebun', '🌱', 'Kebun', `${1 + (s.petak || []).length} petak`],
+      ['lahan', '🏗️', 'Kembangkan Lahan', meta.harga_petak ? `Petak ${meta.harga_petak} koin` : 'Petak maksimal'],
+      ['angkut', '🛒', 'Angkut', 'Sumber sampah kota'], ['pasar', '🏪', 'Pasar Kota', 'Jual hasil'],
+      ['neraca', '⚖️', 'Gudang & Neraca', `${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(s.gudang_kap_g)}`],
+      ['cara', '❓', 'Cara Bermain', 'Panduan singkat'],
+      ['kota', '🗺️', 'Kota Bersama', '🔒 Fase berikutnya'], ['bumi', '🌍', 'Bumi Global', '🔒 Fase berikutnya'],
+    ];
+    body = `<div class="sh-head"><h3>☰ Menu</h3>${closeBtn}</div>
+      <div class="menu-grid">${tiles.map(([m, i, t, d]) => `<button type="button" class="tile" data-open="${m}"><span>${i}</span><b>${t}</b><small>${d}</small></button>`).join('')}</div>
+      <div class="menu-row">
+        <button type="button" data-act="musik">${musOn ? '🎵 Musik: aktif' : '🎵 Musik: mati'}</button>
+        <button type="button" data-act="sfx">${sfxOn ? '🔊 Suara: aktif' : '🔈 Suara: mati'}</button>
+        <button type="button" data-act="reset">↺ Mulai ulang</button>
+        <button type="button" data-act="keluar">⎋ Keluar</button>
+      </div>`;
+  } else if (sheetMode === 'misi') {
+    body = `<div class="sh-head">${back}<h3>📋 Misi</h3>${closeBtn}</div>` + renderMissions(s);
+  } else if (sheetMode === 'capai') {
+    body = `<div class="sh-head">${back}<h3>🏅 Pencapaian</h3>${closeBtn}</div>
+      <div class="badge-grid big">${meta.pencapaian.map(p => badgeHtml(p, true)).join('')}</div>`;
+  } else if (sheetMode === 'profil') {
+    body = `<div class="sh-head">${back}<h3>👤 Profil Pemain</h3>${closeBtn}</div>
+      <div class="profile"><img src="/assets/sprites/${pose().idle}.png" alt="">
+        <div><b class="pname">${s.nama}</b><small>${s.kota} · Tier ${s.tier} · Karma ${s.karma}% · ${s.poin.toLocaleString('id-ID')} poin</small>
+        <small>Sampah dipungut: <b>${st.pungut || 0}</b> · Dipilah: <b>${fmtKg(st.pilah_g || 0)}</b> · Kompos: <b>${st.kompos || 0}</b> · Panen: <b>${st.panen || 0}</b> · Koin dari penjualan: <b>${(st.koin_jual || 0).toLocaleString('id-ID')}</b></small></div></div>
+      <h4 class="sh-sub">Karakter</h4>
+      <div class="char-pick">
+        <button type="button" class="${s.gender !== 'wanita' ? 'on' : ''}" data-a="ganti_karakter" data-gender="pria"><img src="/assets/sprites/player_5.png" alt="">Pria</button>
+        <button type="button" class="${s.gender === 'wanita' ? 'on' : ''}" data-a="ganti_karakter" data-gender="wanita"><img src="/assets/sprites/playerf_4.png" alt="">Wanita</button>
+      </div>
+      <h4 class="sh-sub">Lencana</h4>
+      <div class="badge-grid">${meta.pencapaian.map(p => badgeHtml(p, false)).join('')}</div>`;
+  } else if (sheetMode === 'lahan') {
+    const np = (s.petak || []).length;
+    body = `<div class="sh-head">${back}<h3>🏗️ Kembangkan Lahan</h3>${closeBtn}</div>
+      <p class="sh-note">Koinmu: <b>${s.koin.toLocaleString('id-ID')}</b> Gaia Coin. Koin didapat dari memungut, mengolah, dan menjual.</p>
+      <div class="grid">
+        <div class="card-box"><img class="up-img" src="/assets/sprites/garden_${np < 3 ? 4 : 3}.png" alt=""><b>Petak tanam baru</b>
+          <small>${np}/3 petak tambahan dimiliki. Petak baru dibangun di sisi kanan lahan.</small>
+          ${meta.harga_petak ? `<button class="act" data-a="beli_petak">Bangun Petak<small>${meta.harga_petak} Gaia Coin</small></button>` : '<small>✓ Semua petak sudah dibangun</small>'}</div>
+        <div class="card-box"><b>📦 Perluasan gudang</b><small>Kapasitas sekarang ${fmtKg(s.gudang_kap_g)}. Tiap perluasan +250 kg.</small>
+          ${meta.harga_gudang ? `<button class="act" data-a="tambah_gudang">Perluas Gudang<small>${meta.harga_gudang} Gaia Coin</small></button>` : '<small>✓ Gudang sudah maksimal</small>'}</div>
+        <div class="card-box locked-box"><b>🔒 Mesin pencacah plastik</b><small>Segera hadir pada fase berikutnya.</small></div>
+        <div class="card-box locked-box"><b>🔒 Rumah kompos</b><small>Segera hadir pada fase berikutnya.</small></div>
+      </div>`;
+  } else if (sheetMode === 'cara') {
+    body = `<div class="sh-head">${back}<h3>❓ Cara Bermain</h3>${closeBtn}</div>${howtoHtml()}`;
+  } else if (sheetMode === 'neraca') {
+    body = `<div class="sh-head">${back}<h3>⚖️ Gudang &amp; Neraca Massa</h3>${closeBtn}</div>
+      <table class="tbl">
+        <tr><th>Kategori</th><th>Massa</th><th>Keterangan</th></tr>
+        <tr><td>Total Masuk</td><td><b>${fmtKg(s.total_masuk_g)}</b></td><td>Sampah dipungut, kargo, dan insiden</td></tr>
+        <tr><td>Gudang Aktif</td><td>${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(s.gudang_kap_g)}</td><td>Campuran, 6 fraksi, dan produk jadi</td></tr>
+        <tr><td>Aliran Terkendali (Air/Gas)</td><td>${fmtKg(s.uap_terkendali_g)}</td><td>Tercatat dalam neraca massa, tidak hilang</td></tr>
+        <tr><td>Residu Tersimpan</td><td>${fmtKg(s.residu_g)}</td><td>Belum dimusnahkan; memengaruhi BHI</td></tr>
+        <tr><td>B3 Diserahkan Khusus</td><td>${fmtKg(s.b3_serah_g)}</td><td>Jalur pengolah berizin</td></tr>
+        <tr><td>Backlog Lingkungan/TPA</td><td>${fmtKg(s.backlog_tpa_g)}</td><td>Limpasan node &amp; insiden kedaluwarsa</td></tr>
+      </table>`;
+  } else if (sheetMode === 'kota' || sheetMode === 'bumi') {
+    body = `<div class="sh-head">${back}<h3>${sheetMode === 'kota' ? '🗺️ Kota Bersama' : '🌍 Bumi Global'}</h3>${closeBtn}</div>
+      <div class="lock-box"><b>🔒 Fitur terkunci · fase multiplayer berikutnya</b>
+      <p>Kunjungan antar pabrik, kota bersama, dan BHI/ZWM Bumi Global dibuka setelah tahap pemain tunggal.</p></div>`;
+  } else if (sheetMode.startsWith('dle:')) {
+    const ev = (s.dle_events || []).find(e => e.id === sheetMode.slice(4));
+    if (!ev) { sh.hidden = true; return; }
+    body = `<div class="sh-head"><h3>⚠️ ${ev.judul}</h3>${closeBtn}</div>
+      <div class="card-box"><p>${ev.pesan}</p>
+        <small>Berat: <b>${ev.mass_g} g</b> · Ruang gudang bebas: ${fmtKg(meta.gudang_bebas_g)}</small>
+        <button class="act warn" data-dle="${ev.id}">Ambil Sampah (+${ev.mass_g} g)</button></div>`;
+  }
+  sh.innerHTML = body;
+  sh.hidden = false;
+  if (el('shClose')) el('shClose').onclick = () => { sheetMode = null; renderUI(); };
+}
+
+function renderUI() {
+  if (!state || !meta) return;
+  const s = state;
+  el('tName').textContent = s.nama + ' · ' + s.kota;
+  el('tTier').textContent = s.tier;
+  el('tKarma').textContent = 'Karma ' + s.karma + '%';
+  el('tKarmaBar').style.width = Math.max(0, Math.min(100, s.karma)) + '%';
+  el('tCoin').textContent = s.koin.toLocaleString('id-ID');
+  el('tPoin').textContent = s.poin.toLocaleString('id-ID');
+  el('tGudang').textContent = `${Math.round(meta.gudang_terpakai_g / 1000)}/${Math.round(s.gudang_kap_g / 1000)} kg`;
+  el('tBhi').textContent = meta.bhi + '%';
+  const avSrc = '/assets/sprites/' + pose().idle + '.png';
+  if (el('tAva').firstElementChild.getAttribute('src') !== avSrc) el('tAva').firstElementChild.setAttribute('src', avSrc);
+  const nb = meta.pencapaian.filter(p => p.ok).length;
+  el('tBadges').textContent = `🏅 ${nb}/${meta.pencapaian.length}`;
+  const g = nextGuidance(s);
+  el('gaiaMsg').textContent = g.text;
+  document.querySelectorAll('#nav button').forEach(b => {
+    const t = b.dataset.tab;
+    b.classList.toggle('on', sheetMode === t);
+    b.classList.toggle('dot', g.tab === t && sheetMode !== t);
+  });
+  renderSheet();
+}
+
+/* Global click delegation */
+document.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  if (btn.dataset.tab || btn.dataset.open) {
+    const t = btn.dataset.tab || btn.dataset.open;
+    sheetMode = (btn.dataset.tab && sheetMode === t) ? null : t;
+    if (t === 'angkut') walkTo(822, 560);
+    if (t === 'pabrik') walkTo(720, 480);
+    if (t === 'kebun') walkTo(990, 492);
+    renderUI();
+    return;
+  }
+  if (btn.dataset.act) {
+    const a = btn.dataset.act;
+    if (a === 'musik') el('bMus').click();
+    if (a === 'sfx') el('bSfx').click();
+    if (a === 'keluar') logout();
+    if (a === 'reset') resetAkun();
+    renderSheet();
+    return;
+  }
+  if (btn.dataset.a) {
+    const p = { aksi: btn.dataset.a };
+    if (btn.dataset.petak !== undefined) p.petak = Number(btn.dataset.petak);
+    if (btn.dataset.gender) p.gender = btn.dataset.gender;
+    send(p);
+    return;
+  }
+  if (btn.dataset.node) { send({ aksi: 'angkut_node', node: btn.dataset.node, gram: 10000 }); return; }
+  if (btn.dataset.dle) {
+    const ev = (state.dle_events || []).find(x => x.id === btn.dataset.dle);
+    if (ev) { const a = DLE_ANCHORS[ev.anchor] || DLE_ANCHORS.road_shoulder; walkTo(a.x, a.y - 14); }
+    sheetMode = null;
+    send({ aksi: 'ambil_dle', event_id: btn.dataset.dle });
+  }
+});
+el('bMenu').onclick = () => { sheetMode = sheetMode === 'menu' ? null : 'menu'; renderUI(); };
+el('tProfil').onclick = () => { sheetMode = sheetMode === 'profil' ? null : 'profil'; renderUI(); };
+async function logout() {
+  await fetch('/keluar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  location.href = '/';
+}
+async function resetAkun() {
+  if (!confirm('Mulai ulang dari awal? Seluruh progres akun ini akan direset dan opening cinematic diputar lagi.')) return;
+  await send({ aksi: 'reset_sim' });
+  location.href = '/';
+}
+
+/* ===== ISOMETRIC STARTER YARD (illustrated background + isometric sprites) =====
+   World = the yard illustration (assets/img/yard_iso.webp, 1672 x 941 px), in image coordinates.
+   Sprites (assets/sprites/*.png, generated in the same style): player, pedestrians, vehicles, litter, garden plots. */
+const cv = el('scene'), g = cv.getContext('2d');
+const WORLD_W = 1672, WORLD_H = 941;
+const yardImg = new Image();
+yardImg.src = '/assets/img/yard_iso.webp';
+const SPR = {};
+function spr(name) {
+  if (!SPR[name]) { const im = new Image(); im.src = '/assets/sprites/' + name + '.png'; SPR[name] = im; }
+  return SPR[name];
+}
+['player_1', 'player_2', 'player_4', 'player_5', 'player_6', 'player_8', 'playerf_1', 'playerf_2', 'playerf_4', 'playerf_5', 'playerf_6',
+ 'playerf_7', 'playerf_8', 'npc_1', 'npc_2', 'npc_3', 'npc_4', 'npc_5', 'npc_6',
+ 'vehicles2_3', 'vehicles2_4', 'veh_pikap_1', 'veh_truk_1', 'veh_becak_1', 'veh_delman_1', 'veh_gerobak_1',
+ 'pohon_1', 'pohon_2', 'pohon_3', 'pohon_4', 'pohon_5', 'pohon_6', 'pohon_7', 'pohon_8', 'garden_1', 'garden_2', 'garden_3', 'garden_4',
+ 'trash_1', 'trash_2', 'trash_3', 'trash_4', 'trash_5', 'trash_6', 'trash_7', 'trash_8'].forEach(spr);
+const TRASH_SPR = { botol: 'trash_1', kaleng: 'trash_2', kardus: 'trash_3', organik: 'trash_4', kaca: 'trash_5', kantong: 'trash_6', baterai: 'trash_7', sterofoam: 'trash_8',
+  daun: 'pohon_1', ranting: 'pohon_2', dahan: 'pohon_3', buah: 'pohon_4' };
+// player sprite set per character (male / female sheets have the same poses in a slightly different order)
+const POSE = {
+  pria: { sit: 'player_1', look: 'player_2', idle: 'player_5', walkA: 'player_4', walkB: 'player_5', backA: 'player_6', backB: 'player_8' },
+  wanita: { sit: 'playerf_1', look: 'playerf_2', idle: 'playerf_4', walkA: 'playerf_5', walkB: 'playerf_6', backA: 'playerf_8', backB: 'playerf_7' },
+};
+const pose = () => POSE[(state && state.gender) === 'wanita' ? 'wanita' : 'pria'];
+
+// draw a sprite standing on (x, y): bottom-centre anchor, given height (or width when byWidth)
+function drawSpr(name, x, y, size, flip = false, alpha = 1, byWidth = false, rot = 0) {
+  const im = spr(name);
+  if (!im.complete || !im.naturalWidth) return;
+  const h = byWidth ? size * im.naturalHeight / im.naturalWidth : size;
+  const w = h * im.naturalWidth / im.naturalHeight;
+  g.save(); g.translate(x, y); if (rot) g.rotate(rot); if (flip) g.scale(-1, 1); g.globalAlpha = alpha;
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  g.drawImage(im, -w / 2, -h, w, h); g.restore();
+}
+
+let T = 0, VW = { tx: 0, y0: 0, sc: 1 }, camX = 830, camY = 470;
+let parts = [];
+
+// ---- geometry measured on the illustration
+const ROAD_Y = x => 611 + 0.0962 * x;   // road centre line, measured by regression on the lane markings
+const FENCE = [[380, 500], [380, 420], [510, 310], [705, 180], [770, 160], [1045, 170], [1385, 345], [1390, 430], [1360, 450],
+  [1265, 500], [1180, 545], [1000, 580], [900, 580], [745, 585], [655, 565], [530, 550], [430, 530]];
+const GATE_IN = [822, 540], GATE_OUT = [822, 632];
+const OBST = [[755, 120, 1045, 350], [500, 210, 760, 410], [420, 390, 700, 505], [710, 370, 840, 460], [950, 300, 1390, 470]];
+const RIVER = [[0, 752], [300, 792], [836, 852], [1100, 896], [1400, 912], [1672, 930]];
+const PLOT_POS = [[1490, 440], [1610, 520], [1490, 612]];
+const YARD_C = [790, 492];
+const DLE_ANCHORS = { road_shoulder: { x: 960, y: 652 }, river_bank: { x: 330, y: 772 } };
+const HOTSPOTS = [
+  { id: 'gudang', x: 760, y: 80, w: 290, h: 270, tab: 'pabrik', ax: 880, ay: 380, label: 'GUDANG / KANTOR', lx: 1075, ly: 112 },
+  { id: 'pilah', x: 470, y: 205, w: 290, h: 300, tab: 'pabrik', ax: 720, ay: 480, label: 'AREA PILAH', lx: 610, ly: 200 },
+  { id: 'kebun', x: 950, y: 290, w: 440, h: 190, tab: 'kebun', ax: 990, ay: 492, label: 'KEBUN GAIA', lx: 1180, ly: 285 },
+  { id: 'gerbang', x: 740, y: 560, w: 165, h: 40, tab: 'angkut', ax: 822, ay: 560, label: 'GERBANG / ANGKUT', lx: 822, ly: 600 },
+];
+function riverTop(x) {
+  for (let i = 1; i < RIVER.length; i++) if (x <= RIVER[i][0]) {
+    const [x0, y0] = RIVER[i - 1], [x1, y1] = RIVER[i];
+    return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+  }
+  return RIVER[RIVER.length - 1][1];
+}
+function inPoly(x, y, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+const inYard = (x, y) => inPoly(x, y, FENCE);
+const walkableIn = (x, y) => inYard(x, y) && !OBST.some(r => x > r[0] && x < r[2] && y > r[1] && y < r[3]);
+const walkableOut = (x, y) => !inYard(x, y) && x > 25 && x < WORLD_W - 25 && y > 45 && y < riverTop(x) - 12;
+function segCross(a, b, c, d) {
+  const o = (p, q, r) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]));
+  return o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0;
+}
+function hitsFence(a, b) {
+  for (let i = 0, j = FENCE.length - 1; i < FENCE.length; j = i++) if (segCross(a, b, FENCE[i], FENCE[j])) return true;
+  return inYard((a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+}
+// walking around the fence: corners pushed outward form a small visibility graph
+const FC = FENCE.reduce((s, p) => [s[0] + p[0] / FENCE.length, s[1] + p[1] / FENCE.length], [0, 0]);
+const CORNERS = FENCE.map(([x, y]) => { const dx = x - FC[0], dy = y - FC[1], l = Math.hypot(dx, dy); return [x + dx / l * 42, y + dy / l * 42]; })
+  .filter(([x, y]) => walkableOut(x, y));
+function outsidePath(a, b) {
+  if (!hitsFence(a, b)) return [b];
+  const nodes = [a, b, ...CORNERS], n = nodes.length, dist = Array(n).fill(Infinity), prev = Array(n).fill(-1), done = Array(n).fill(false);
+  dist[0] = 0;
+  for (let k = 0; k < n; k++) {
+    let u = -1;
+    for (let i = 0; i < n; i++) if (!done[i] && (u < 0 || dist[i] < dist[u])) u = i;
+    if (u < 0 || dist[u] === Infinity) break;
+    done[u] = true;
+    if (u === 1) break;
+    for (let v = 0; v < n; v++) if (!done[v] && !hitsFence(nodes[u], nodes[v])) {
+      const d = dist[u] + Math.hypot(nodes[u][0] - nodes[v][0], nodes[u][1] - nodes[v][1]);
+      if (d < dist[v]) { dist[v] = d; prev[v] = u; }
+    }
+  }
+  if (prev[1] < 0) return [b];
+  const path = [];
+  for (let v = 1; v !== 0; v = prev[v]) path.unshift(nodes[v]);
+  return path;
+}
+function route(from, to) {
+  const fi = inYard(from[0], from[1]), ti = inYard(to[0], to[1]);
+  if (fi && ti) return [to];
+  if (fi) return [GATE_IN, GATE_OUT, ...outsidePath(GATE_OUT, to)];
+  if (ti) return [...outsidePath(from, GATE_OUT), GATE_IN, to];
+  return outsidePath(from, to);
+}
+
+// ---- player avatar
+const av = { x: YARD_C[0], y: YARD_C[1], path: [], onArrive: null, flip: false, back: false, step: 0 };
+function walkTo(x, y, onArrive = null) {
+  if (cine) return;
+  camFree = false;
+  av.path = route([av.x, av.y], [x, y]);
+  av.onArrive = onArrive;
+  if (REDUCED) { const p = av.path[av.path.length - 1]; av.x = p[0]; av.y = p[1]; av.path = []; if (onArrive) onArrive(); }
+}
+function moveAvatar(x, y) { walkTo(x, y); }
+function stepAvatar() {
+  if (!av.path.length) return false;
+  const [tx, ty] = av.path[0], dx = tx - av.x, dy = ty - av.y, d = Math.hypot(dx, dy), sp = 3.6;
+  if (Math.abs(dx) > 0.5) av.flip = dx > 0;
+  av.back = dy < -Math.abs(dx) * 0.35;
+  if (d <= sp) {
+    av.x = tx; av.y = ty; av.path.shift();
+    if (!av.path.length && av.onArrive) { const f = av.onArrive; av.onArrive = null; f(); }
+  } else { av.x += dx / d * sp; av.y += dy / d * sp; }
+  av.step++;
+  return true;
+}
+function spawnBurst(x, y, col) {
+  if (REDUCED) return;
+  for (let i = 0; i < 16; i++) parts.push({ x, y, vx: (Math.random() - .5) * 6, vy: -3 - Math.random() * 4, l: 45, c: col });
+}
+let picking = null;
+function pickUp(item) {
+  picking = item.id;
+  walkTo(item.x, item.y + 6, async () => {
+    spawnBurst(item.x, item.y - 20, '#9be37f');
+    await send({ aksi: 'pungut', id: item.id });
+    picking = null;
+  });
+}
+
+// ---- cosmetic pedestrians & vehicles (DLE pools, capped at 4 NPC + 2 vehicles per DESIGN_SPEC v1.3 §18)
+const NPCS = [
+  { x: 80, off: 70, vx: 0.55, fr: ['npc_1', 'npc_2'], h: 68 },
+  { x: 900, off: 72, vx: -0.45, fr: ['npc_3', 'npc_4'], h: 66 },
+  { x: 1400, off: 69, vx: 0.4, fr: ['npc_5', 'npc_6'], h: 58 },
+];
+// Vehicles are strict side-profile sprites. `face` is the direction the sprite's front points to in the PNG
+// (1 = right); a vehicle is mirrored only when it drives against that direction, so it always moves forwards.
+// All sprites are rotated by the road slope so they sit parallel to the lane.
+const VEH = {
+  pikap: { s: 'veh_pikap_1', w: 150, v: 1.6, face: 1, lanes: 'RL' },
+  truk: { s: 'veh_truk_1', w: 172, v: 1.35, face: 1, lanes: 'RL' },
+  motor: { s: 'vehicles2_3', w: 84, v: 2.3, face: 1, lanes: 'RL' },
+  sepeda: { s: 'vehicles2_4', w: 74, v: 0.95, face: 1, lanes: 'RL', bob: 1 },
+  becak: { s: 'veh_becak_1', w: 104, v: 0.8, face: 1, lanes: 'RL', bob: 1 },
+  delman: { s: 'veh_delman_1', w: 196, v: 1.05, face: 1, lanes: 'RL', bob: 1.5 },
+};
+const LANE = { R: { off: -12, dir: 1 }, L: { off: 30, dir: -1 } };   // wheel line of each lane
+const ROAD_ANGLE = Math.atan(0.0962);
+const pickVeh = lane => { const ks = Object.keys(VEH).filter(k => VEH[k].lanes.includes(lane)); return ks[Math.floor(Math.random() * ks.length)]; };
+const newCar = (lane, x) => { const k = pickVeh(lane); return { k, lane, x: x ?? (LANE[lane].dir > 0 ? -220 : WORLD_W + 220) }; };
+const CARS = [newCar('R', 200), newCar('L', 1300)];
+let dropCars = [];            // vehicles scheduled by the server to drop litter
+const TREES = [               // trunk-side litter spot (server TITIK_POHON) -> crown centre
+  [[190, 150], [160, 47]], [[440, 195], [407, 100]], [[590, 258], [560, 153]], [[280, 345], [247, 233]], [[140, 482], [107, 373]],
+  [[700, 140], [740, 47]], [[1195, 152], [1167, 47]], [[1560, 125], [1580, 40]], [[1440, 270], [1467, 147]], [[1630, 600], [1600, 467]],
+];
+let leaves = [];              // falling leaf particles
+const hiddenUntil = {};       // litter id -> time it becomes visible (after the fall / drop animation)
+const seenLitter = new Set();
+// new litter from the server: animate where it came from (vehicle drop or falling from a tree)
+function onNewLitter() {
+  const now = performance.now(), srvNow = meta ? meta.server_time : 0, first = seenLitter.size === 0;
+  litter().forEach(t => {
+    if (seenLitter.has(t.id)) return;
+    seenLitter.add(t.id);
+    const age = srvNow - (t.t || 0);
+    if (first || !t.sumber || age > 40 || REDUCED) return;
+    if (t.sumber === 'jalan' && VEH[t.kendaraan]) {
+      const lane = t.arah === 'L' ? 'L' : 'R', dir = LANE[lane].dir, v = VEH[t.kendaraan].v * 1.6;
+      const x0 = dir > 0 ? -220 : WORLD_W + 220;
+      dropCars.push({ k: t.kendaraan, lane, x: x0, vx: v * dir, item: t, dropped: false });
+      hiddenUntil[t.id] = Infinity;
+    } else if (t.sumber === 'pohon') {
+      const tree = TREES.find(([b]) => b[0] === t.x && b[1] === t.y);
+      const crown = tree ? tree[1] : [t.x, t.y - 110];
+      for (let i = 0; i < 9; i++) leaves.push(makeLeaf(crown, [t.x, t.y], i * 9));
+      hiddenUntil[t.id] = now + 2300;
+    }
+  });
+}
+function makeLeaf(crown, ground, delay = 0) {
+  return { x: crown[0] + (Math.random() - .5) * 90, y: crown[1] + (Math.random() - .5) * 40, gx: ground[0] + (Math.random() - .5) * 40,
+    gy: ground[1] - Math.random() * 10, s: 'pohon_' + (5 + Math.floor(Math.random() * 4)), ph: Math.random() * 6.3,
+    vy: 0.9 + Math.random() * 0.6, size: 16 + Math.random() * 8, delay, life: 0 };
+}
+const PLAYER_H = 80;
+
+// ---- drag to look around (the river bank can sit under the Gaia bar / menu); a new walk re-centres the camera
+let drag = null, dragMoved = false, camFree = false;
+cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, cx: camX, cy: camY }; dragMoved = false; });
+addEventListener('pointermove', e => {
+  if (!drag || cine) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!dragMoved && Math.hypot(dx, dy) < 8) return;
+  dragMoved = true; camFree = true;
+  camX = Math.min(Math.max(drag.cx - dx / VW.sc, 0), WORLD_W);
+  camY = Math.min(Math.max(drag.cy - dy / VW.sc, 0), WORLD_H);
+});
+addEventListener('pointerup', () => { drag = null; });
+
+// ---- canvas click: litter > incidents > plots > hotspots > walk
+cv.addEventListener('click', e => {
+  if (dragMoved) { dragMoved = false; return; }
+  if (!state || !state.diterima || cine) return;
+  const r = cv.getBoundingClientRect();
+  const wx = (e.clientX - r.left - VW.tx) / VW.sc;
+  const wy = (e.clientY - r.top - VW.y0) / VW.sc;
+  const item = litter().find(t => Math.hypot(wx - t.x, wy - (t.y - 20)) <= 48);
+  if (item) { if (picking !== item.id) pickUp(item); return; }
+  for (const ev of (state.dle_events || [])) {
+    const a = DLE_ANCHORS[ev.anchor] || DLE_ANCHORS.road_shoulder;
+    if (Math.hypot(wx - a.x, wy - (a.y - 30)) <= 60) { walkTo(a.x, a.y - 14); sheetMode = 'dle:' + ev.id; renderUI(); return; }
+  }
+  const np = (state.petak || []).length;
+  for (let i = 0; i <= Math.min(np, 2); i++) {
+    const [px0, py0] = PLOT_POS[i];
+    if (wx > px0 - 75 && wx < px0 + 75 && wy > py0 - 100 && wy < py0) {
+      walkTo(px0 - 90, py0 + 10);
+      sheetMode = i < np ? 'kebun' : 'lahan';
+      renderUI(); return;
+    }
+  }
+  for (const h of HOTSPOTS) {
+    if (wx >= h.x && wx <= h.x + h.w && wy >= h.y && wy <= h.y + h.h) { walkTo(h.ax, h.ay); sheetMode = h.tab; renderUI(); return; }
+  }
+  if (walkableIn(wx, wy) || walkableOut(wx, wy)) { walkTo(wx, wy); sheetMode = null; renderUI(); }
+  else if (!inYard(wx, wy) && wy >= riverTop(wx) - 12) { walkTo(Math.min(Math.max(wx, 30), WORLD_W - 30), riverTop(wx) - 16); sheetMode = null; renderUI(); }
+});
+
+function px(x, y, w, h, c) { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+function drawTag(txt, x, y, hot) {
+  g.font = 'bold 19px system-ui';
+  const w = g.measureText(txt).width + 26;
+  g.fillStyle = hot ? '#c97e18' : 'rgba(12,32,23,.9)';
+  g.beginPath(); g.roundRect(x - w / 2, y - 17, w, 34, 9); g.fill();
+  g.strokeStyle = hot ? '#ffe08a' : '#9be37f'; g.lineWidth = 2.5; g.stroke();
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(txt, x, y + 7); g.textAlign = 'left';
+}
+function bubble(txt, x, y) {
+  g.font = 'bold 22px system-ui';
+  const w = Math.max(40, g.measureText(txt).width + 22);
+  g.fillStyle = '#fff'; g.strokeStyle = '#2b3a30'; g.lineWidth = 2.5;
+  g.beginPath(); g.roundRect(x - w / 2, y - 40, w, 36, 12); g.fill(); g.stroke();
+  g.beginPath(); g.moveTo(x - 7, y - 5); g.lineTo(x, y + 6); g.lineTo(x + 7, y - 5); g.fill();
+  g.fillStyle = '#2b3a30'; g.textAlign = 'center'; g.fillText(txt, x, y - 14); g.textAlign = 'left';
+}
+
+// ---- opening-in-the-yard sequence (Evaluasi 1 #2): messy yard, teleport, dazed look-around, stand up
+let cine = null;
+function startCine() {
+  cine = { t0: performance.now(), dialog: false };
+  av.x = YARD_C[0]; av.y = YARD_C[1]; av.path = [];
+  camX = YARD_C[0]; camY = YARD_C[1] - 40;
+  document.body.classList.add('cine');
+  sheetMode = null; renderSheet();
+  el('cineSkip').hidden = false;
+}
+const CINE_LINES = [
+  'Tenanglah, Penjaga Bumi. Akulah Gaia. Aku membawamu ke lahan kecil ini.',
+  'Lihat sekelilingmu: sampah berserakan di dalam dan di luar pagar. Inilah luka yang kubicarakan.',
+  'Pungut sampahnya, pilah, olah, lalu jual hasilnya. Dari situlah koinmu bertambah. Modalmu hanya 1.000 koin, jadi bekerjalah dengan cermat.',
+];
+function showCineDialog() {
+  if (cine.dialog) return;
+  cine.dialog = true;
+  let i = 0;
+  const box = el('cineBox'), txt = el('cineText');
+  const show = () => { txt.textContent = CINE_LINES[i]; el('cineNext').textContent = i < CINE_LINES.length - 1 ? 'Lanjut ›' : 'Cara Bermain ›'; };
+  box.hidden = false; show(); el('cineNext').focus();
+  el('cineNext').onclick = () => {
+    i++;
+    if (i < CINE_LINES.length) { show(); return; }
+    box.hidden = true; showHowto();
+  };
+}
+function showHowto() {
+  el('howtoList').innerHTML = howtoHtml();
+  el('howtoBox').hidden = false;
+  el('howtoGo').focus({ preventScroll: true });
+  el('howtoBox').querySelector('.howto-card').scrollTop = 0;
+}
+function endCine() {
+  el('cineBox').hidden = true; el('howtoBox').hidden = true; el('cineSkip').hidden = true;
+  document.body.classList.remove('cine');
+  cine = null;
+  send({ aksi: 'intro_selesai' });
+  renderUI();
+}
+el('howtoGo').onclick = endCine;
+el('cineSkip').onclick = endCine;
+
+function drawCineAvatar(e) {
+  const [x, y] = YARD_C;
+  // light column descending onto the yard centre
+  const beam = e < 1.6 ? Math.min(1, e / 0.8) : Math.max(0, 1 - (e - 1.6) / 0.9);
+  if (beam > 0) {
+    const gr = g.createLinearGradient(0, y - 520, 0, y);
+    gr.addColorStop(0, 'rgba(246,230,150,0)'); gr.addColorStop(1, `rgba(246,236,170,${0.75 * beam})`);
+    g.fillStyle = gr; g.fillRect(x - 46 - 20 * beam, y - 520, 92 + 40 * beam, 520);
+    g.fillStyle = `rgba(255,250,210,${0.55 * beam})`;
+    g.beginPath(); g.ellipse(x, y, 70 * beam + 20, 22 * beam + 8, 0, 0, Math.PI * 2); g.fill();
+    if (!REDUCED && T % 3 === 0) parts.push({ x: x + (Math.random() - .5) * 90, y: y - Math.random() * 40, vx: (Math.random() - .5) * 1.5, vy: -1.5 - Math.random() * 2, l: 40, c: '#fff6c8' });
+  }
+  if (e < 1.3) return;
+  const a = Math.min(1, (e - 1.3) / 0.4);
+  const P = pose();
+  if (e < 3.0) drawSpr(P.sit, x, y, 74, false, a);
+  else if (e < 3.8) { drawSpr(P.look, x, y, 74, false); bubble('?', x - 4, y - 78); }
+  else if (e < 4.6) { drawSpr(P.look, x, y, 74, true); bubble('?', x + 4, y - 78); }
+  else if (e < 5.3) { drawSpr(P.look, x, y, 74, false); bubble('?!', x, y - 78); }
+  else drawSpr(P.idle, x, y, PLAYER_H, false);
+  if (e > 5.8) showCineDialog();
+}
+
+function drawWorld() {
+  const s = state || {};
+  // 1. illustrated isometric yard
+  if (yardImg.complete && yardImg.naturalWidth) {
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    g.drawImage(yardImg, 0, 0, WORLD_W, WORLD_H);
+  } else px(0, 0, WORLD_W, WORLD_H, '#5f9c45');
+
+  // 2. river shimmer
+  if (!REDUCED) {
+    g.fillStyle = 'rgba(200,240,255,.35)';
+    for (let i = 0; i < 12; i++) { const rx = (i * 151 + T * 0.7) % WORLD_W; g.fillRect(rx, riverTop(rx) + 30 + (i % 3) * 22, 26, 3); }
+  }
+
+  // 3. depth-sorted scene: plots, litter, incidents, pedestrians, vehicles, avatar
+  const D = [];
+  if (s.ditanam) D.push({ y: 470, f: () => {
+    const left = plotLeft(s), tot = s.dipupuk ? 30 : 40, x = 1080, y = 452;
+    if (left > 0) {
+      g.fillStyle = 'rgba(12,32,23,.9)'; g.beginPath(); g.roundRect(x - 80, y - 30, 160, 40, 9); g.fill();
+      g.fillStyle = '#fff'; g.font = 'bold 17px system-ui'; g.textAlign = 'center'; g.fillText('🌱 Kebun · ' + Math.ceil(left) + ' dtk', x, y - 12); g.textAlign = 'left';
+      px(x - 68, y - 2, 136, 8, '#222'); px(x - 68, y - 2, 136 * Math.min(1, 1 - left / tot), 8, '#7bd88f');
+    } else bubble('🌾 Panen!', x, y);
+  } });
+  const np = (s.petak || []).length;
+  for (let i = 0; i < np; i++) {
+    const p = s.petak[i], [x, y] = PLOT_POS[i];
+    D.push({ y, f: () => {
+      const left = plotLeft(p), tot = p.dipupuk ? 30 : 40;
+      drawSpr(!p.ditanam ? 'garden_1' : left > 0 ? 'garden_2' : 'garden_3', x, y, 150, false, 1, true);
+      if (p.ditanam && left > 0) { px(x - 50, y - 108, 100, 8, '#222'); px(x - 50, y - 108, 100 * Math.min(1, 1 - left / tot), 8, '#7bd88f'); }
+      if (p.ditanam && left <= 0) bubble('🌾', x, y - 96);
+    } });
+  }
+  if (s.diterima && np < 3) {
+    const [x, y] = PLOT_POS[np];
+    D.push({ y, f: () => { drawSpr('garden_4', x, y, 140, false, 0.92, true); if (meta && meta.harga_petak) drawTag(`Petak baru · ${meta.harga_petak} koin`, x, y - 112, s.koin >= meta.harga_petak); } });
+  }
+  const nowMs = performance.now();
+  litter().forEach(t => {
+    const hu = hiddenUntil[t.id];
+    if (hu !== undefined && nowMs < hu) return;
+    const pop = hu !== undefined ? Math.min(1, (nowMs - hu) / 350) : 1;
+    D.push({ y: t.y, f: () => {
+      const w = { kantong: 64, baterai: 58, daun: 64, ranting: 66, dahan: 92, buah: 60 }[t.jenis] || 74;
+      drawSpr(TRASH_SPR[t.jenis], t.x, t.y - (1 - pop) * 14, w * (0.6 + 0.4 * pop), t.x % 2 === 1, picking === t.id ? 0.55 : pop, true);
+    } });
+  });
+  (s.dle_events || []).forEach(ev => {
+    const a = DLE_ANCHORS[ev.anchor] || DLE_ANCHORS.road_shoulder;
+    D.push({ y: a.y, f: () => {
+      drawSpr(ev.jenis === 'vegetable_spill' ? 'trash_4' : 'trash_1', a.x, a.y, 64, false, 1, true);
+      const bob = REDUCED ? 0 : Math.sin(T / 7) * 6;
+      g.fillStyle = '#fff'; g.strokeStyle = '#7a4508'; g.lineWidth = 3;
+      g.beginPath(); g.roundRect(a.x - 20, a.y - 92 + bob, 40, 40, 10); g.fill(); g.stroke();
+      g.fillStyle = '#f2a10a'; g.font = 'bold 28px system-ui'; g.textAlign = 'center'; g.fillText('!', a.x, a.y - 61 + bob); g.textAlign = 'left';
+    } });
+  });
+  if (!REDUCED && !document.hidden) {
+    NPCS.forEach(n => { n.x += n.vx; if (n.x > WORLD_W + 40) n.x = -40; if (n.x < -40) n.x = WORLD_W + 40; });
+    CARS.forEach((c, i) => {
+      c.x += VEH[c.k].v * LANE[c.lane].dir;
+      if (c.x > WORLD_W + 240 || c.x < -240) CARS[i] = newCar(c.lane);
+    });
+    dropCars.forEach(c => {
+      c.x += c.vx;
+      if (!c.dropped && (c.vx > 0 ? c.x >= c.item.x : c.x <= c.item.x)) {
+        c.dropped = true; hiddenUntil[c.item.id] = performance.now();
+        spawnBurst(c.item.x, c.item.y - 18, '#e0c078');
+      }
+    });
+    dropCars = dropCars.filter(c => c.x > -260 && c.x < WORLD_W + 260);
+    // ambient: now and then a single leaf drifts down from a random tree
+    if (T % 50 === 0 && leaves.length < 24) { const [b, c] = TREES[Math.floor(Math.random() * TREES.length)]; leaves.push(makeLeaf(c, [b[0], b[1] + 10])); }
+  }
+  NPCS.forEach(n => { const y = ROAD_Y(n.x) + n.off; D.push({ y, f: () => drawSpr(n.fr[Math.floor(T / 14) % 2], n.x, y, n.h, n.vx < 0) }); });
+  [...CARS, ...dropCars].forEach(c => {
+    const V = VEH[c.k], L = LANE[c.lane], y = ROAD_Y(c.x) + L.off;
+    const bob = V.bob && !REDUCED ? Math.abs(Math.sin(c.x / 9)) * V.bob : 0;   // pedalling / horse gait
+    D.push({ y, f: () => drawSpr(V.s, c.x, y - bob, V.w, L.dir !== V.face, 1, true, ROAD_ANGLE) });
+  });
+  if (s.job && s.job.status === 'in_transit') {
+    const cx = 900 + ((T * 3) % 760), cy = ROAD_Y(cx) - 8;
+    D.push({ y: cy, f: () => drawSpr('veh_gerobak_1', cx, cy, 120, false, 1, true, ROAD_ANGLE) });
+  }
+  if (cine) {
+    const e = (performance.now() - cine.t0) / 1000;
+    D.push({ y: YARD_C[1], f: () => drawCineAvatar(e) });
+  } else if (s.diterima) {
+    const moving = stepAvatar();
+    D.push({ y: av.y, f: () => {
+      const P = pose();
+      let name = P.idle;
+      if (moving) name = av.back ? (Math.floor(av.step / 9) % 2 ? P.backA : P.backB) : (Math.floor(av.step / 9) % 2 ? P.walkA : P.walkB);
+      const bob = moving && !REDUCED ? Math.abs(Math.sin(av.step / 4.5)) * 2.5 : 0;
+      drawSpr(name, av.x, av.y - bob, PLAYER_H, av.flip);
+    } });
+  }
+  D.sort((a, b) => a.y - b.y).forEach(d => d.f());
+
+  // 4. area labels (hidden during the arrival sequence)
+  if (!cine) {
+    const guide = nextGuidance(s);
+    HOTSPOTS.forEach(h => drawTag(h.label, h.lx, h.ly, guide.tab === h.tab));
+  }
+
+  // 5. falling leaves (tree litter + ambient)
+  leaves = leaves.filter(l => l.life < 400);
+  leaves.forEach(l => {
+    if (l.delay > 0) { l.delay--; return; }
+    l.life++;
+    if (l.y < l.gy) { l.y += l.vy; l.x += Math.sin(l.ph + l.life / 14) * 1.3 + (l.gx - l.x) * 0.01; }
+    else if (!l.landed) l.landed = l.life;
+    if (l.landed && l.life - l.landed > 70) l.life = 400;   // gone
+    const a = l.landed ? Math.max(0, 1 - (l.life - l.landed) / 70) : 1;
+    drawSpr(l.s, l.x, l.y, l.size, Math.sin(l.ph + l.life / 9) < 0, a, false, Math.sin(l.ph + l.life / 11) * 0.8);
+  });
+
+  // 6. particles
+  parts = parts.filter(p => p.l-- > 0);
+  parts.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .2; g.globalAlpha = p.l / 45; px(p.x, p.y, 7, 7, p.c); });
+  g.globalAlpha = 1;
+}
+
+function frame() {
+  if (!document.hidden) {
+    T++;
+    const W = innerWidth, H = innerHeight, dpr = Math.min(W < 760 ? 1 : 1.5, devicePixelRatio || 1);
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) {
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.imageSmoothingEnabled = false;
+    const y0 = el('top').offsetHeight, y1 = H - el('nav').offsetHeight, hh = Math.max(200, y1 - y0);
+    // cover the play area with the illustration; pan with the avatar where it overflows
+    const sc = Math.max(hh / WORLD_H, W / WORLD_W);
+    const fx = cine ? YARD_C[0] : camFree ? camX : av.x, fy = cine ? YARD_C[1] - 40 : camFree ? camY : av.y;
+    camX += (fx - camX) * .06;
+    camY += (fy - camY) * .06;
+    let tx = (W - WORLD_W * sc) / 2;
+    if (WORLD_W * sc > W) tx = Math.min(0, Math.max(W - WORLD_W * sc, W / 2 - camX * sc));
+    let ty = (hh - WORLD_H * sc) / 2;
+    if (WORLD_H * sc > hh) ty = Math.min(0, Math.max(hh - WORLD_H * sc, hh / 2 - camY * sc));
+    VW = { tx, y0: y0 + ty, sc };
+
+    px(0, 0, W, H, '#12362a');
+    g.save(); g.beginPath(); g.rect(0, y0, W, hh); g.clip();
+    g.translate(tx, y0 + ty); g.scale(sc, sc);
+    drawWorld();
+    g.restore();
+  }
+  requestAnimationFrame(frame);
+}
+
+function syncBars() {
+  document.documentElement.style.setProperty('--top', el('top').offsetHeight + 'px');
+  document.documentElement.style.setProperty('--nav', el('nav').offsetHeight + 'px');
+}
+addEventListener('resize', syncBars);
+let pollTick = 0;
+setInterval(() => {
+  syncBars();
+  if (state && !document.hidden) {
+    // Auto-refresh saat kargo tiba atau kebun matang
+    const nowS = (meta ? meta.server_time : 0) + (Date.now() - received) / 1000;
+    if (state.job && state.job.status === 'in_transit' && nowS >= state.job.tiba_pada) fetchState();
+    else if (sheetMode === 'kebun') renderSheet();
+    if (++pollTick % 12 === 0 && !busy) fetchState();
+  }
+}, 1000);
+
+// status toast: show each new message for 6 s, then fade so it does not cover the yard labels
+let statusTimer = null;
+new MutationObserver(() => {
+  el('status').classList.remove('fade');
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => el('status').classList.add('fade'), 6000);
+}).observe(el('status'), { childList: true, characterData: true, subtree: true });
+
+syncBars();
+fetchState();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
