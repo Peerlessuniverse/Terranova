@@ -1,0 +1,40 @@
+# Deploy TERRA NOVA to Fly.io on every push to main (or manually from the Actions tab).
+# Needs the repo secret FLY_API_TOKEN (create with: fly tokens create deploy -x 999999h).
+name: Deploy ke Fly.io
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: fly-deploy
+  cancel-in-progress: false   # never interrupt a running deploy; the next one waits
+
+jobs:
+  deploy:
+    name: Cek & deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Cek sintaks Python & server bisa start
+        run: |
+          python -m py_compile server.py engine/*.py
+          TN_HOST=127.0.0.1 PORT=8099 TN_DB_PATH=/tmp/tn/gaia.sqlite3 python server.py &
+          for i in $(seq 1 20); do curl -fs http://127.0.0.1:8099/ > /dev/null && break; sleep 1; done
+          curl -fs http://127.0.0.1:8099/ > /dev/null
+          curl -fs http://127.0.0.1:8099/meta-statis > /dev/null
+          curl -fs http://127.0.0.1:8099/assets/musik/daftar.json > /dev/null
+          echo "server OK"
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
