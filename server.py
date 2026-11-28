@@ -47,7 +47,8 @@ META_STATIS_CACHE = meta_statis()  # teks misi, geometri lahan, paket: tetap sel
 def angka_id(teks):
     """Pesan engine memakai f"{x:,}" (450,000); tampilkan pemisah ribuan Indonesia (450.000)."""
     return _RIBUAN.sub(".", teks) if isinstance(teks, str) else teks
-DB_PATH = ROOT / "gaia.sqlite3"
+# TN_DB_PATH: on Fly.io the database lives on the mounted volume (/data) so it survives restarts and deploys
+DB_PATH = Path(os.environ.get("TN_DB_PATH") or (ROOT / "gaia.sqlite3"))
 
 # ---------------------------------------------------------------- akun & sesi
 PBKDF2_ITER = 240_000
@@ -548,7 +549,10 @@ def siapkan_db():
 
 
 if __name__ == "__main__":
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     siapkan_db()
     load_seed()  # warm catalog cache
-    print("Buka http://127.0.0.1:8765", flush=True)
-    ThreadingHTTPServer(("127.0.0.1", 8765), Layanan).serve_forever()
+    host = os.environ.get("TN_HOST", "127.0.0.1")   # hosting (Fly.io): TN_HOST=0.0.0.0 and PORT from the platform
+    port = int(os.environ.get("PORT", "8765"))
+    print(f"Buka http://{host}:{port}", flush=True)
+    ThreadingHTTPServer((host, port), Layanan).serve_forever()

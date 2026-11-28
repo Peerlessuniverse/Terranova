@@ -1,0 +1,34 @@
+# Fly.io config for TERRA NOVA. The database is on the volume "tn_data" (mounted at /data), so player
+# accounts and progress survive restarts and new deploys. Keep exactly ONE machine (SQLite = single writer).
+app = "terranova-game"
+primary_region = "sin"   # Singapore: closest Fly region to Indonesia
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  TN_HOST = "0.0.0.0"
+  PORT = "8080"
+  TN_DB_PATH = "/data/gaia.sqlite3"
+
+[mounts]
+  source = "tn_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

@@ -1,0 +1,8 @@
+*
+!server.py
+!engine/
+!data/
+!web/
+!cinematic-web/runtime/
+**/__pycache__
+**/*.pyc

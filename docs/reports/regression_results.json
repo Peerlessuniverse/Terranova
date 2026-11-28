@@ -2,8 +2,8 @@
   "passed": 85,
   "failed": 0,
   "total": 85,
-  "p95_ms": 36.09,
-  "snapshot_bytes": 16096,
+  "p95_ms": 65.79,
+  "snapshot_bytes": 16103,
   "results": [
     {
       "ff": "FF01",
@@ -99,7 +99,7 @@
       "ff": "FF04",
       "status": "PASS",
       "name": "River floating trash spawns & conserves missed mass to backlog",
-      "detail": "saw_spawn=True, backlog=480g"
+      "detail": "saw_spawn=True, backlog=2990g"
     },
     {
       "ff": "FF05",
@@ -494,7 +494,7 @@
     {
       "ff": "FF24",
       "status": "PASS",
-      "name": "Perf: API p95=36.1ms (<=500ms), shell_gz=61.6KB (<=250KB), snapshot=15.7KB (<=20KB)",
+      "name": "Perf: API p95=65.8ms (<=500ms), shell_gz=61.6KB (<=250KB), snapshot=15.7KB (<=20KB)",
       "detail": ""
     },
     {
