@@ -27,6 +27,8 @@ from engine.gameplay import (
     TITIK_LUAR,
     TITIK_POHON,
     aksi,
+    efek_mesin,
+    meta_statis,
     migrasi_state,
     perlu,
     ringkasan_ekstra,
@@ -36,6 +38,15 @@ from engine.gameplay import (
 )
 
 ROOT = Path(__file__).resolve().parent
+_RIBUAN = re.compile(r"(?<=\d),(?=\d{3}(?!\d))")
+
+
+META_STATIS_CACHE = meta_statis()  # teks misi, geometri lahan, paket: tetap selama proses server hidup
+
+
+def angka_id(teks):
+    """Pesan engine memakai f"{x:,}" (450,000); tampilkan pemisah ribuan Indonesia (450.000)."""
+    return _RIBUAN.sub(".", teks) if isinstance(teks, str) else teks
 DB_PATH = ROOT / "gaia.sqlite3"
 
 # ---------------------------------------------------------------- akun & sesi
@@ -46,6 +57,12 @@ USERNAME_RE = re.compile(r"^[A-Za-z0-9_.]{3,24}$")
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]+\.[^@\s]{2,}$")
 GAGAL_LOGIN = {}
 GAGAL_LOCK = threading.Lock()
+# Admin Config hanya untuk akun pemilik. Atur lewat env TN_ADMIN_USERS="nama1,nama2" (tanpa beda huruf besar/kecil).
+ADMIN_USERS = {u.strip().lower() for u in os.environ.get("TN_ADMIN_USERS", "Dewa_Penguji").split(",") if u.strip()}
+
+
+def is_admin(akun):
+    return bool(akun) and akun["username"].lower() in ADMIN_USERS
 
 
 def hash_sandi(sandi, salt=None):
@@ -206,9 +223,21 @@ def transaksi(akun_id, payload=None, key=None):
                     pesan = aksi(s, payload, kini, cfg)
                     db.execute("INSERT INTO receipt VALUES(?,?,?,?)", (rkey, payload.get("aksi", ""), kanonik, pesan))
             db.execute("INSERT OR REPLACE INTO pemain_akun VALUES(?,?)", (akun_id, json.dumps(s)))
-            return {"state": s, "meta": ringkasan_ekstra(s, kini, cfg), "pesan": pesan}
+            return {"state": s, "meta": ringkasan_ekstra(s, kini, cfg), "pesan": angka_id(pesan)}
     finally:
         db.close()
+
+
+def baca_state(akun_id):
+    """Baca state tanpa menulis ke DB (untuk endpoint GET yang hanya menampilkan)."""
+    cfg = get_active_config()
+    with sqlite3.connect(DB_PATH, timeout=10) as db:
+        row = db.execute("SELECT data FROM pemain_akun WHERE akun_id=?", (akun_id,)).fetchone()
+    if not row:
+        return None
+    s = migrasi_state(json.loads(row[0]), cfg)
+    settle_waktu(s, time.time())
+    return s
 
 
 def build_leaderboard_fixture(board="sustainability", my_state=None):
@@ -274,7 +303,7 @@ def build_leaderboard_fixture(board="sustainability", my_state=None):
 INTRO_MIME = {
     ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
     ".css": "text/css; charset=utf-8", ".json": "application/json", ".webp": "image/webp",
-    ".m4a": "audio/mp4", ".vtt": "text/vtt; charset=utf-8", ".md": "text/markdown; charset=utf-8",
+    ".m4a": "audio/mp4", ".ogg": "audio/ogg", ".vtt": "text/vtt; charset=utf-8", ".md": "text/markdown; charset=utf-8",
 }
 
 
@@ -291,6 +320,25 @@ class Layanan(BaseHTTPRequestHandler):
             self.send_header(k, v)
         self.end_headers()
         self.wfile.write(isi)
+
+    def kirim_media(self, isi, mime, cache="no-cache"):
+        """Audio dengan dukungan satu rentang byte (Range) agar browser bisa seek/stream Opus & AAC."""
+        total = len(isi)
+        rng = self.headers.get("Range", "")
+        m = re.match(r"bytes=(\d*)-(\d*)$", rng.strip()) if rng else None
+        if not m or (not m.group(1) and not m.group(2)):
+            self.kirim(isi, mime, cache=cache, header={"Accept-Ranges": "bytes"})
+            return
+        if m.group(1):
+            awal = int(m.group(1)); akhir = int(m.group(2)) if m.group(2) else total - 1
+        else:
+            awal = max(0, total - int(m.group(2))); akhir = total - 1
+        akhir = min(akhir, total - 1)
+        if awal > akhir or awal >= total:
+            self.kirim(b"", mime, kode=416, cache=cache, header={"Content-Range": f"bytes */{total}"})
+            return
+        self.kirim(isi[awal:akhir + 1], mime, kode=206, cache=cache,
+                   header={"Accept-Ranges": "bytes", "Content-Range": f"bytes {awal}-{akhir}/{total}"})
 
     def kirim_json(self, obj, kode=200, header=None):
         self.kirim(json.dumps(obj, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8", kode, header=header)
@@ -330,8 +378,10 @@ class Layanan(BaseHTTPRequestHandler):
             if not akun:
                 return self.kirim_json({"pesan": "Silakan masuk terlebih dahulu."}, 401)
             hasil = transaksi(akun["id"])
-            hasil["akun"] = {"username": akun["username"]}
+            hasil["akun"] = {"username": akun["username"], "admin": is_admin(akun)}
             self.kirim_json(hasil)
+        elif jalan == "/meta-statis":
+            self.kirim_json(META_STATIS_CACHE)
         elif jalan == "/catalog":
             res = query_catalog(
                 kind=qs.get("kind", ["all"])[0],
@@ -341,10 +391,19 @@ class Layanan(BaseHTTPRequestHandler):
                 per_page=qs.get("per_page", ["24"])[0],
                 only_active=qs.get("active", ["0"])[0] in ("1", "true"),
             )
+            seed = load_seed()
+            kind = qs.get("kind", ["all"])[0]
+            sumber = seed["machines"] if kind == "machine" else seed["materials"] if kind == "material" else []
+            res["categories"] = sorted({x.get("category") for x in sumber if x.get("category")})
+            for it in res.get("items", []):
+                if it.get("catalog_kind") == "machine":
+                    it["efek"] = efek_mesin(it.get("canonical_id") or it["id"])
             self.kirim_json(res)
         elif jalan == "/leaderboard":
             akun = self.akun()
-            st = transaksi(akun["id"])["state"] if akun else None
+            st = baca_state(akun["id"]) if akun else None
+            if st and not st.get("diterima"):
+                st = None
             board = qs.get("board", ["sustainability"])[0]
             self.kirim_json(build_leaderboard_fixture(board, st))
         elif jalan == "/admin/config":
@@ -355,8 +414,8 @@ class Layanan(BaseHTTPRequestHandler):
                 audits = [
                     {"version": r[0], "actor": r[1], "reason": r[2], "created_at": r[3]}
                     for r in db.execute("SELECT version, actor, reason, created_at FROM admin_audit ORDER BY id DESC LIMIT 15").fetchall()
-                ]
-            self.kirim_json({"config": get_active_config(), "audit": audits})
+                ] if is_admin(akun) else []
+            self.kirim_json({"config": get_active_config(), "audit": audits, "is_admin": is_admin(akun)})
         elif jalan == "/feedback":
             akun = self.akun()
             if not akun:
@@ -373,9 +432,13 @@ class Layanan(BaseHTTPRequestHandler):
                 ".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp",
                 ".wav": "audio/wav", ".txt": "text/plain", ".json": "application/json",
                 ".svg": "image/svg+xml", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
+                ".m4a": "audio/mp4",
             }.get(f.suffix.lower())
             if tipe and f.is_file() and (ROOT / "web" / "assets") in f.parents:
-                self.kirim(f.read_bytes(), tipe, cache="public, max-age=3600")
+                if tipe == "audio/mp4":   # songs: Range support so the browser streams/seeks instead of downloading all
+                    self.kirim_media(f.read_bytes(), tipe, cache="public, max-age=86400")
+                else:
+                    self.kirim(f.read_bytes(), tipe, cache="public, max-age=3600")
             else:
                 self.send_error(404)
         elif jalan == "/intro":
@@ -388,7 +451,10 @@ class Layanan(BaseHTTPRequestHandler):
             f = (base / rel).resolve()
             tipe = INTRO_MIME.get(f.suffix.lower())
             if tipe and f.is_file() and base in f.parents:
-                self.kirim(f.read_bytes(), tipe, cache="no-cache")
+                if tipe.startswith("audio/"):
+                    self.kirim_media(f.read_bytes(), tipe)
+                else:
+                    self.kirim(f.read_bytes(), tipe, cache="no-cache")
             else:
                 self.send_error(404)
         else:
@@ -421,10 +487,13 @@ class Layanan(BaseHTTPRequestHandler):
 
             if self.path == "/market/quote":
                 cfg = get_active_config()
-                q = make_quote(data.get("kind", ""), data.get("id", ""), data.get("side", "buy"), data.get("qty", 1), time.time(), cfg["price_multiplier"])
+                q = make_quote(str(data.get("kind", "")), str(data.get("id", "")), str(data.get("side", "buy")), data.get("qty", 1), time.time(), cfg["price_multiplier"])
                 return self.kirim_json({"quote": q})
 
             if self.path == "/admin/config":
+                if not is_admin(akun):
+                    return self.kirim_json({"pesan": "Admin Config hanya untuk akun pemilik."}, 403)
+                perlu(isinstance(data.get("updates", {}), dict), "Format pembaruan config tidak valid.")
                 if "rollback_to" in data:
                     cfg = rollback_config(data["rollback_to"], akun["username"], str(data.get("reason", "rollback lokal")))
                     return self.kirim_json({"ok": True, "config": cfg, "pesan": f"Config di-rollback ke versi baru v{cfg['version']}."})
@@ -449,7 +518,11 @@ class Layanan(BaseHTTPRequestHandler):
             hasil = transaksi(akun["id"], payload, key)
             self.kirim_json(hasil)
         except (ValueError, TypeError, KeyError) as e:
-            self.kirim_json({"pesan": str(e)}, 400)
+            self.kirim_json({"pesan": angka_id(str(e))}, 400)
+        except Exception:  # jangan pernah memutus koneksi tanpa jawaban
+            import traceback
+            traceback.print_exc()
+            self.kirim_json({"pesan": "Terjadi kesalahan di server lokal. Coba lagi."}, 500)
 
 
 def siapkan_db():

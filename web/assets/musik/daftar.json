@@ -1,0 +1,120 @@
+{
+ "tema": [
+  {
+   "id": "terra_nova",
+   "judul": "Terra Nova",
+   "artis": "Ukolabs",
+   "src": "/assets/musik/tema_terra_nova.m4a",
+   "durasi": 271
+  }
+ ],
+ "latar": [
+  {
+   "id": "morning_on_the_hill",
+   "judul": "Morning on the Hill",
+   "artis": "Ukolabs40",
+   "src": "/assets/musik/latar_morning_on_the_hill.m4a",
+   "durasi": 160
+  },
+  {
+   "id": "return_to_the_grove",
+   "judul": "Return to the Grove",
+   "artis": "Ukolabs40",
+   "src": "/assets/musik/latar_return_to_the_grove.m4a",
+   "durasi": 148
+  },
+  {
+   "id": "the_pastoral_way",
+   "judul": "The Pastoral Way",
+   "artis": "Ukolabs40",
+   "src": "/assets/musik/latar_the_pastoral_way.m4a",
+   "durasi": 168
+  },
+  {
+   "id": "the_return_of_the_wind",
+   "judul": "The Return of the Wind",
+   "artis": "Ukolabs40",
+   "src": "/assets/musik/latar_the_return_of_the_wind.m4a",
+   "durasi": 170
+  }
+ ],
+ "radio": [
+  {
+   "id": "bahagia_kelola_sampah",
+   "judul": "Bahagia Kelola Sampah",
+   "artis": "Ukolabs40",
+   "src": "/assets/musik/radio_bahagia_kelola_sampah.m4a",
+   "durasi": 200
+  },
+  {
+   "id": "balada_seorang_pemulung",
+   "judul": "Balada Seorang Pemulung",
+   "artis": "Ukolabs40",
+   "src": "/assets/musik/radio_balada_seorang_pemulung.m4a",
+   "durasi": 240
+  },
+  {
+   "id": "hari_peduli_sampah_nasional",
+   "judul": "Hari Peduli Sampah Nasional",
+   "artis": "Ukolabs40",
+   "src": "/assets/musik/radio_hari_peduli_sampah_nasional.m4a",
+   "durasi": 240
+  },
+  {
+   "id": "mafia_sampah",
+   "judul": "Mafia Sampah",
+   "artis": "Ukolabs40",
+   "src": "/assets/musik/radio_mafia_sampah.m4a",
+   "durasi": 209
+  },
+  {
+   "id": "mari_kita_kelola",
+   "judul": "Mari Kita Kelola",
+   "artis": "Ukolabs40",
+   "src": "/assets/musik/radio_mari_kita_kelola.m4a",
+   "durasi": 195
+  },
+  {
+   "id": "pirolisis_menepis",
+   "judul": "Pirolisis menepis",
+   "artis": "Ukolabs40",
+   "src": "/assets/musik/radio_pirolisis_menepis.m4a",
+   "durasi": 226
+  },
+  {
+   "id": "sampahku_com",
+   "judul": "Sampahku.com",
+   "artis": "Ukolabs40",
+   "src": "/assets/musik/radio_sampahku_com.m4a",
+   "durasi": 202
+  },
+  {
+   "id": "the_golden_rules_reggae",
+   "judul": "The Golden Rules (Reggae)",
+   "artis": "Ukolabs",
+   "src": "/assets/musik/radio_the_golden_rules_reggae.m4a",
+   "durasi": 225
+  },
+  {
+   "id": "the_golden_rules",
+   "judul": "The Golden Rules",
+   "artis": "Ukolabs",
+   "src": "/assets/musik/radio_the_golden_rules.m4a",
+   "durasi": 189
+  },
+  {
+   "id": "traditional_sampahku_songs",
+   "judul": "Karinding Celempung Sampahku",
+   "artis": "Ukolabs40",
+   "src": "/assets/musik/radio_traditional_sampahku_songs.m4a",
+   "durasi": 146
+  },
+  {
+   "id": "wasted_feeling",
+   "judul": "Wasted feeling",
+   "artis": "Ukolabs",
+   "src": "/assets/musik/radio_wasted_feeling.m4a",
+   "durasi": 197
+  }
+ ]
+}

@@ -18,14 +18,21 @@ from .catalog import (
 )
 
 WIB = timezone(timedelta(hours=7))
+# Parameter uji (mis. _test_eta) hanya dihormati saat suite regresi menyalakan flag ini; tidak pernah dari browser.
+TEST_MODE = False
+# Tambahan kapasitas baterai per unit LFP (Wh)
+BATTERY_CAP_WH = {"DRE-075": 500, "DRE-076": 1000, "DRE-077": 5000}
+BATTERY_CAP_MIN_WH = 1000
+BATTERY_CAP_MAX_WH = 200_000
+# Alat bergerak yang tidak dipasang di slot lahan
+MESIN_TIDAK_DIPASANG = {"MCH-002"}
 
 FRAKSI = ("organik", "plastik", "kertas", "logam_kaca", "residu", "B3")
 KOTA_SAH = ("Bandung", "Jakarta", "Surabaya", "Yogyakarta", "Semarang", "Medan", "Makassar", "Kota lainnya")
+# Setting karakter (Evaluasi 4): dipilih sekali sebelum prolog; warna diterapkan ke sprite di klien (web/assets/tn_avatar.js)
 AVATAR_ALLOW = {
-    "rambut": ("pendek", "ikal", "panjang", "cepuk"),
-    "baju": ("hijau", "biru", "coklat", "kuning"),
-    "topi": ("tanpa", "rimba", "cap", "daun"),
-    "aksesori": ("tanpa", "kacamata", "ransel", "syal"),
+    "baju": ("hijau", "biru", "merah", "kuning", "ungu", "coklat"),
+    "rambut": ("coklat", "hitam", "pirang", "merah"),
 }
 
 # Realistic_v1 Transport Nodes (Addendum 11 §4)
@@ -154,13 +161,221 @@ KENDARAAN = {
 
 # Modular placement slots inside/right of yard (no overlap, road & river safe)
 YARD_SLOTS = [
-    {"id": "S1", "label": "Slot Komposter Kiri", "x": 620, "y": 530},
-    {"id": "S2", "label": "Slot Alat Tengah", "x": 760, "y": 545},
-    {"id": "S3", "label": "Slot Energi Kanan", "x": 1030, "y": 535},
-    {"id": "S4", "label": "Slot Biogas Belakang", "x": 910, "y": 360},
-    {"id": "S5", "label": "Slot Surya Atap", "x": 960, "y": 210},
-    {"id": "S6", "label": "Slot Ekspansi Timur", "x": 1410, "y": 495},
+    # Koordinat dipilih di ruang kosong ilustrasi yard_iso (tidak menimpa pagar, gerbang, tiang lampu, atau kebun)
+    {"id": "S1", "label": "Slot Komposter Kiri", "x": 690, "y": 400},
+    {"id": "S2", "label": "Slot Alat Tengah", "x": 885, "y": 455},
+    {"id": "S3", "label": "Slot Energi Kanan", "x": 1275, "y": 575},
+    {"id": "S4", "label": "Slot Biogas Belakang", "x": 1185, "y": 190},
+    {"id": "S5", "label": "Slot Surya Atap", "x": 895, "y": 150},
+    {"id": "S6", "label": "Slot Ekspansi Timur", "x": 1470, "y": 300},
 ]
+
+# ---- Tata lahan bebas (Evaluasi 3 #6): alat ditaruh di mana saja di lahan milik, diseret pemain.
+# Koordinat = piksel ilustrasi yard_iso (1672 x 941). Klien menerima geometri yang sama lewat meta["tata_lahan"].
+TATA_LAHAN = {
+    # Lahan milik: halaman berpagar + rumput sekitarnya, berhenti 75 px di atas garis tengah jalan
+    "lahan": [[140, 300], [420, 200], [700, 110], [1080, 110], [1420, 250], [1650, 320],
+              [1650, round(611 + 0.0962 * 1650 - 75)], [140, round(611 + 0.0962 * 140 - 75)]],
+    # Bangunan, tumpukan, mobil, kebun, petak tanam, tiang lampu (x0, y0, x1, y1)
+    "larangan": [[755, 120, 1045, 350], [500, 210, 760, 410], [420, 390, 700, 505], [710, 370, 840, 460],
+                 [950, 300, 1390, 470], [1410, 340, 1570, 450], [1530, 420, 1690, 530], [1410, 512, 1570, 622],
+                 [335, 280, 390, 600], [1395, 455, 1440, 690]],
+    # Batang pohon (x, y, radius)
+    "pohon": [[190, 150, 40], [440, 195, 40], [465, 255, 40], [280, 345, 40], [140, 482, 40], [700, 140, 40],
+              [1195, 152, 40], [1560, 125, 40], [1440, 270, 40], [1630, 600, 40]],
+    # Pagar halaman (sama dengan FENCE di web/index.html): alat tidak boleh menumpang di garis pagar
+    "pagar": [[380, 500], [380, 420], [510, 310], [705, 180], [770, 160], [1045, 170], [1385, 345], [1390, 430], [1360, 450],
+              [1265, 500], [1180, 545], [1000, 580], [900, 580], [745, 585], [655, 565], [530, 550], [430, 530]],
+    # Atap kantor: hanya panel surya
+    "atap": [800, 95, 1010, 180],
+}
+POS_PUSAT = (900, 430)  # penempatan otomatis dicari dari tengah halaman keluar
+
+
+def _dalam_poligon(x, y, poly):
+    dalam = False
+    j = len(poly) - 1
+    for i in range(len(poly)):
+        xi, yi = poly[i]
+        xj, yj = poly[j]
+        if (yi > y) != (yj > y) and x < (xj - xi) * (y - yi) / (yj - yi) + xi:
+            dalam = not dalam
+        j = i
+    return dalam
+
+
+def jejak_mesin(cid):
+    """Radius jejak (px ilustrasi) dari luas alat di katalog."""
+    info = get_machine(cid) or {}
+    a = info.get("area_m2") or 1
+    return 24 if a <= 1 else 30 if a <= 4 else 38 if a <= 15 else 46 if a <= 60 else 54
+
+
+def mesin_surya(cid):
+    info = get_machine(cid) or {}
+    return cid in DRES_WATT and DRES_WATT[cid][1] == "surya" or "PLTS" in info.get("nama", "") or info.get("category") == "Surya"
+
+
+def _titik_boleh(x, y, atap_ok):
+    ax0, ay0, ax1, ay1 = TATA_LAHAN["atap"]
+    if atap_ok and ax0 <= x <= ax1 and ay0 <= y <= ay1:
+        return True
+    if not _dalam_poligon(x, y, TATA_LAHAN["lahan"]):
+        return False
+    if any(r[0] < x < r[2] and r[1] < y < r[3] for r in TATA_LAHAN["larangan"]):
+        return False
+    return not any((x - px) ** 2 + (y - py) ** 2 < pr ** 2 for px, py, pr in TATA_LAHAN["pohon"])
+
+
+def posisi_mesin(m):
+    """Posisi tampil (x, y) alat terpasang, atau None bila disimpan di gudang."""
+    if m.get("pos"):
+        return tuple(m["pos"])
+    sl = next((sl for sl in YARD_SLOTS if sl["id"] == m.get("slot")), None)
+    return (sl["x"], sl["y"]) if sl else None
+
+
+def cek_posisi(s, uid, cid, x, y):
+    """None bila (x, y) sah untuk alat ini; selain itu alasan penolakan."""
+    r = jejak_mesin(cid)
+    atap_ok = mesin_surya(cid)
+    sampel = ((0, 0), (-r, 0), (r, 0), (0, -r / 2), (0, r / 2))
+    for dx, dy in sampel:
+        if not _titik_boleh(x + dx, y + dy, atap_ok):
+            return "Posisi di luar lahan atau menimpa bangunan, kebun, pohon, atau jalan."
+    sisi = {_dalam_poligon(x + dx, y + dy, TATA_LAHAN["pagar"]) for dx, dy in sampel}
+    if len(sisi) > 1 and not (atap_ok and TATA_LAHAN["atap"][1] <= y <= TATA_LAHAN["atap"][3] and TATA_LAHAN["atap"][0] <= x <= TATA_LAHAN["atap"][2]):
+        return "Alat menumpang di garis pagar. Geser ke dalam atau ke luar pagar."
+    for m in s.get("machines_owned", []):
+        if m["uid"] == uid:
+            continue
+        p = posisi_mesin(m)
+        if not p:
+            continue
+        r2 = jejak_mesin(m["canonical_id"])
+        if (x - p[0]) ** 2 + (2 * (y - p[1])) ** 2 < (r + r2) ** 2:
+            return "Posisi menimpa alat lain. Geser sedikit agar tidak tumpang tindih."
+    return None
+
+
+def cari_posisi_bebas(s, uid, cid):
+    cx, cy = POS_PUSAT
+    titik = [(x, y) for x in range(150, 1650, 20) for y in range(100, 720, 15)]
+    if mesin_surya(cid):  # panel surya diutamakan di atap
+        ax0, ay0, ax1, ay1 = TATA_LAHAN["atap"]
+        titik = [(x, y) for x in range(ax0 + 30, ax1 - 20, 30) for y in range(ay0 + 20, ay1 - 10, 20)] + titik
+        cx, cy = (ax0 + ax1) / 2, (ay0 + ay1) / 2
+    titik.sort(key=lambda p: (not _dalam_poligon(p[0], p[1], TATA_LAHAN["lahan"]), (p[0] - cx) ** 2 + (2 * (p[1] - cy)) ** 2))
+    r = jejak_mesin(cid)
+    # utamakan tempat yang tidak menimpa titik munculnya sampah, supaya alat tidak tertutup sampah
+    for hindari in (True, False):
+        for x, y in titik:
+            if hindari and _dekat_titik_sampah(x, y, r):
+                continue
+            if cek_posisi(s, uid, cid, x, y) is None:
+                return [x, y]
+    return None
+
+
+def _dekat_titik_sampah(x, y, r):
+    return any((x - tx) ** 2 + (2 * (y - ty)) ** 2 < (r + 45) ** 2 for tx, ty in TITIK_DALAM + TITIK_LUAR + TITIK_POHON)
+
+
+def titik_tertutup_alat(s):
+    """Titik sampah yang kini berada di bawah alat terpasang (sampah baru tidak dimunculkan di sana)."""
+    alat = [(posisi_mesin(m), jejak_mesin(m["canonical_id"])) for m in s.get("machines_owned", [])]
+    alat = [(p, r) for p, r in alat if p]
+    return {(tx, ty) for tx, ty in TITIK_LUAR + TITIK_POHON if any((tx - p[0]) ** 2 + (2 * (ty - p[1])) ** 2 < (r + 20) ** 2 for p, r in alat)}
+
+
+# ---- Efek produksi nyata alat dasar (Evaluasi 4): hanya alat yang TERPASANG di lahan (atau disewa) yang bekerja.
+PILAH_DASAR_G, PILAH_PER_MEJA_G, PILAH_MAKS_G = 5_000, 5_000, 25_000      # MCH-005 meja pilah
+KOMPOS_BATCH_G = {"MCH-021": 2_000, "MCH-022": 4_000, "MCH-023": 3_000, "MCH-024": 10_000}   # organik per aksi
+RAK_GUDANG_G = 100_000          # MCH-006 rak: +100 kg kapasitas per unit
+BAK_ORGANIK_G = 100_000         # MCH-007 bak tertutup: 100 kg organik tidak memakai gudang per unit
+TONG_RESIDU_PCT, TONG_MAKS = 25, 2   # MCH-001: residu hasil pilah -25% per unit (dipindah ke fraksi daur ulang)
+TIMBANGAN_BONUS_PCT = 5         # MCH-003: +5% harga jual produk olahan (maks 1 unit)
+PENCACAH_BATCH_G, PENCACAH_HASIL = 3_000, 900   # MCH-044: hingga 3 kg plastik per aksi, 900 g produk per kg
+
+
+def alat_aktif(s):
+    """Jumlah unit per canonical_id yang bekerja: milik sendiri & terpasang, ditambah alat sewaan yang masih berlaku."""
+    n = {}
+    for m in s.get("machines_owned", []):
+        if posisi_mesin(m):
+            n[m["canonical_id"]] = n.get(m["canonical_id"], 0) + 1
+    for m in s.get("machines_leased", []):
+        n[m["canonical_id"]] = n.get(m["canonical_id"], 0) + 1
+    return n
+
+
+def kap_gudang(s):
+    return s["gudang_kap_g"] + RAK_GUDANG_G * alat_aktif(s).get("MCH-006", 0)
+
+
+def kap_pilah(s):
+    return min(PILAH_MAKS_G, PILAH_DASAR_G + PILAH_PER_MEJA_G * alat_aktif(s).get("MCH-005", 0))
+
+
+def kap_kompos(s):
+    a = alat_aktif(s)
+    return sum(g * a.get(cid, 0) for cid, g in KOMPOS_BATCH_G.items())
+
+
+def tata_ulang_mesin(raw):
+    # Slot tetap lama -> posisi bebas; alat yang posisinya kini tidak sah (atau starter yang belum tampil) ditata ulang
+    for m in raw.get("machines_owned", []):
+        if m.get("canonical_id") in MESIN_TIDAK_DIPASANG or m.get("disimpan"):
+            continue
+        p = posisi_mesin(m)
+        m["slot"] = None
+        m.pop("pos", None)
+        if p is None and not m.get("starter"):
+            continue
+        auto = not m.get("dipindah_pemain")
+        if p is None or cek_posisi(raw, m["uid"], m["canonical_id"], p[0], p[1]) or (auto and _dekat_titik_sampah(p[0], p[1], jejak_mesin(m["canonical_id"]))):
+            p = cari_posisi_bebas(raw, m["uid"], m["canonical_id"])
+        if p:
+            m["pos"] = [int(p[0]), int(p[1])]
+
+
+def efek_mesin(cid):
+    """Kalimat jujur tentang dampak alat di dalam game bila dibeli (UI katalog & kartu alat)."""
+    out = []
+    if cid in DRES_WATT:
+        w, jenis = DRES_WATT[cid]
+        if jenis == "surya":
+            out.append(f"☀️ Mengisi baterai otomatis saat siang (WIB): +{w:,} W terpasang ≈ {w * 4.97 / 1000:.2f} kWh/hari".replace(",", "."))
+        else:
+            out.append(f"💧 Mengisi baterai 24 jam: +{w:,} W ≈ {w * 24 / 1000:.1f} kWh/hari".replace(",", "."))
+    if cid in BATTERY_CAP_WH:
+        out.append(f"🔋 Kapasitas baterai +{BATTERY_CAP_WH[cid]:,} Wh".replace(",", "."))
+    if cid == "WTE-002":
+        out.append("🔥 Olah biogas tanpa biaya mitra (hemat 2.500 GC per batch)")
+    if cid == "WTE-015":
+        out.append("⚡ Jalankan genset biogas tanpa biaya mitra (hemat 2.000 GC per batch)")
+    nyata = {
+        "MCH-005": f"♻️ Kapasitas pilah +{PILAH_PER_MEJA_G // 1000} kg per aksi (tanpa meja {PILAH_DASAR_G // 1000} kg, maks {PILAH_MAKS_G // 1000} kg)",
+        "MCH-001": f"🗑️ Residu hasil pilah −{TONG_RESIDU_PCT}% per unit (maks {TONG_MAKS} unit): jadi plastik & kertas yang bisa dijual",
+        "MCH-003": f"⚖️ Harga jual produk olahan +{TIMBANGAN_BONUS_PCT}% (berat terukur akurat, cukup 1 unit)",
+        "MCH-006": f"📦 Kapasitas gudang +{RAK_GUDANG_G // 1000} kg per unit",
+        "MCH-007": f"🛢️ Menyimpan {BAK_ORGANIK_G // 1000} kg organik di luar gudang per unit",
+        "MCH-044": f"✂️ Olah plastik hingga {PENCACAH_BATCH_G // 1000} kg per aksi, hasil {PENCACAH_HASIL} g per kg (tanpa pencacah 1 kg → 850 g)",
+    }
+    if cid in KOMPOS_BATCH_G:
+        out.append(f"🌿 Kapasitas kompos +{KOMPOS_BATCH_G[cid] // 1000} kg organik per aksi (kapasitas komposter terpasang dijumlahkan)")
+    if cid in nyata:
+        out.append(nyata[cid])
+    if cid in MESIN_TIDAK_DIPASANG:
+        out.append("🛒 Alat angkut untuk menu Angkut (tidak dipasang di lahan)")
+    else:
+        out.append("🏗️ Bekerja selama terpasang di lahan (disimpan di gudang = tidak bekerja); bisa diseret ke posisi lain")
+    if not (cid in DRES_WATT or cid in BATTERY_CAP_WH or cid in ("WTE-002", "WTE-015") or cid in MESIN_TIDAK_DIPASANG or cid in nyata or cid in KOMPOS_BATCH_G):
+        out.append("📘 Belum menambah produksi otomatis: alat koleksi & edukasi proses daur ulang")
+    if ((get_machine(cid) or {}).get("f_stage", 1)) >= 3:
+        out.append("⚠️ Skala industri (F3+): memengaruhi evaluasi Gaia's Chosen")
+    return out
+
 
 # Realistic_v1 Prices for processed products (per kg, 1 GC = Rp1 nominal simulation)
 HARGA_PRODUK_REALISTIS = {
@@ -231,7 +446,7 @@ def stat_awal():
         "pilah_g": 0, "kompos": 0, "daur": 0, "kreasi": 0, "biogas": 0,
         "panen": 0, "panen_langka": 0, "koin_jual": 0, "lot_jual_sah": 0,
         "lot_jual_laba": 0, "pulih_unik_g": 0, "neraca_valid": 0, "audit_energi": 0,
-        "angkut_tepat": 0, "resep_dipakai": [], "varietas_panen": [], "fraksi_terpilah": [],
+        "angkut_tepat": 0, "audit_neraca": 0, "batch_sejak_audit": 0, "laba_operasi_puncak_gc": 0, "resep_dipakai": [], "varietas_panen": [], "fraksi_terpilah": [],
         "hari_bersih": [], "energi_sumber_dipakai": [],
     }
 
@@ -249,7 +464,7 @@ def state_awal(starter_gc=1_000_000):
         "diterima": False,
         "nama": "Penjaga Bumi",
         "gender": "pria",
-        "avatar": {"rambut": "pendek", "baju": "hijau", "topi": "rimba", "aksesori": "tanpa"},
+        "avatar": {"baju": "hijau", "rambut": "coklat"},
         "kota": "Bandung",
         "koin": int(starter_gc),
         "starter_gc_initial": int(starter_gc),
@@ -356,6 +571,7 @@ def state_awal(starter_gc=1_000_000):
             "battery_loss_wh": 0,
             "biogas_m3_x100": 0,
             "last_audit_ts": 0,
+            "gen_sisa_mwh": 0,  # sisa pecahan produksi DRES (mWh) yang dibawa ke tick berikutnya
         },
         # Progression, Grants, Celebrations, Journal, Periodic Missions
         "gt_claimed": [],
@@ -369,42 +585,68 @@ def state_awal(starter_gc=1_000_000):
     }
 
 
+IDENTITAS_KEYS = ("diterima", "nama", "gender", "avatar", "kota", "public_profile")
+
+
+def reset_dari_v09(raw, starter_gc, kini=None):
+    """Keputusan pemilik (B6): akun v0.9 direset ke Realistic_v1. Identitas (nama, karakter, kota) dipertahankan;
+    progres, saldo 1.000 koin lama, dan stok benih lama diganti modal awal Realistic_v1."""
+    kini = kini or time.time()
+    baru = state_awal(starter_gc)
+    for k in IDENTITAS_KEYS:
+        if k in raw:
+            baru[k] = raw[k]
+    baru["waktu"] = kini
+    if baru["diterima"]:
+        baru["dle_cursor_slot"] = int(kini // 180)
+        sebar_sampah_awal(baru, kini)
+        buat_insiden_tutorial(baru, kini)
+        push_celebration(baru, "mission", "Selamat datang di ekonomi baru",
+                         f"Akun lama direset ke Realistic_v1 dengan modal {int(starter_gc):,} GC.", 1, kini)
+    return baru
+
+
 def migrasi_state(raw, cfg=None):
-    """Non-destructive migration: preserves existing v0.9 accounts & balances without forced overwrite!"""
-    base = state_awal((cfg or DEFAULT_CONFIG).get("starter_gc", 1_000_000))
+    """Migrasi state. Akun v0.9 (versi 2 / historical_v09_preserved) direset ke Realistic_v1 (keputusan pemilik B6)."""
+    starter = (cfg or DEFAULT_CONFIG).get("starter_gc", 1_000_000)
+    base = state_awal(starter)
     if not isinstance(raw, dict):
         return base
     v = raw.get("versi", 1)
-    if v >= 2:
-        was_v2 = (v == 2)
+    if v == 2 or raw.get("economy_mode") == "historical_v09_preserved":
+        return reset_dari_v09(raw, starter)
+    if v >= 3:
         for k, val in base.items():
             if k not in raw:
                 raw[k] = val
         for k, val in stat_awal().items():
             raw["stat"].setdefault(k, val)
+        # avatar lama (rambut pendek/topi/aksesori) -> warna jaket & rambut
+        av_lama = raw.get("avatar") or {}
+        raw["avatar"] = {slot: (av_lama.get(slot) if av_lama.get(slot) in daftar else daftar[0]) for slot, daftar in AVATAR_ALLOW.items()}
         for k, val in base["wallet"].items():
             raw["wallet"].setdefault(k, val)
         for k, val in base["energy"].items():
             raw["energy"].setdefault(k, val)
         for k, val in base["nodes"].items():
             raw["nodes"].setdefault(k, val)
-        if was_v2:
-            # Preserve existing v0.9 account balance & flag it as historical_v09 so we NEVER overwrite old balances!
-            raw["versi"] = 3
-            if raw.get("diterima"):
-                raw["economy_mode"] = "historical_v09_preserved"
-                raw["starter_gc_initial"] = raw.get("koin", 1000)
-                if "CR01" not in raw["benih_map"] and raw.get("benih", 0) > 0:
-                    raw["benih_map"]["CR01"] = raw["benih"]
+        for m in raw.get("machines_owned", []):
+            # Gerobak adalah alat bergerak; lepaskan dari slot bila sempat dipasang di build lama
+            if m.get("canonical_id") in MESIN_TIDAK_DIPASANG:
+                m["slot"] = None
+                m.pop("pos", None)
+        tata_ulang_mesin(raw)
         return raw
+    tata_ulang_mesin(base)
     return base
 
 
 def gudang_terpakai_g(s):
     panen_g = sum(s.get("panen_map", {}).values())
+    organik_di_bak = min(s["organik_g"], BAK_ORGANIK_G * alat_aktif(s).get("MCH-007", 0))
     return (
         s["campuran_g"]
-        + s["organik_g"]
+        + s["organik_g"] - organik_di_bak
         + s["plastik_g"]
         + s["kertas_g"]
         + s["logam_kaca_g"]
@@ -440,9 +682,23 @@ def push_celebration(s, ctype, title, subtitle, priority, kini):
 
 
 def record_clean_day(s, kini):
+    """Hari operasi bersih = hari dengan minimal satu batch pengolahan nyata dan stok B3 nol.
+    Hanya dipanggil dari aksi pengolahan (pilah/olah/daur/biogas/serah B3), bukan dari pungut atau audit."""
     day = datetime.fromtimestamp(kini, tz=WIB).strftime("%Y-%m-%d")
     if s["b3_g"] == 0 and day not in s["stat"]["hari_bersih"]:
         s["stat"]["hari_bersih"].append(day)
+
+
+def catat_batch(s):
+    """Satu batch pengolahan nyata: menambah neraca valid dan menandai ada batch yang bisa diaudit."""
+    s["stat"]["neraca_valid"] += 1
+    s["stat"]["batch_sejak_audit"] = s["stat"].get("batch_sejak_audit", 0) + 1
+
+
+def catat_jual_produksi(s):
+    """PR07: penjualan produksi sendiri hanya dihitung bila laba operasi kumulatif positif setelah penjualan."""
+    if s["wallet"]["operating_profit_gc"] > 0:
+        s["stat"]["lot_jual_laba"] += 1
 
 
 def update_wealth_and_milestones(s, kini):
@@ -455,6 +711,8 @@ def update_wealth_and_milestones(s, kini):
         if info:
             m_val += int(info["harga_gc"] * (m.get("condition", 100) / 100.0) * 0.6)
     net_worth = s["koin"] + m_val
+    st = s["stat"]
+    st["laba_operasi_puncak_gc"] = max(st.get("laba_operasi_puncak_gc", 0), s["wallet"].get("operating_profit_gc", 0))
     if net_worth > s.get("peak_wealth_gc", 0):
         s["peak_wealth_gc"] = net_worth
     earned = s["wallet"]["earned_gc"]
@@ -546,7 +804,7 @@ def tumbuh_sampah(s, kini):
         return
     for sl in range(max(s["sampah_slot"] + 1, slot - 2), slot + 1):
         luar = [t for t in s["sampah_liar"] if t["zona"] == "luar"]
-        terpakai = {(t["x"], t["y"]) for t in s["sampah_liar"]}
+        terpakai = {(t["x"], t["y"]) for t in s["sampah_liar"]} | titik_tertutup_alat(s)
         bebas = [t for t in TITIK_LUAR if t not in terpakai]
         if len(luar) >= SAMPAH_MAKS_LUAR or not bebas:
             break
@@ -565,7 +823,7 @@ def jatuh_pohon(s, kini):
         if rng.random() > 0.6:
             continue
         ada = [t for t in s["sampah_liar"] if t.get("sumber") == "pohon"]
-        terpakai = {(t["x"], t["y"]) for t in s["sampah_liar"]}
+        terpakai = {(t["x"], t["y"]) for t in s["sampah_liar"]} | titik_tertutup_alat(s)
         bebas = [t for t in TITIK_POHON if t not in terpakai]
         if len(ada) >= POHON_MAKS or not bebas:
             break
@@ -634,6 +892,95 @@ def jatuh_sungai(s, kini):
     s["sungai_slot"] = slot
 
 
+# Kurva surya waktu nyata (WIB, dekat khatulistiwa): terbit 06.00, terbenam 18.00, puncak 12.00.
+# Faktor puncak 0,65 dari daya terpasang -> ~5 jam-matahari-puncak per hari (wajar untuk Indonesia).
+SURYA_TERBIT_JAM = 6.0
+SURYA_TERBENAM_JAM = 18.0
+SURYA_PUNCAK = 0.65
+DRES_WATT = {  # canonical_id -> (watt terpasang, jenis)
+    "DRE-001": (50, "surya"), "DRE-002": (150, "surya"), "DRE-003": (500, "surya"),
+    "DRE-004": (1000, "surya"), "DRE-005": (3000, "surya"), "DRE-030": (100, "hidro"),
+}
+DRES_MAKS_W = 100_000  # batas DRES rumah tangga-UMKM (parameter freeze)
+
+
+def jam_wib(t):
+    """Jam lokal WIB (0..24, pecahan) dari epoch detik."""
+    return ((t + 7 * 3600) % 86400) / 3600.0
+
+
+def faktor_surya(t):
+    """Fraksi daya terpasang yang dihasilkan panel pada saat t (0 di malam hari)."""
+    h = jam_wib(t)
+    if h <= SURYA_TERBIT_JAM or h >= SURYA_TERBENAM_JAM:
+        return 0.0
+    lama = SURYA_TERBENAM_JAM - SURYA_TERBIT_JAM
+    return SURYA_PUNCAK * math.sin(math.pi * (h - SURYA_TERBIT_JAM) / lama)
+
+
+def _kumulatif_surya(t):
+    """Integral faktor surya (jam efektif tanpa faktor puncak) dari epoch lokal 0 sampai t."""
+    lokal = t + 7 * 3600
+    hari, sisa = divmod(lokal, 86400)
+    h = sisa / 3600.0
+    lama = SURYA_TERBENAM_JAM - SURYA_TERBIT_JAM
+    per_hari = 2 * lama / math.pi
+    if h <= SURYA_TERBIT_JAM:
+        dalam = 0.0
+    elif h >= SURYA_TERBENAM_JAM:
+        dalam = per_hari
+    else:
+        dalam = (lama / math.pi) * (1 - math.cos(math.pi * (h - SURYA_TERBIT_JAM) / lama))
+    return hari * per_hari + dalam
+
+
+def jam_surya_efektif(t0, t1):
+    """Jam-matahari-puncak efektif di antara t0 dan t1 (dikali watt terpasang = Wh)."""
+    if t1 <= t0:
+        return 0.0
+    return SURYA_PUNCAK * (_kumulatif_surya(t1) - _kumulatif_surya(t0))
+
+
+def watt_dres(s, ev=None):
+    """Total watt terpasang (surya, hidro) setelah efek event harian, dibatasi 100 kW."""
+    ev = ev or {"solar_mult": 1.0, "hydro_mult": 1.0}
+    surya = hidro = 0
+    for m in s.get("machines_owned", []):
+        spek = DRES_WATT.get(m["canonical_id"])
+        if not spek:
+            continue
+        w, jenis = spek
+        if jenis == "surya":
+            surya += int(w * ev["solar_mult"])
+        else:
+            hidro += int(w * ev["hydro_mult"])
+    hidro = min(hidro, DRES_MAKS_W)
+    surya = min(surya, DRES_MAKS_W - hidro)
+    return surya, hidro
+
+
+def info_waktu(s, kini):
+    """Info siang/malam untuk UI dan perkiraan daya DRES saat ini."""
+    h = jam_wib(kini)
+    if 5.0 <= h < 6.5:
+        fase = "fajar"
+    elif 6.5 <= h < 16.5:
+        fase = "siang"
+    elif 16.5 <= h < 18.5:
+        fase = "senja"
+    else:
+        fase = "malam"
+    surya_w, hidro_w = watt_dres(s, active_dynamic_event(kini))
+    f = faktor_surya(kini)
+    return {
+        "jam": round(h, 3), "fase": fase, "zona": "WIB", "zona_offset_jam": 7,
+        "terbit_jam": SURYA_TERBIT_JAM, "terbenam_jam": SURYA_TERBENAM_JAM,
+        "faktor_surya": round(f, 3),
+        "surya_terpasang_w": surya_w, "hidro_terpasang_w": hidro_w,
+        "daya_kini_w": int(round(surya_w * f + hidro_w)),
+    }
+
+
 def settle_waktu(s, kini):
     if s["waktu"] <= 0:
         s["waktu"] = kini
@@ -656,30 +1003,25 @@ def settle_waktu(s, kini):
         s["rare_boost"] = None
     s["machines_leased"] = [ls for ls in s.get("machines_leased", []) if kini < ls["expires_at"]]
 
-    # 4. Passive DRES renewable generation (solar / pico-hydro, capped to battery capacity, NO perpetual energy!)
-    if s["diterima"] and selang_cap >= 10:
+    # 4. Passive DRES renewable generation (waktu nyata WIB: surya mengikuti kurva siang-malam,
+    #    mikrohidro 24 jam; dibatasi kapasitas baterai, sisa pecahan dibawa ke tick berikutnya)
+    if s["diterima"] and selang_cap > 0:
         ev = active_dynamic_event(kini)
-        watts = 0
-        for m in s.get("machines_owned", []):
-            cid = m["canonical_id"]
-            if cid == "DRE-001": watts += int(50 * ev["solar_mult"])
-            elif cid == "DRE-002": watts += int(150 * ev["solar_mult"])
-            elif cid == "DRE-003": watts += int(500 * ev["solar_mult"])
-            elif cid == "DRE-004": watts += int(1000 * ev["solar_mult"])
-            elif cid == "DRE-005": watts += int(3000 * ev["solar_mult"])
-            elif cid == "DRE-030": watts += int(100 * ev["hydro_mult"])
-        # Cap total DRES household-UMKM at 100 kW per freeze parameter
-        watts = min(100_000, watts)
-        if watts > 0:
-            # Accelerated game clock (1s real ~ 1 min sim for energy preview -> watts * selang_cap / 60 Wh)
-            gen_wh = int((watts * selang_cap) // 3600)
-            if gen_wh > 0:
-                en = s["energy"]
-                space = max(0, en["battery_cap_wh"] - en["battery_wh"])
-                stored = min(space, gen_wh)
-                if stored > 0:
-                    en["battery_wh"] += stored
-                    en["battery_renew_wh"] += stored
+        surya_w, hidro_w = watt_dres(s, ev)
+        if surya_w + hidro_w > 0:
+            t0 = kini - selang_cap
+            surya_wh = surya_w * jam_surya_efektif(t0, kini)
+            hidro_wh = hidro_w * selang_cap / 3600.0
+            en = s["energy"]
+            total_mwh = int(round((surya_wh + hidro_wh) * 1000)) + int(en.get("gen_sisa_mwh", 0))
+            gen_wh, sisa_mwh = divmod(total_mwh, 1000)
+            space = max(0, en["battery_cap_wh"] - en["battery_wh"])
+            stored = min(space, gen_wh)
+            if stored > 0:
+                en["battery_wh"] += stored
+                en["battery_renew_wh"] += stored
+            # baterai penuh: kelebihan terbuang, pecahan tidak ditimbun
+            en["gen_sisa_mwh"] = sisa_mwh if space > gen_wh else 0
 
     # 5. WCS job arrival
     if s["job"] and s["job"]["status"] == "in_transit" and kini >= s["job"]["tiba_pada"]:
@@ -787,7 +1129,7 @@ def hitung_gsg(s):
         "pulih_200kg": pulih_kg >= 200.0,
         "waste_energy_10kwh": waste_kwh >= 10.0,
         "clean_days_10": days >= 10,
-        "mass_audit": st["neraca_valid"] >= 1,
+        "mass_audit": st.get("audit_neraca", 0) >= 1,
         "energy_audit": st["audit_energi"] >= 1,
         "b3_safe": s["b3_g"] == 0,
     }
@@ -822,29 +1164,62 @@ def daftar_gt(s):
 
     defs = [
         ("GT01", "Awaken", "BT01", 0, "Terima panggilan Gaia & selesaikan intro lahan.", bool(s["diterima"] and s["intro_selesai"])),
-        ("GT02", "Seeker", "BT02", 5000, "Pungut 5 sampah, jual 1 lot sah, pulihkan 2 kg.", st["pungut"] >= 5 and st["lot_jual_sah"] >= 1 and pulih_kg >= 2),
-        ("GT03", "Sorter", "BT03", 15000, "Pilah 10 kg campuran, 3 fraksi, 1 audit neraca valid.", st["pilah_g"] >= 10000 and len(st["fraksi_terpilah"]) >= 3 and st["neraca_valid"] >= 1),
-        ("GT04", "Recycler", "BT04", 40000, "Pulihkan 25 kg, 2 resep berbeda, panen pertama.", pulih_kg >= 25 and len(st["resep_dipakai"]) >= 2 and st["panen"] >= 1),
-        ("GT05", "Guardian", "BT05", 100000, "Pulihkan 50 kg, 5 bersih sungai, 3 hari operasi bersih.", pulih_kg >= 50 and (st["sungai"] + st["sungai_apung"]) >= 5 and days >= 3),
-        ("GT06", "Ascendant", "BT06", 250000, "Pulihkan 100 kg, 1 kWh energi waste-origin, 1 audit energi.", pulih_kg >= 100 and waste_kwh >= 1 and st["audit_energi"] >= 1),
-        ("GT07", "Titan", "BT07", 500000, "Pulihkan 150 kg, 5 kWh waste-origin, 7 hari bersih, B3 aman.", pulih_kg >= 150 and waste_kwh >= 5 and days >= 7 and s["b3_g"] == 0),
-        ("GT08", "Archon", "BT08", 1000000, "Pulihkan 200 kg, 10 kWh waste-origin, 10 hari bersih, audit neraca.", pulih_kg >= 200 and waste_kwh >= 10 and days >= 10 and st["neraca_valid"] >= 1),
-        ("GT09", "God", "BT09", 2500000, "Lulus Gaia Sustainability Gate (GSG) — tanpa syarat kekayaan/pabrik besar.", gsg["passed"]),
+        ("GT02", "Seeker", "BT02", 5000, "Pungut 5 sampah, jual 1 hasil olahan, dan pulihkan 2 kg sampah.", st["pungut"] >= 5 and st["lot_jual_sah"] >= 1 and pulih_kg >= 2),
+        ("GT03", "Sorter", "BT03", 15000, "Pilah 10 kg sampah campur menjadi minimal 3 jenis, lalu cek catatan gudang 1 kali.", st["pilah_g"] >= 10000 and len(st["fraksi_terpilah"]) >= 3 and st.get("audit_neraca", 0) >= 1),
+        ("GT04", "Recycler", "BT04", 40000, "Pulihkan 25 kg sampah, coba 2 cara olah berbeda, dan panen pertama kali.", pulih_kg >= 25 and len(st["resep_dipakai"]) >= 2 and st["panen"] >= 1),
+        ("GT05", "Guardian", "BT05", 100000, "Pulihkan 50 kg sampah, bersihkan sungai 5 kali, dan bekerja bersih 3 hari.", pulih_kg >= 50 and (st["sungai"] + st["sungai_apung"]) >= 5 and days >= 3),
+        ("GT06", "Ascendant", "BT06", 250000, "Pulihkan 100 kg sampah, pakai 1 kWh listrik dari sampah, lalu cek catatan listrik.", pulih_kg >= 100 and waste_kwh >= 1 and st["audit_energi"] >= 1),
+        ("GT07", "Titan", "BT07", 500000, "Pulihkan 150 kg sampah, pakai 5 kWh listrik dari sampah, bekerja bersih 7 hari, B3 aman.", pulih_kg >= 150 and waste_kwh >= 5 and days >= 7 and s["b3_g"] == 0),
+        ("GT08", "Archon", "BT08", 1000000, "Pulihkan 200 kg sampah, pakai 10 kWh listrik dari sampah, bekerja bersih 10 hari, cek catatan gudang.", pulih_kg >= 200 and waste_kwh >= 10 and days >= 10 and st.get("audit_neraca", 0) >= 1),
+        ("GT09", "God", "BT09", 2500000, "Lulus Ujian Gaia: penuhi semua syarat God di bawah. Tidak butuh kekayaan atau pabrik besar.", gsg["passed"]),
     ]
+    # Progress terukur per syarat [label, nilai, target, satuan] + saran langkah berikutnya (Addendum 11 §2: UI misi
+    # menampilkan kondisi, progress, hadiah, alasan terkunci dan alternatif)
+    pk = round(st["pulih_unik_g"] / 1000, 1)
+    wk = round(en["waste_origin_used_wh"] / 1000, 2)
+    sungai = st["sungai"] + st["sungai_apung"]
+    an = st.get("audit_neraca", 0)
+    prog = {
+        "GT01": [["Intro lahan selesai", int(bool(s["diterima"] and s["intro_selesai"])), 1, ""]],
+        "GT02": [["Sampah dipungut", st["pungut"], 5, ""], ["Hasil olahan terjual", st["lot_jual_sah"], 1, ""], ["Sampah dipulihkan", pk, 2, "kg"]],
+        "GT03": [["Sampah campur dipilah", round(st["pilah_g"] / 1000, 1), 10, "kg"], ["Jenis hasil pilah", len(st["fraksi_terpilah"]), 3, ""], ["Cek catatan gudang", an, 1, "×"]],
+        "GT04": [["Sampah dipulihkan", pk, 25, "kg"], ["Cara olah berbeda", len(st["resep_dipakai"]), 2, ""], ["Panen", st["panen"], 1, "×"]],
+        "GT05": [["Sampah dipulihkan", pk, 50, "kg"], ["Bersih sungai", sungai, 5, "×"], ["Hari kerja bersih", days, 3, "hari"]],
+        "GT06": [["Sampah dipulihkan", pk, 100, "kg"], ["Listrik dari sampah", wk, 1, "kWh"], ["Cek catatan listrik", st["audit_energi"], 1, "×"]],
+        "GT07": [["Sampah dipulihkan", pk, 150, "kg"], ["Listrik dari sampah", wk, 5, "kWh"], ["Hari kerja bersih", days, 7, "hari"], ["B3 tersisa", round(s["b3_g"] / 1000, 2), 0, "kg"]],
+        "GT08": [["Sampah dipulihkan", pk, 200, "kg"], ["Listrik dari sampah", wk, 10, "kWh"], ["Hari kerja bersih", days, 10, "hari"], ["Cek catatan gudang", an, 1, "×"]],
+        "GT09": [["Sampah dipulihkan", pk, 200, "kg"], ["Listrik dari sampah", wk, 10, "kWh"], ["Hari kerja bersih", days, 10, "hari"],
+                 ["Cek catatan gudang", an, 1, "×"], ["Cek catatan listrik", st["audit_energi"], 1, "×"], ["B3 tersisa", round(s["b3_g"] / 1000, 2), 0, "kg"]],
+    }
+    saran = {
+        "GT02": "Pungut sampah di sekitar lahan, pilah, olah, lalu jual satu lot di Pasar.",
+        "GT03": "Pilah sampah campur di Pabrik, lalu tekan Cek Catatan Gudang di Menu → Gudang & Catatan.",
+        "GT04": "Kirim gerobak lewat Angkut untuk bahan baru; olah kompos dan plastik; tanam lalu panen di Kebun.",
+        "GT05": "Ambil sampah terapung atau kirim gerobak ke node Sungai. Hari bersih dihitung dari hari yang ada pengolahan nyata.",
+        "GT06": "Olah 5 kg organik menjadi biogas di Pusat Energi, nyalakan genset, lalu Cek Catatan Listrik.",
+        "GT07": "Lanjutkan siklus biogas setiap hari dan serahkan B3 ke jalur khusus di Pabrik.",
+        "GT08": "Jaga ritme: pulihkan sampah, jalankan biogas, dan cek catatan gudang setelah mengolah.",
+        "GT09": "Semua syarat God berasal dari kerja nyata: tidak bisa dibeli dan tidak butuh pabrik besar.",
+    }
     out = []
     prev_claimed = True
+    prev_id = None
     for gid, tier, badge, gc, desc, met in defs:
         is_claimed = gid in claimed
         can_claim = (not is_claimed) and prev_claimed and met
-        out.append({"id": gid, "tier": tier, "badge": badge, "grant_gc": gc, "desc": desc, "met": met, "claimed": is_claimed, "can_claim": can_claim})
+        kunci = None if is_claimed or prev_claimed else f"Klaim tier {prev_tier} terlebih dahulu (tier naik berurutan)."
+        out.append({"id": gid, "tier": tier, "badge": badge, "grant_gc": gc, "desc": desc, "met": met, "claimed": is_claimed, "can_claim": can_claim,
+                    "progress": prog.get(gid, []), "saran": saran.get(gid, ""), "kunci": kunci})
         prev_claimed = is_claimed
+        prev_id = gid
+        prev_tier = tier
     return out
 
 
 def daftar_pr(s):
     st = s["stat"]
     claimed = set(s.get("pr_claimed", []))
-    placed = sum(1 for m in s.get("machines_owned", []) if m.get("slot"))
+    placed = sum(1 for m in s.get("machines_owned", []) if posisi_mesin(m))
     defs = [
         ("PR01", "Arus Pertama", "River Catcher", 500, "Ambil 1 sampah sungai terapung dengan aman.", st["sungai_apung"] >= 1),
         ("PR02", "Sungai Lestari", "Flow Guardian", 2000, "Tangani 10 lot sampah sungai terapung.", st["sungai_apung"] >= 10),
@@ -855,16 +1230,31 @@ def daftar_pr(s):
         ("PR07", "Usaha Mandiri", "Circular Trader", 3000, "10 penjualan produksi sendiri dengan laba positif.", st["lot_jual_laba"] >= 10),
         ("PR08", "Daya Campuran", "Hybrid Keeper", 4000, "2 sumber energi berbeda menyuplai beban sah.", len(st["energi_sumber_dipakai"]) >= 2),
         ("PR09", "Tata Lahan", "Eco Builder", 1000, "Tempatkan 3 alat sah tanpa tumpang tindih.", placed >= 3),
-        ("PR10", "Tidak Terbuang", "Matter Keeper", 2000, "Catat 10 batch neraca massa valid.", st["neraca_valid"] >= 10),
+        ("PR10", "Tidak Terbuang", "Matter Keeper", 2000, "Olah sampah 10 kali dengan catatan gudang yang cocok.", st["neraca_valid"] >= 10),
     ]
-    return [{"id": pid, "judul": j, "badge": b, "grant_gc": gc, "desc": d, "met": met, "claimed": pid in claimed, "can_claim": (pid not in claimed) and met} for pid, j, b, gc, d, met in defs]
+    prog = {
+        "PR01": [["Sampah terapung diambil", st["sungai_apung"], 1, ""]],
+        "PR02": [["Lot sungai terapung", st["sungai_apung"], 10, ""]],
+        "PR03": [["Kontrak angkut tepat waktu", st["angkut_tepat"], 5, ""]],
+        "PR04": [["Varietas dipanen", len(st["varietas_panen"]), 5, ""]],
+        "PR05": [["Panen varietas langka", st["panen_langka"], 1, ""]],
+        "PR06": [["Kelompok pangan hari ini", len(s.get("food_groups_today", [])), 3, ""]],
+        "PR07": [["Penjualan produksi sendiri berlaba", st["lot_jual_laba"], 10, ""]],
+        "PR08": [["Sumber energi berbeda", len(st["energi_sumber_dipakai"]), 2, ""]],
+        "PR09": [["Alat terpasang di lahan", placed, 3, ""]],
+        "PR10": [["Olahan dengan catatan cocok", st["neraca_valid"], 10, ""]],
+    }
+    return [{"id": pid, "judul": j, "badge": b, "grant_gc": gc, "desc": d, "met": met, "claimed": pid in claimed, "can_claim": (pid not in claimed) and met,
+             "progress": prog.get(pid, [])} for pid, j, b, gc, d, met in defs]
 
 
 def daftar_pencapaian(s):
     """Preserve all 8 §34 legacy badges; Saudagar Hijau uses operating_profit_gc >= 2000 for realistic_v1."""
     st = s["stat"]
     dalam_sisa = sum(1 for t in s["sampah_liar"] if t["zona"] == "dalam")
-    saudagar_val = s["wallet"]["operating_profit_gc"] if s.get("economy_mode") == "realistic_v1" else s["koin"]
+    # Lencana yang sudah terbuka tidak hilang lagi: pakai puncak laba operasi yang pernah dicapai
+    saudagar_val = (max(s["wallet"]["operating_profit_gc"], st.get("laba_operasi_puncak_gc", 0))
+                    if s.get("economy_mode") == "realistic_v1" else s["koin"])
     saudagar_desc = "Raih laba operasi kumulatif 2.000 GC." if s.get("economy_mode") == "realistic_v1" else "Kumpulkan 2.000 Gaia Coin."
     data = [
         ("pungut", 1, "Tangan Pertama", "Pungut sampah pertamamu.", st["pungut"], 1),
@@ -876,7 +1266,7 @@ def daftar_pencapaian(s):
         ("petani", 7, "Petani Kota", "Miliki petak tanam tambahan.", len(s["petak"]), 1),
         ("bersih", 8, "Lahan Bersih", "Bersihkan semua sampah di dalam pagar.", len(TITIK_DALAM) - dalam_sisa if s["diterima"] else 0, len(TITIK_DALAM)),
     ]
-    return [{"id": i, "ikon": f"badges_{ik}.png", "judul": j, "desk": d, "nilai": min(n, t), "target": t, "ok": n >= t} for i, ik, j, d, n, t in data]
+    return [{"id": i, "ikon": f"badges_{ik}.webp", "judul": j, "desk": d, "nilai": min(n, t), "target": t, "ok": n >= t} for i, ik, j, d, n, t in data]
 
 
 def petak_dari(s, payload):
@@ -910,6 +1300,8 @@ def aksi(s, payload, kini, cfg=None):
         gender = payload.get("gender", "pria")
         perlu(gender in ("pria", "wanita"), "Pilihan karakter harus pria atau wanita.")
         av_in = payload.get("avatar") or {}
+        perlu(isinstance(av_in, dict), "Data kosmetik karakter tidak valid.")
+        perlu(isinstance(kota, str), "Pilih kota awal yang valid.")
         av = {}
         for slot, daftar in AVATAR_ALLOW.items():
             val = av_in.get(slot, daftar[0])
@@ -923,10 +1315,8 @@ def aksi(s, payload, kini, cfg=None):
     perlu(s["diterima"], "Terima panggilan Gaia dahulu.")
 
     if nama == "ganti_karakter":
-        gender = payload.get("gender", "")
-        perlu(gender in ("pria", "wanita"), "Pilihan karakter harus pria atau wanita.")
-        s["gender"] = gender
-        return "Karakter diganti menjadi " + ("Penjaga Bumi wanita." if gender == "wanita" else "Penjaga Bumi pria.")
+        # Evaluasi 4: gender dan tampilan dipilih sekali di Setting Karakter sebelum prolog
+        raise ValueError("Karakter dipilih saat awal permainan dan tidak dapat diganti.")
 
     if nama == "ganti_kota":
         kota = payload.get("kota", "")
@@ -956,7 +1346,7 @@ def aksi(s, payload, kini, cfg=None):
         sid = str(payload.get("id", ""))
         item = next((t for t in s["sampah_liar"] if t["id"] == sid), None)
         perlu(item is not None, "Sampah itu sudah dipungut.")
-        ruang = s["gudang_kap_g"] - gudang_terpakai_g(s)
+        ruang = kap_gudang(s) - gudang_terpakai_g(s)
         perlu(ruang >= item["g"], "Gudang penuh — olah atau jual isi gudang terlebih dahulu.")
         kunci = JENIS_SAMPAH[item["jenis"]][0]
         s[kunci] += item["g"]
@@ -982,9 +1372,8 @@ def aksi(s, payload, kini, cfg=None):
         if (item["x"], item["y"]) in TITIK_SUNGAI:
             s["stat"]["sungai"] += 1
         drain_vitality(s, 1)
-        record_clean_day(s, kini)
         update_wealth_and_milestones(s, kini)
-        tujuan = "Area Pilah (perlu dipilah)" if kunci == "campuran_g" else "gudang"
+        tujuan ="Area Pilah (perlu dipilah)" if kunci == "campuran_g" else "gudang"
         return f"{LABEL_SAMPAH[item['jenis']]} {item['g']} g dipungut → {tujuan} (+{reward_gc} GC kompensasi)."
 
     # ---- Pickup floating river trash (safe bank access, no B3)
@@ -993,7 +1382,7 @@ def aksi(s, payload, kini, cfg=None):
         ev = next((e for e in s.get("sampah_sungai", []) if e["id"] == rid), None)
         perlu(ev is not None, "Sampah sungai sudah hanyut ke hilir atau sudah diambil.")
         perlu(kini < ev["end_at"], "Sampah sudah melewati tepi sungai dan tercatat di backlog hilir.")
-        ruang = s["gudang_kap_g"] - gudang_terpakai_g(s)
+        ruang = kap_gudang(s) - gudang_terpakai_g(s)
         perlu(ruang >= ev["g"], "Gudang penuh — kosongkan ruang gudang terlebih dahulu.")
         kunci = JENIS_SAMPAH[ev["jenis"]][0]
         s[kunci] += ev["g"]
@@ -1055,7 +1444,7 @@ def aksi(s, payload, kini, cfg=None):
         ns = s["nodes"][node_id]["stok"]
         tot_node = sum(ns.values())
         perlu(tot_node >= muat_g, f"Stok {tpl['nama']} belum mencukupi ({tot_node // 1000} kg tersedia).")
-        ruang = s["gudang_kap_g"] - gudang_terpakai_g(s)
+        ruang = kap_gudang(s) - gudang_terpakai_g(s)
         perlu(ruang >= muat_g, "Ruang gudang tidak cukup untuk menerima muatan ini.")
         s["koin"] -= biaya
         s["wallet"]["expenses_gc"] += biaya
@@ -1079,12 +1468,14 @@ def aksi(s, payload, kini, cfg=None):
             sisa -= pot
         tr_win = active_tr_window(kini)
         tr_match = tr_win["window_key"] if (tr_win["node"] == node_id and kg >= tr_win["min_kg"] and tr_win["window_key"] not in s["tr_claimed_windows"]) else None
-        eta = int(payload.get("_test_eta", tpl["eta_detik"])) if "_test_eta" in payload else tpl["eta_detik"]
+        eta = tpl["eta_detik"]
+        if TEST_MODE and "_test_eta" in payload:
+            eta = max(0, int(payload["_test_eta"]))
         s["job"] = {
             "node": node_id, "nama_node": tpl["nama"], "muat_g": muat_g, "fraksi": diambil,
             "biaya_gc": biaya, "kompensasi_gc": kompensasi, "tr_window": tr_match,
             "tr_bonus_gc": tr_win["bonus_gc"] if tr_match else 0,
-            "status": "in_transit", "tiba_pada": kini + eta, "deadline": kini + eta + 600,
+            "status": "in_transit", "berangkat_pada": kini, "tiba_pada": kini + eta, "deadline": kini + eta + 600,
         }
         return f"Gerobak MCH-002 ke {tpl['nama']} ({kg} kg, biaya {biaya:,} GC, kompensasi jasa {kompensasi:,} GC). Tiba dalam {eta} dtk."
 
@@ -1092,7 +1483,7 @@ def aksi(s, payload, kini, cfg=None):
         perlu(s["job"] is not None, "Tidak ada kargo aktif.")
         perlu(s["job"]["status"] == "arrived", "Gerobak masih dalam perjalanan.")
         muat_g = s["job"]["muat_g"]
-        ruang = s["gudang_kap_g"] - gudang_terpakai_g(s)
+        ruang = kap_gudang(s) - gudang_terpakai_g(s)
         perlu(ruang >= muat_g, "Gudang penuh — kosongkan ruang terlebih dahulu.")
         # Preserve ACTUAL node fraction composition!
         s["campuran_g"] += muat_g
@@ -1125,7 +1516,7 @@ def aksi(s, payload, kini, cfg=None):
         ev = next((e for e in s["dle_events"] if e["id"] == ev_id and e["status"] == "available"), None)
         perlu(ev is not None, "Insiden sudah dibersihkan atau kedaluwarsa.")
         perlu(kini < ev["expires_at"], "Insiden sudah kedaluwarsa dan berpindah ke backlog lingkungan.")
-        ruang = s["gudang_kap_g"] - gudang_terpakai_g(s)
+        ruang = kap_gudang(s) - gudang_terpakai_g(s)
         perlu(ruang >= ev["mass_g"], "Gudang penuh — kosongkan ruang terlebih dahulu.")
         perlu(s["dle_daily_bonus_g"] + ev["mass_g"] <= 12_000, "Batas bonus material DLE harian (12 kg) tercapai.")
         ev["status"] = "collected"
@@ -1148,7 +1539,7 @@ def aksi(s, payload, kini, cfg=None):
     # ---- Sorting 6 fractions (uses REAL accumulated node composition!)
     if nama == "pilah":
         perlu(s["campuran_g"] >= 1000, "Belum ada bahan campuran di area pilah (minimal 1 kg).")
-        batch_g = min(10_000, s["campuran_g"])
+        batch_g = min(kap_pilah(s), s["campuran_g"])
         tot_cf = sum(s["campuran_fraksi"].values())
         if tot_cf > 0:
             bagian = bagi_g(batch_g, s["campuran_fraksi"])
@@ -1156,46 +1547,61 @@ def aksi(s, payload, kini, cfg=None):
                 s["campuran_fraksi"][f] = max(0, s["campuran_fraksi"][f] - bagian[f])
         else:
             bagian = bagi_g(batch_g, {"organik": 50, "plastik": 18, "kertas": 10, "logam_kaca": 7, "residu": 14, "B3": 1})
+        n_tong = min(TONG_MAKS, alat_aktif(s).get("MCH-001", 0))
+        if n_tong and bagian["residu"] > 0:
+            # tong terpilah: sebagian "residu" ternyata plastik/kertas bersih; massa hanya berpindah fraksi
+            pindah = bagian["residu"] * TONG_RESIDU_PCT * n_tong // 100
+            ke_plastik = pindah * 6 // 10
+            bagian["residu"] -= pindah
+            bagian["plastik"] += ke_plastik
+            bagian["kertas"] += pindah - ke_plastik
         s["campuran_g"] -= batch_g
         s["stat"]["pilah_g"] += batch_g
         for f, col in (("organik", "organik_g"), ("plastik", "plastik_g"), ("kertas", "kertas_g"), ("logam_kaca", "logam_kaca_g"), ("residu", "residu_g"), ("B3", "b3_g")):
             s[col] += bagian[f]
             if bagian[f] > 0 and f not in s["stat"]["fraksi_terpilah"]:
                 s["stat"]["fraksi_terpilah"].append(f)
-        s["stat"]["neraca_valid"] += 1
+        catat_batch(s)
         drain_vitality(s, 2)
         record_clean_day(s, kini)
         return f"Dipilah {batch_g} g sesuai komposisi asal → {bagian['organik']}g organik, {bagian['plastik']}g plastik, {bagian['kertas']}g kertas, {bagian['logam_kaca']}g logam/kaca, {bagian['residu']}g residu, {bagian['B3']}g B3."
 
     # ---- Processing: Compost, Plastic Pellet, Plastic Pot
     if nama in ("olah", "olah_kompos"):
+        kap = kap_kompos(s)
+        perlu(kap > 0, "Belum ada komposter terpasang. Buka Menu → Lahan & Alat lalu tampilkan Tong Komposter di lahan.")
         perlu(s["organik_g"] >= 2000, "Perlu minimal 2 kg bahan organik.")
-        s["organik_g"] -= 2000
-        # Manual efficiency affected gently by vitality on bonus speed/points, mass strictly conserved!
-        s["kompos_g"] += 1000
-        s["uap_terkendali_g"] += 900
-        s["residu_g"] += 100
+        masuk = min(kap, s["organik_g"]) // 2000 * 2000
+        s["organik_g"] -= masuk
+        # Massa tetap: setiap 2 kg organik -> 1 kg kompos + 0,9 kg uap/air + 0,1 kg residu
+        s["kompos_g"] += masuk // 2
+        s["uap_terkendali_g"] += masuk * 9 // 20
+        s["residu_g"] += masuk // 20
         s["stat"]["kompos"] += 1
-        s["stat"]["pulih_unik_g"] += 1000
-        s["stat"]["neraca_valid"] += 1
+        s["stat"]["pulih_unik_g"] += masuk // 2
+        catat_batch(s)
         if "kompos" not in s["stat"]["resep_dipakai"]:
             s["stat"]["resep_dipakai"].append("kompos")
         s["poin"] += int(round(40 * vitality_multiplier(s)))
         s["karma"] = max(0.0, round(s["karma"] - 0.1, 2))
         drain_vitality(s, 2)
         record_clean_day(s, kini)
-        return "2.000 g organik → 1.000 g kompos, 900 g uap/air terkendali, 100 g residu (neraca valid)."
+        return f"{masuk:,} g organik → {masuk // 2:,} g kompos, {masuk * 9 // 20:,} g uap/air, {masuk // 20:,} g residu (catatan gudang cocok)."
 
     if nama in ("daur", "kreasi"):
         perlu(s["plastik_g"] >= 1000, "Perlu minimal 1 kg plastik terpilah.")
-        s["plastik_g"] -= 1000
+        cacah = alat_aktif(s).get("MCH-044", 0) > 0
+        kg = min(PENCACAH_BATCH_G if cacah else 1000, s["plastik_g"]) // 1000
+        hasil = (PENCACAH_HASIL if cacah else 850) * kg
+        uap, sisa = (70 * kg, 30 * kg) if cacah else (100 * kg, 50 * kg)
+        s["plastik_g"] -= kg * 1000
         target = "pot_g" if nama == "kreasi" else "pelet_g"
-        s[target] += 850
-        s["uap_terkendali_g"] += 100
-        s["residu_g"] += 50
+        s[target] += hasil
+        s["uap_terkendali_g"] += uap
+        s["residu_g"] += sisa
         s["stat"][nama] = s["stat"].get(nama, 0) + 1
-        s["stat"]["pulih_unik_g"] += 850
-        s["stat"]["neraca_valid"] += 1
+        s["stat"]["pulih_unik_g"] += hasil
+        catat_batch(s)
         if nama not in s["stat"]["resep_dipakai"]:
             s["stat"]["resep_dipakai"].append(nama)
         s["poin"] += int(round(60 * vitality_multiplier(s)))
@@ -1203,7 +1609,7 @@ def aksi(s, payload, kini, cfg=None):
         drain_vitality(s, 2)
         record_clean_day(s, kini)
         label = "pot daur ulang" if nama == "kreasi" else "pelet plastik"
-        return f"1.000 g plastik → 850 g {label}, 100 g terkendali, 50 g residu (neraca valid)."
+        return f"{kg * 1000:,} g plastik → {hasil:,} g {label}, {uap:,} g terkendali, {sisa:,} g residu" + (" (pencacah aktif)." if cacah else ".")
 
     # ---- B3 licensed handover (D03)
     if nama == "serah_b3":
@@ -1211,16 +1617,18 @@ def aksi(s, payload, kini, cfg=None):
         jml = s["b3_g"]
         s["b3_g"] = 0
         s["b3_serah_g"] += jml
-        s["stat"]["neraca_valid"] += 1
+        catat_batch(s)
         s["poin"] += max(10, (jml * 8) // 100)
         record_clean_day(s, kini)
         return f"{jml} g B3 diserahkan ke pengolah berizin (aman, tidak masuk pengolahan umum)."
 
     # ---- Formal Mass Balance Audit (for GT03/GT08/PR10)
     if nama == "audit_neraca":
-        s["stat"]["neraca_valid"] += 1
-        record_clean_day(s, kini)
-        return "Audit Neraca Massa selesai: seluruh gram masuk, olahan, uap terkendali, B3, dan backlog tercatat seimbang."
+        baru = s["stat"].get("batch_sejak_audit", 0)
+        perlu(baru > 0, "Belum ada hasil pilah/olah baru untuk dicek. Pilah atau olah sampah dahulu.")
+        s["stat"]["batch_sejak_audit"] = 0
+        s["stat"]["audit_neraca"] = s["stat"].get("audit_neraca", 0) + 1
+        return f"Catatan gudang dicek untuk {baru} kali olah: semua sampah masuk = hasil olahan + air/uap + sisa. Cocok!"
 
     # ---- Household WtE & DRES Energy Center (strict Wh provenance, no double count!)
     if nama == "olah_biogas":
@@ -1240,7 +1648,7 @@ def aksi(s, payload, kini, cfg=None):
         s["energy"]["biogas_m3_x100"] += 50  # 0.50 m3 biogas
         s["stat"]["biogas"] += 1
         s["stat"]["pulih_unik_g"] += 1500
-        s["stat"]["neraca_valid"] += 1
+        catat_batch(s)
         if "biogas" not in s["stat"]["resep_dipakai"]:
             s["stat"]["resep_dipakai"].append("biogas")
         record_clean_day(s, kini)
@@ -1258,12 +1666,13 @@ def aksi(s, payload, kini, cfg=None):
             if fee:
                 s["koin"] -= fee
                 s["wallet"]["expenses_gc"] += fee
+                s["wallet"]["operating_profit_gc"] -= fee
             en["biogas_m3_x100"] -= 50
             # Net 1.200 Wh (1.2 kWh) waste-origin electricity used directly for yard load (counted ONCE!)
             en["waste_origin_used_wh"] += 1200
             if "waste_biogas" not in s["stat"]["energi_sumber_dipakai"]:
                 s["stat"]["energi_sumber_dipakai"].append("waste_biogas")
-            return f"1,20 kWh listrik net waste-origin (biogas) menyuplai beban lahan" + (f" (mitra -{fee:,} GC)." if fee else ".")
+            return f"1,20 kWh listrik dari sampah (biogas) menyalakan lahanmu" + (f" (mitra -{fee:,} GC)." if fee else ".")
         elif sumber == "renewable":
             perlu(en["battery_renew_wh"] >= 200, "Muatan baterai energi terbarukan minimal 200 Wh. Pasang Solar Kit/PLTS atau tunggu pengisian.")
             gross = en["battery_renew_wh"]
@@ -1280,10 +1689,10 @@ def aksi(s, payload, kini, cfg=None):
 
     if nama == "audit_energi":
         en = s["energy"]
-        perlu(en["waste_origin_used_wh"] > 0 or en["renewable_used_wh"] > 0, "Gunakan minimal 1 sumber energi terlebih dahulu sebelum audit energi.")
+        perlu(en["waste_origin_used_wh"] > 0 or en["renewable_used_wh"] > 0, "Pakai listrik minimal sekali dulu sebelum cek catatan listrik.")
         en["last_audit_ts"] = round(kini, 1)
         s["stat"]["audit_energi"] += 1
-        return f"Audit energi tercatat: {en['waste_origin_used_wh']/1000:.2f} kWh waste-origin, {en['renewable_used_wh']/1000:.2f} kWh terbarukan, rugi baterai {en['battery_loss_wh']} Wh."
+        return f"Catatan listrik dicek: {en['waste_origin_used_wh']/1000:.2f} kWh dari sampah, {en['renewable_used_wh']/1000:.2f} kWh dari matahari/air, susut baterai {en['battery_loss_wh']} Wh."
 
     # ---- 15-Crop Garden & Vitality
     if nama in ("beli", "beli_langka", "beli_benih"):
@@ -1334,14 +1743,14 @@ def aksi(s, payload, kini, cfg=None):
         s["dipakai_kebun_g"] += 1000
         pt["detik"] = round(pt["detik"] * 0.75, 2)
         pt["dipupuk"] = True
-        return "1 kg kompos dipakai di kebun (-25% sisa waktu; tercatat di Neraca Massa, tanpa kredit lingkungan ganda)."
+        return "1 kg kompos dipakai di kebun (sisa waktu tumbuh -25%)."
 
     if nama == "panen":
         pt = petak_dari(s, payload)
         perlu(pt["ditanam"] and pt["detik"] <= 0, "Tanaman belum siap dipanen.")
         cid = pt.get("tanaman_id") or "CR01"
         crop = get_crop(cid) or get_crop("CR01")
-        ruang = s["gudang_kap_g"] - gudang_terpakai_g(s)
+        ruang = kap_gudang(s) - gudang_terpakai_g(s)
         perlu(ruang >= crop["hasil_g"], "Gudang penuh — kosongkan ruang sebelum panen.")
         s["panen_map"][cid] = s["panen_map"].get(cid, 0) + crop["hasil_g"]
         s["biomassa_panen_g"] += crop["hasil_g"]
@@ -1408,17 +1817,27 @@ def aksi(s, payload, kini, cfg=None):
         req_id = str(payload.get("machine_id", ""))
         side = "buy" if nama == "beli_mesin" else "rent"
         q = make_quote("machine", req_id, side, 1, kini, cfg["price_multiplier"])
-        perlu(s["koin"] >= q["net_gc"], f"Saldo tidak cukup untuk {q['nama']} ({q['net_gc']:,} GC).")
+        perlu(s["koin"] >= q["net_gc"], f"Saldo tidak cukup untuk {q['nama']} ({q['net_gc']:,} GC). Tambah koin lewat kerja angkut di menu Angkut, lalu olah dan jual hasilnya di Pasar.")
         s["koin"] -= q["net_gc"]
         s["wallet"]["expenses_gc"] += q["net_gc"]
         cid = q["id"]
         uid = f"m-{cid}-{int(kini)}-{len(s['machines_owned'])+len(s['machines_leased'])}"
         if side == "buy":
-            s["machines_owned"].append({"uid": uid, "canonical_id": cid, "condition": 100, "slot": None, "starter": False})
-            # Expand battery capacity if LFP battery purchased
-            if cid == "DRE-075": s["energy"]["battery_cap_wh"] = min(200_000, s["energy"]["battery_cap_wh"] + 500)
-            elif cid == "DRE-076": s["energy"]["battery_cap_wh"] = min(200_000, s["energy"]["battery_cap_wh"] + 1000)
-            elif cid == "DRE-077": s["energy"]["battery_cap_wh"] = min(200_000, s["energy"]["battery_cap_wh"] + 5000)
+            inst = {"uid": uid, "canonical_id": cid, "condition": 100, "slot": None, "starter": False, "paid_gc": q["net_gc"]}
+            # Expand battery capacity if LFP battery purchased; remember the exact Wh added so selling removes it
+            if cid in BATTERY_CAP_WH:
+                en = s["energy"]
+                sebelum = en["battery_cap_wh"]
+                en["battery_cap_wh"] = min(BATTERY_CAP_MAX_WH, sebelum + BATTERY_CAP_WH[cid])
+                inst["cap_added_wh"] = en["battery_cap_wh"] - sebelum
+            s["machines_owned"].append(inst)
+            if cid not in MESIN_TIDAK_DIPASANG:
+                pos = cari_posisi_bebas(s, uid, cid)
+                if pos:
+                    inst["pos"] = pos
+                    return f"Membeli {q['nama']} seharga {q['net_gc']:,} GC. Alat sudah tampil di lahan; seret untuk memindahkannya."
+                inst["disimpan"] = True
+                return f"Membeli {q['nama']} seharga {q['net_gc']:,} GC. Lahan penuh, alat disimpan di gudang."
             return f"Membeli {q['nama']} ({cid}) seharga {q['net_gc']:,} GC."
         else:
             s["machines_leased"].append({"uid": uid, "canonical_id": cid, "expires_at": round(kini + 24 * 3600, 1), "partner": "Mitra UMKM Lokal"})
@@ -1429,10 +1848,24 @@ def aksi(s, payload, kini, cfg=None):
         inst = next((m for m in s["machines_owned"] if m["uid"] == uid), None)
         perlu(inst is not None, "Mesin tidak ditemukan di inventaris.")
         perlu(not inst.get("starter"), "Aset starter tidak dapat dijual (anti-deadlock).")
-        q = make_quote("machine", inst["canonical_id"], "sell_used", 1, kini)
+        q = make_quote("machine", inst["canonical_id"], "sell_used", 1, kini, cfg["price_multiplier"])
+        # Anti-arbitrase: tidak pernah lebih dari 57% harga yang benar-benar dibayar pemain
+        cap_bayar = int(round(inst.get("paid_gc", q["net_gc"] / 0.57) * 0.57))
+        net = max(0, min(q["net_gc"], cap_bayar))
         s["machines_owned"].remove(inst)
-        s["koin"] += q["net_gc"]
-        return f"Menjual bekas {q['nama']} (+{q['net_gc']:,} GC setelah depresiasi & biaya inspeksi)."
+        s["koin"] += net
+        # Kapasitas baterai yang ditambahkan unit ini ikut hilang saat dijual
+        cap_lepas = inst.get("cap_added_wh", BATTERY_CAP_WH.get(inst["canonical_id"], 0))
+        if cap_lepas:
+            en = s["energy"]
+            en["battery_cap_wh"] = max(BATTERY_CAP_MIN_WH, en["battery_cap_wh"] - cap_lepas)
+            if en["battery_wh"] > en["battery_cap_wh"]:
+                lebih = en["battery_wh"] - en["battery_cap_wh"]
+                en["battery_wh"] = en["battery_cap_wh"]
+                kurang_renew = min(en["battery_renew_wh"], lebih)
+                en["battery_renew_wh"] -= kurang_renew
+                en["battery_waste_wh"] = max(0, en["battery_waste_wh"] - (lebih - kurang_renew))
+        return f"Menjual bekas {q['nama']} (+{net:,} GC setelah depresiasi & biaya inspeksi)."
 
     if nama == "pasang_mesin":
         uid = str(payload.get("uid", ""))
@@ -1440,10 +1873,39 @@ def aksi(s, payload, kini, cfg=None):
         perlu(any(sl["id"] == slot_id for sl in YARD_SLOTS), "Slot penempatan tidak valid.")
         inst = next((m for m in s["machines_owned"] if m["uid"] == uid), None)
         perlu(inst is not None, "Mesin tidak ditemukan.")
-        occupied = next((m for m in s["machines_owned"] if m.get("slot") == slot_id and m["uid"] != uid), None)
-        perlu(occupied is None, f"Slot {slot_id} sudah ditempati mesin lain (anti-overlap).")
-        inst["slot"] = slot_id
-        return f"Mesin ditempatkan di {slot_id} (jalan & sungai tetap aman)."
+        perlu(inst["canonical_id"] not in MESIN_TIDAK_DIPASANG, "Gerobak adalah alat angkut bergerak, tidak dipasang di slot lahan.")
+        sl = next(sl for sl in YARD_SLOTS if sl["id"] == slot_id)
+        pos = [sl["x"], sl["y"]] if cek_posisi(s, uid, inst["canonical_id"], sl["x"], sl["y"]) is None else cari_posisi_bebas(s, uid, inst["canonical_id"])
+        perlu(pos is not None, "Lahan penuh. Simpan atau jual alat lain dahulu.")
+        inst["slot"], inst["pos"] = None, pos
+        inst.pop("disimpan", None)
+        return "Alat ditempatkan di lahan. Seret untuk mengatur posisinya."
+
+    if nama == "pindah_mesin":
+        uid = str(payload.get("uid", ""))
+        inst = next((m for m in s["machines_owned"] if m["uid"] == uid), None)
+        perlu(inst is not None, "Alat tidak ditemukan.")
+        perlu(inst["canonical_id"] not in MESIN_TIDAK_DIPASANG, "Gerobak adalah alat angkut bergerak, tidak dipasang di lahan.")
+        try:
+            x, y = int(round(float(payload.get("x")))), int(round(float(payload.get("y"))))
+        except (TypeError, ValueError):
+            raise ValueError("Posisi tidak valid.")
+        alasan = cek_posisi(s, uid, inst["canonical_id"], x, y)
+        perlu(alasan is None, alasan or "")
+        inst["slot"], inst["pos"] = None, [x, y]
+        inst["dipindah_pemain"] = True
+        inst.pop("disimpan", None)
+        return f"{(get_machine(inst['canonical_id']) or {}).get('nama', 'Alat')} dipindahkan."
+
+    if nama == "lepas_mesin":
+        uid = str(payload.get("uid", ""))
+        inst = next((m for m in s["machines_owned"] if m["uid"] == uid), None)
+        perlu(inst is not None, "Mesin tidak ditemukan.")
+        perlu(posisi_mesin(inst), "Alat ini sudah tersimpan di gudang.")
+        inst["slot"] = None
+        inst.pop("pos", None)
+        inst["disimpan"] = True
+        return "Alat diangkat dari lahan dan disimpan di gudang."
 
     # ---- Market Selling (Products, Crops with Daily Demand Cap + Rare Boost Cap)
     if nama == "jual_panen_crop":
@@ -1478,7 +1940,7 @@ def aksi(s, payload, kini, cfg=None):
         s["wallet"]["grant_gc"] += bonus_gc
         s["stat"]["koin_jual"] += tot
         s["stat"]["lot_jual_sah"] += 1
-        s["stat"]["lot_jual_laba"] += 1
+        catat_jual_produksi(s)
         s["pernah_jual"] = True
         update_wealth_and_milestones(s, kini)
         return f"Menjual {qty_g} g {crop['nama']} (+{base_gc:,} GC" + (f" + {bonus_gc:,} GC bonus langka" if bonus_gc else "") + ")."
@@ -1497,12 +1959,14 @@ def aksi(s, payload, kini, cfg=None):
             s["wallet"]["operating_profit_gc"] += 1200
             s["stat"]["koin_jual"] += 1200
             s["stat"]["lot_jual_sah"] += 1
-            s["stat"]["lot_jual_laba"] += 1
+            catat_jual_produksi(s)
             s["pernah_jual"] = True
             return "Penjualan 1 ikat sayur berhasil (+1.200 GC)."
         perlu(barang in HARGA_PRODUK_REALISTIS, "Produk pasar tidak dikenal.")
         kunci, min_g, harga = HARGA_PRODUK_REALISTIS[barang]
         harga = int(round(harga * cfg["price_multiplier"]))
+        if alat_aktif(s).get("MCH-003", 0):
+            harga += harga * TIMBANGAN_BONUS_PCT // 100   # berat terukur akurat: tidak dipotong pengepul
         perlu(s[kunci] >= min_g, f"Perlu minimal {min_g} g untuk menjual {barang}.")
         bonus_gc = 0
         if s.get("rare_boost") and kini < s["rare_boost"]["expires_at"]:
@@ -1521,7 +1985,7 @@ def aksi(s, payload, kini, cfg=None):
         s["wallet"]["grant_gc"] += bonus_gc
         s["stat"]["koin_jual"] += tot
         s["stat"]["lot_jual_sah"] += 1
-        s["stat"]["lot_jual_laba"] += 1
+        catat_jual_produksi(s)
         s["pernah_jual"] = True
         update_wealth_and_milestones(s, kini)
         return f"Penjualan {min_g} g {barang} berhasil (+{harga:,} GC" + (f" + {bonus_gc:,} GC bonus" if bonus_gc else "") + ")."
@@ -1531,8 +1995,8 @@ def aksi(s, payload, kini, cfg=None):
         gid = str(payload.get("id", ""))
         item = next((x for x in daftar_gt(s) if x["id"] == gid), None)
         perlu(item is not None, "Misi tier tidak dikenal.")
-        perlu(not item["claimed"], f"{gid} sudah pernah diklaim.")
-        perlu(item["can_claim"], f"Syarat {gid} ({item['tier']}) belum terpenuhi atau tier sebelumnya belum diklaim.")
+        perlu(not item["claimed"], f"Tier {item['tier']} sudah pernah diklaim.")
+        perlu(item["can_claim"], f"Syarat tier {item['tier']} belum terpenuhi atau tier sebelumnya belum diklaim.")
         s["gt_claimed"].append(gid)
         s["tier"] = item["tier"]
         s["tier_idx"] = int(gid[2:]) - 1
@@ -1540,16 +2004,17 @@ def aksi(s, payload, kini, cfg=None):
             s["koin"] += item["grant_gc"]
             s["wallet"]["grant_gc"] += item["grant_gc"]
         prio = 5 if gid == "GT09" else 4
-        push_celebration(s, "god" if gid == "GT09" else "tier", f"Naik Tier: {item['tier']} ({item['badge']})", item["desc"], prio, kini)
+        push_celebration(s, "god" if gid == "GT09" else "tier", f"Naik Tier: {item['tier']}", item["desc"], prio, kini)
         update_wealth_and_milestones(s, kini)
-        return f"Selamat! Tier {item['tier']} ({gid}) tercapai (+{item['grant_gc']:,} GC hibah sekali)."
+        hibah = f" (+{item['grant_gc']:,} GC hibah sekali)" if item["grant_gc"] > 0 else ""
+        return f"Selamat! Tier {item['tier']} tercapai{hibah}."
 
     if nama == "klaim_pr":
         pid = str(payload.get("id", ""))
         item = next((x for x in daftar_pr(s) if x["id"] == pid), None)
         perlu(item is not None, "Misi tambahan tidak dikenal.")
-        perlu(not item["claimed"], f"{pid} sudah pernah diklaim.")
-        perlu(item["can_claim"], f"Syarat {pid} ({item['judul']}) belum terpenuhi.")
+        perlu(not item["claimed"], f"Misi {item['judul']} sudah pernah diklaim.")
+        perlu(item["can_claim"], f"Syarat misi {item['judul']} belum terpenuhi.")
         s["pr_claimed"].append(pid)
         s["koin"] += item["grant_gc"]
         s["wallet"]["grant_gc"] += item["grant_gc"]
@@ -1571,6 +2036,62 @@ def aksi(s, payload, kini, cfg=None):
     raise ValueError("Aksi tidak dikenal.")
 
 
+def nama_item(s):
+    """Nama tampilan untuk kode mesin milik pemain, 15 tanaman, dan pangan pokok (UI tidak menampilkan kode mentah)."""
+    seed = load_seed()
+    out = {c["id"]: c["nama"] for c in seed["crops"]}
+    out.update({f["id"]: f["nama"] for f in seed["staple_foods"]})
+    for m in s.get("machines_owned", []) + s.get("machines_leased", []):
+        info = get_machine(m["canonical_id"])
+        if info:
+            out[m["canonical_id"]] = info["nama"]
+    return out
+
+
+def info_mesin_milik(s):
+    """Data kartu alat milik pemain: nama, kategori, fungsi, jejak, dan efek di game."""
+    out = {}
+    for m in s.get("machines_owned", []) + s.get("machines_leased", []):
+        cid = m["canonical_id"]
+        info = get_machine(cid)
+        if info and cid not in out:
+            out[cid] = {"nama": info["nama"], "category": info["category"], "fungsi": info["fungsi"], "kapasitas": info.get("kapasitas"),
+                        "area_m2": info.get("area_m2"), "f_stage": info.get("f_stage", 1), "r": jejak_mesin(cid), "surya": mesin_surya(cid),
+                        "efek": efek_mesin(cid)}
+    return out
+
+
+_MISI_STATIS = ("desc", "saran", "progress", "judul")
+
+
+def misi_ringkas(daftar):
+    """Snapshot hanya membawa nilai yang berubah; teks & target misi ada di meta_statis() (PERFORMANCE_BUDGET: snapshot <= 20 KB)."""
+    out = []
+    for m in daftar:
+        r = {k: v for k, v in m.items() if k not in _MISI_STATIS and v is not None}
+        r["nilai"] = [p[1] for p in m.get("progress", [])]
+        out.append(r)
+    return out
+
+
+def meta_statis():
+    """Data yang tidak berubah selama sesi: dikirim sekali lewat GET /meta-statis lalu digabung klien ke meta."""
+    contoh = state_awal()
+    misi = {}
+    for m in daftar_gt(contoh) + daftar_pr(contoh):
+        misi[m["id"]] = {"desc": m["desc"], "saran": m.get("saran", ""), "judul": m.get("judul", ""),
+                         "labels": [[p[0], p[2], p[3]] for p in m.get("progress", [])]}
+    return {
+        "misi_def": misi,
+        "tata_lahan": TATA_LAHAN,
+        "yard_slots": YARD_SLOTS,
+        "mesin_tidak_dipasang": sorted(MESIN_TIDAK_DIPASANG),
+        "label_sampah": LABEL_SAMPAH,
+        "sandbox_packages": SANDBOX_TOPUP_PACKAGES,
+        "catalog_stats": load_seed()["stats"],
+    }
+
+
 def ringkasan_ekstra(s, kini, cfg=None):
     cfg = cfg or DEFAULT_CONFIG
     terpakai = gudang_terpakai_g(s)
@@ -1585,32 +2106,37 @@ def ringkasan_ekstra(s, kini, cfg=None):
             "nama": tpl["nama"], "tersedia_g": sum(ns.values()), "kapasitas_g": tpl["kapasitas_g"],
             "jarak_km": tpl["jarak_km"], "tarif_10kg": biaya_10, "kompensasi_per_kg": tpl["kompensasi_per_kg"],
             "eta_detik": tpl["eta_detik"], "min_kg": tpl["min_kg"], "max_kg": tpl["max_kg"], "stok": ns,
+            "fee_tetap": tpl["fee_tetap"], "gc_per_km": tpl["gc_per_km"], "handling_per_kg": tpl["handling_per_kg"],
         }
     return {
         "gudang_terpakai_g": terpakai,
-        "gudang_bebas_g": max(0, s["gudang_kap_g"] - terpakai),
+        "gudang_bebas_g": max(0, kap_gudang(s) - terpakai),
+        "gudang_kap_g": kap_gudang(s),
+        "kap_pilah_g": kap_pilah(s),
+        "kap_kompos_g": kap_kompos(s),
+        "pencacah": alat_aktif(s).get("MCH-044", 0) > 0,
         "bhi": bhi,
         "bhi_label": "Snapshot lokal (simulasi)",
         "server_time": kini,
         "nodes_info": nodes_info,
         "tr_aktif": active_tr_window(kini),
         "event_aktif": active_dynamic_event(kini),
-        "gt_missions": daftar_gt(s),
-        "pr_missions": daftar_pr(s),
+        "waktu_info": info_waktu(s, kini),
+        "gt_missions": misi_ringkas(daftar_gt(s)),
+        "pr_missions": misi_ringkas(daftar_pr(s)),
         "gsg": hitung_gsg(s),
         "chosen_eval": evaluasi_chosen_provisional(s),
         "pencapaian": daftar_pencapaian(s),
         "harga_petak": HARGA_PETAK_REALISTIS[len(s["petak"])] if len(s["petak"]) < len(HARGA_PETAK_REALISTIS) else None,
         "harga_gudang": HARGA_GUDANG_REALISTIS[s["gudang_upgrade"]] if s["gudang_upgrade"] < len(HARGA_GUDANG_REALISTIS) else None,
         "harga_produk": {k: {"min_g": v[1], "gc": int(round(v[2] * cfg["price_multiplier"]))} for k, v in HARGA_PRODUK_REALISTIS.items()},
-        "yard_slots": YARD_SLOTS,
-        "label_sampah": LABEL_SAMPAH,
-        "sandbox_packages": SANDBOX_TOPUP_PACKAGES,
+        "info_mesin": info_mesin_milik(s),
+        "nama_item": nama_item(s),
+
         "support_urls": {
             "support_url": cfg.get("support_url"),
             "sponsor_contact_url": cfg.get("sponsor_contact_url"),
             "soundtrack_url": cfg.get("soundtrack_url"),
         },
         "config_version": cfg.get("version", 1),
-        "catalog_stats": load_seed()["stats"],
     }

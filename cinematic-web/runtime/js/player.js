@@ -8,12 +8,14 @@ const DURATION = 120;
 const $ = (id) => document.getElementById(id);
 const app = $('app'), canvas = $('film'), ctx = canvas.getContext('2d', { alpha: false });
 const buf = document.createElement('canvas'), bctx = buf.getContext('2d', { alpha: false });
+// Opus (~700 KB) where supported, AAC fallback (Safari lama)
+const OPUS = new Audio().canPlayType('audio/ogg; codecs=opus') !== '';
 const audio = new Audio();
 audio.preload = 'auto';
-audio.src = 'audio/opening.m4a';
+audio.src = OPUS ? 'audio/opening.ogg' : 'audio/opening.m4a';
 const acceptAudio = new Audio();
 acceptAudio.preload = 'none';
-acceptAudio.src = 'audio/accept.m4a';
+acceptAudio.src = OPUS ? 'audio/accept.ogg' : 'audio/accept.m4a';
 
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
@@ -48,19 +50,29 @@ function sceneReady(s) {
   }
   return true;
 }
-const allUrls = [...new Set(SCENES.flatMap((s) => s.urls.map(([, u]) => u)))];
+// Anggaran opening: fetch pertama hanya panel 24 detik awal; sisanya di-stream satu per satu
+// mengikuti urutan film setelah penonton menekan mulai (pemutar menahan jam bila panel belum siap).
+const urlsOf = (list) => [...new Set(list.flatMap((s) => s.urls.map(([, u]) => u)))];
+const firstUrls = urlsOf(SCENES.filter((s) => s.start < 24));
+const restUrls = urlsOf(SCENES).filter((u) => !firstUrls.includes(u));
 let loadedCount = 0;
 async function preload() {
-  const queue = allUrls.slice();
+  const queue = firstUrls.slice();
   const worker = async () => {
     while (queue.length) {
       await want(queue.shift());
       loadedCount++;
-      $('load-fill').style.width = `${Math.round((loadedCount / allUrls.length) * 100)}%`;
+      $('load-fill').style.width = `${Math.round((loadedCount / firstUrls.length) * 100)}%`;
       updateStartButton();
     }
   };
   await Promise.all([worker(), worker(), worker()]);
+}
+let streaming = false;
+async function streamRest() {
+  if (streaming) return;
+  streaming = true;
+  for (const u of restUrls) await want(u);   // one panel at a time, in timeline order
 }
 let audioReady = false;
 audio.addEventListener('canplay', () => { audioReady = true; updateStartButton(); }, { once: true });
@@ -108,6 +120,7 @@ function seek(t) {
 async function play() {
   if (state.ended) return;
   state.playing = true;
+  streamRest();
   app.classList.remove('paused');
   state.clockStart = performance.now();
   if (state.audioOk) {

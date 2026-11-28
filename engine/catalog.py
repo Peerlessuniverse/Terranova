@@ -55,6 +55,8 @@ def query_catalog(kind="all", category="", search="", page=1, per_page=24, only_
     seed = load_seed()
     q = (search or "").strip().lower()
     cat = (category or "").strip().lower()
+    # beberapa kategori sekaligus dipisah "|" (kios Pasar: mis. Bengkel = Pengumpulan|Organik|Plastik|...)
+    cats = [c for c in cat.split("|") if c] if "|" in cat else None
     per_page = max(1, min(48, int(per_page or 24)))
     page = max(1, int(page or 1))
 
@@ -86,7 +88,10 @@ def query_catalog(kind="all", category="", search="", page=1, per_page=24, only_
             })
     if kind in ("all", "machine", "machines"):
         for m in seed["machines"]:
-            if cat and cat not in m["category"].lower() and cat != m["domain"]:
+            if cats is not None:
+                if not any(c in m["category"].lower() for c in cats):
+                    continue
+            elif cat and cat not in m["category"].lower() and cat != m["domain"]:
                 continue
             if only_active and m["status"] != "active":
                 continue
@@ -199,8 +204,9 @@ def make_quote(item_kind, item_id, side, qty, kini=None, price_mult=1.0):
             net_gc = max(15000, int(round(m["harga_gc"] * 0.04 * price_mult)))
             fee_gc = 0
         elif side == "sell_used":
-            # Anti-arbitrage: used buyback is 60% of canonical price minus 5% inspection fee
-            gross = int(round(m["harga_gc"] * 0.60))
+            # Anti-arbitrage: used buyback is 60% of the CURRENT market price minus 5% inspection fee
+            # (gameplay additionally caps it at 57% of what the player actually paid)
+            gross = int(round(m["harga_gc"] * 0.60 * price_mult))
             fee_gc = int(round(gross * 0.05))
             net_gc = max(0, gross - fee_gc)
         else:

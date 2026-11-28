@@ -2,10 +2,11 @@
 
 Each sheet is one image with several poses/items (consistent look within a sheet). The background is removed
 with birefnet, then sprites are cut out by alpha connected components (row-major order) and saved to
-web/assets/sprites/<sheet>_<n>.png. Raw outputs are kept in Asset/generated/ (never re-billed if present).
+Asset/sumber_web/sprites_png/<sheet>_<n>.png (lalu tools/optimize_sprites.py -> WebP). Raw outputs are kept in Asset/generated/ (never re-billed if present).
 
 Usage: python tools/gen_assets_fal.py [sheet ...]     (default: all sheets)
 Budget guard: stops before exceeding MAX_USD (owner approved US$1.50).
+Backgrounds: python tools/gen_assets_fal.py --bg pasar  -> web/assets/img/<name>_iso.webp (whole image, no cut-out).
 """
 import base64, io, json, os, re, sys, time
 import requests
@@ -13,7 +14,8 @@ from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(ROOT, "Asset", "generated"); os.makedirs(RAW, exist_ok=True)
-OUT = os.path.join(ROOT, "web", "assets", "sprites"); os.makedirs(OUT, exist_ok=True)
+# PNG sumber disimpan di Asset/ (tidak dilayani); jalankan tools/optimize_sprites.py untuk WebP web/assets/sprites
+OUT = os.path.join(ROOT, "Asset", "sumber_web", "sprites_png"); os.makedirs(OUT, exist_ok=True)
 LEDGER = os.path.join(RAW, "cost_ledger.json")
 env = open(os.path.normpath(os.path.join(ROOT, "..", ".env")), encoding="utf-8").read()
 KEY = re.search(r"^FAL_KEY\s*=\s*\"?([^\"\r\n]+)", env, re.M).group(1).strip()
@@ -92,6 +94,10 @@ SHEETS = {
                  "pedalling, holding the handlebar behind the canopy. Two small wheels at the front, one big wheel at the back.",
         "delman": "a traditional Indonesian delman: a brown horse walking at the FRONT (right side) pulling a small two-wheeled "
                   "wooden carriage behind it (left side) with a cloth canopy and a driver holding the reins.",
+        "sepeda": "a schoolboy in a blue t-shirt and shorts riding a light-blue bicycle with a small front basket, pedalling, "
+                  "body and face turned to the RIGHT (direction of travel), both wheels the same size.",
+        "motor": "a rider in a white helmet and blue shirt on a red Indonesian scooter (motor matic), sitting upright, "
+                 "facing the RIGHT (direction of travel), headlight at the right end, both wheels the same size.",
         "gerobak": "a small green motorized three-wheeled waste collection cart: the rider on the motorcycle part at the FRONT "
                    "(right side) and an open green cargo box with sacks of sorted waste and a recycling symbol at the back.",
        }.items()},
@@ -104,12 +110,68 @@ SHEETS = {
         "Plain flat solid light grey (#d9d9d9) background, badges evenly spaced, not touching, no text."),
 }
 
+SHEETS["pedagang"] = dict(refs=["yard", "npcsheet"], target_h=150, prompt=STYLE +
+    "The second reference shows the pedestrian sprites of this game: match their size, outline and shading. "
+    "Create 7 market vendor character sprites, full body, standing and facing the viewer in isometric 3/4 view, "
+    "in one row, evenly spaced: (1) a weathered scrap-collector man with a towel over his shoulder holding a sack; "
+    "(2) a cheerful young woman in a green apron holding a bag of compost; (3) a farmer woman in a conical straw hat "
+    "holding fresh vegetables; (4) a food-stall lady in a batik apron holding a ladle; (5) a mechanic man in blue "
+    "overalls holding a wrench; (6) an engineer woman in a yellow safety helmet and orange vest holding a small solar "
+    "panel; (7) an elderly researcher man with glasses and a white lab coat holding a book. Indonesian people, friendly. " + BG)
+
+SHEETS["pedagang2"] = dict(refs=["yard", "npcsheet"], target_h=150, prompt=STYLE +
+    "The second reference shows the pedestrian sprites of this game: match their size, outline and shading. "
+    "Create 2 market vendor character sprites, full body, standing and facing the viewer in isometric 3/4 view, in one row, "
+    "well apart: (1) a middle-aged Indonesian food-stall lady wearing a batik apron and headscarf, holding a ladle in one hand "
+    "and a bowl of rice in the other; (2) a young Indonesian engineer woman in a yellow safety helmet and orange safety vest "
+    "holding a small blue solar panel in both hands. " + BG)
+
+BACKGROUNDS = {
+    "pasar": dict(refs=["yardfull"], aspect="16:9", prompt=STYLE +
+        "Create a NEW scene in exactly the same isometric camera angle and pixel-art style: a small traditional Indonesian "
+        "neighbourhood market square (pasar), wide 16:9 landscape, daylight. A paved plaza in the centre with two shady trees "
+        "and benches; the entrance path enters from the bottom centre edge. Around the plaza place exactly 7 separate open "
+        "market stalls with colourful cloth canopies, clearly spaced apart, each showing its trade with goods: "
+        "(1) top-left: scrap collector stall with sacks of plastic bottles, flattened cardboard bales and metal cans; "
+        "(2) top-centre: recycling stall with bags of compost, plastic pellets and recycled flower pots; "
+        "(3) top-right: farm stall with fresh vegetables, seed packets and seedling trays; "
+        "(4) middle-left: small food warung with rice sacks, eggs, tempeh and water gallons; "
+        "(5) middle-right: mechanic workshop with tools, a sorting table, compost barrels and small machines; "
+        "(6) bottom-left: renewable energy shop with solar panels, a small wind turbine and batteries on display; "
+        "(7) bottom-right: researcher booth with books, a microscope and a notice board. "
+        "Leave a clear empty patch of pavement in front of each stall where a vendor will stand. "
+        "No people, no animals, no vehicles, no text, no letters, no writing on any sign."),
+}
+
 REFS = {
     "yard": os.path.join(ROOT, "web", "assets", "img", "yard_iso.webp"),
-    "avatar": os.path.join(ROOT, "web", "assets", "img", "ui_avatar.png"),
+    "avatar": os.path.join(ROOT, "Asset", "sumber_web", "tidak_terpakai", "img", "ui_avatar.png"),
     "badge": os.path.join(ROOT, "web", "assets", "landing", "b_zwm.webp"),
     "playersheet": os.path.join(ROOT, "Asset", "generated", "player.png"),
+    "npcsheet": os.path.join(ROOT, "Asset", "generated", "npc.png"),
+    "yardfull": os.path.join(ROOT, "web", "assets", "img", "yard_iso.webp"),
 }
+
+
+def generate_bg(name):
+    """Whole illustration (no background removal) -> web/assets/img/<name>_iso.webp."""
+    spec = BACKGROUNDS[name]
+    raw = os.path.join(RAW, f"{name}.png")
+    if not os.path.exists(raw):
+        L = ledger()
+        if L["usd"] + PRICE_IMG > MAX_USD:
+            sys.exit(f"Budget guard: {L['usd']:.2f} USD spent, next image would exceed {MAX_USD}")
+        refs = [data_uri(REFS[r], None, max_w=1672) for r in spec["refs"]]
+        res = run("fal-ai/nano-banana/edit", {"prompt": spec["prompt"], "image_urls": refs, "num_images": 1,
+                                               "output_format": "png", "aspect_ratio": spec.get("aspect", "16:9")})
+        open(raw, "wb").write(requests.get(res["images"][0]["url"], timeout=120).content)
+        L["usd"] += PRICE_IMG; L["items"].append({"sheet": name, "t": time.time()})
+        json.dump(L, open(LEDGER, "w"), indent=1)
+        print(f"{name}: generated (total spent {L['usd']:.2f} USD)")
+    im = Image.open(raw).convert("RGB")
+    dst = os.path.join(ROOT, "web", "assets", "img", f"{name}_iso.webp")
+    im.save(dst, "WEBP", quality=82, method=6)
+    print(f"{name}: {im.width}x{im.height} -> {dst} ({os.path.getsize(dst) // 1024} KB)")
 
 
 def data_uri(path, crop=None, max_w=1024):
@@ -230,11 +292,16 @@ def slice_sheet(name, cut):
             spr = spr.resize((360, round(spr.height * 360 / spr.width)), Image.LANCZOS)
         spr.save(os.path.join(OUT, f"{name}_{i}.png"), optimize=True)
         meta.append(dict(file=f"{name}_{i}.png", w=spr.width, h=spr.height))
-    print(f"{name}: {len(ordered)} sprites -> web/assets/sprites/")
+    print(f"{name}: {len(ordered)} sprites -> Asset/sumber_web/sprites_png/ (jalankan tools/optimize_sprites.py)")
     return meta
 
 
 if __name__ == "__main__":
+    if sys.argv[1:2] == ["--bg"]:
+        for n in sys.argv[2:]:
+            generate_bg(n)
+        print("spent:", f"{ledger()['usd']:.2f} USD")
+        sys.exit(0)
     names = sys.argv[1:] or list(SHEETS)
     allmeta = {}
     mpath = os.path.join(OUT, "sprites.json")

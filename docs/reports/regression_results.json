@@ -1,9 +1,9 @@
 {
-  "passed": 39,
+  "passed": 85,
   "failed": 0,
-  "total": 39,
-  "p95_ms": 35.82,
-  "snapshot_bytes": 15840,
+  "total": 85,
+  "p95_ms": 36.09,
+  "snapshot_bytes": 16096,
   "results": [
     {
       "ff": "FF01",
@@ -32,7 +32,13 @@
     {
       "ff": "FF01",
       "status": "PASS",
-      "name": "Existing v0.9 account balance preserved without forced overwrite",
+      "name": "v0.9 account reset to Realistic_v1 (1.000.000 GC) keeping name & city",
+      "detail": ""
+    },
+    {
+      "ff": "FF01",
+      "status": "PASS",
+      "name": "Already-migrated historical_v09_preserved account is also reset",
       "detail": ""
     },
     {
@@ -45,6 +51,18 @@
       "ff": "FF02",
       "status": "PASS",
       "name": "Paginated /catalog returns 24 items/page",
+      "detail": ""
+    },
+    {
+      "ff": "FF16",
+      "status": "PASS",
+      "name": "K1 Catalog lists categories for the filter",
+      "detail": ""
+    },
+    {
+      "ff": "FF16",
+      "status": "PASS",
+      "name": "K1 Category filter returns only that category",
       "detail": ""
     },
     {
@@ -81,7 +99,7 @@
       "ff": "FF04",
       "status": "PASS",
       "name": "River floating trash spawns & conserves missed mass to backlog",
-      "detail": "saw_spawn=True, backlog=2420g"
+      "detail": "saw_spawn=True, backlog=480g"
     },
     {
       "ff": "FF05",
@@ -158,13 +176,79 @@
     {
       "ff": "FF13",
       "status": "PASS",
-      "name": "Modular placement blocks overlap on occupied slot S1",
+      "name": "E3 Purchased item is auto-placed on the land (visible immediately)",
       "detail": ""
     },
     {
       "ff": "FF13",
       "status": "PASS",
-      "name": "Modular placement succeeds on free slot S5",
+      "name": "E3 Starter komposter has a valid on-land position",
+      "detail": ""
+    },
+    {
+      "ff": "FF13",
+      "status": "PASS",
+      "name": "E3 Drag onto another item is rejected (no overlap)",
+      "detail": ""
+    },
+    {
+      "ff": "FF13",
+      "status": "PASS",
+      "name": "E3 Drag onto the road is rejected",
+      "detail": ""
+    },
+    {
+      "ff": "FF13",
+      "status": "PASS",
+      "name": "E3 Drag onto the sorting shed is rejected",
+      "detail": ""
+    },
+    {
+      "ff": "FF13",
+      "status": "PASS",
+      "name": "E3 Solar panel may be dragged onto the office roof",
+      "detail": ""
+    },
+    {
+      "ff": "FF13",
+      "status": "PASS",
+      "name": "E3 Komposter may be dragged to free grass inside the land",
+      "detail": ""
+    },
+    {
+      "ff": "FF13",
+      "status": "PASS",
+      "name": "E3 Non-solar item cannot be placed on the roof",
+      "detail": ""
+    },
+    {
+      "ff": "FF13",
+      "status": "PASS",
+      "name": "E3 Item cannot straddle the yard fence",
+      "detail": ""
+    },
+    {
+      "ff": "FF10",
+      "status": "PASS",
+      "name": "K1 Mission cards carry measurable progress, lock reason and suggestion",
+      "detail": ""
+    },
+    {
+      "ff": "FF24",
+      "status": "PASS",
+      "name": "K1 Static meta (mission texts/targets, land geometry) served once via /meta-statis",
+      "detail": ""
+    },
+    {
+      "ff": "FF03",
+      "status": "PASS",
+      "name": "K1 Server messages use Indonesian thousands separator",
+      "detail": ""
+    },
+    {
+      "ff": "FF13",
+      "status": "PASS",
+      "name": "E3 Card data lists in-game effect of owned items",
       "detail": ""
     },
     {
@@ -216,9 +300,201 @@
       "detail": ""
     },
     {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B9 Malformed avatar payload returns 400 JSON (no dropped connection)",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B9 Quote with list id returns 4xx JSON",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B1 Non-admin player cannot publish global config (403)",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B1 Non-admin GET hides audit log & reports is_admin=false",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B4 _test_eta from client ignored outside test mode",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B5 Audit neraca rejected without new processed batch",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B5 Audit spam cannot unlock PR10",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B3 Selling LFP battery removes its capacity",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B2 Buy/sell-used loop never profits (×0,5 and ×2,0 swings)",
+      "detail": "saldo 42,398,700 → 23,063,700"
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B7 Mobile cart (gerobak) cannot be placed in a yard slot",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B7 PR09 claimable with komposter S1 + meja S2 + solar S6",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B7 lepas_mesin stores the item in the warehouse",
+      "detail": ""
+    },
+    {
+      "ff": "FF01",
+      "status": "PASS",
+      "name": "E4 Character setup stores gender + jacket/hair colour; gender cannot be changed later",
+      "detail": ""
+    },
+    {
+      "ff": "FF01",
+      "status": "PASS",
+      "name": "E4 Unknown appearance option rejected",
+      "detail": ""
+    },
+    {
+      "ff": "FF08",
+      "status": "PASS",
+      "name": "E4 Starter sorting table sorts 10 kg per action (5 kg base + 5 kg table)",
+      "detail": ""
+    },
+    {
+      "ff": "FF08",
+      "status": "PASS",
+      "name": "E4 Without an installed table sorting drops to 5 kg",
+      "detail": ""
+    },
+    {
+      "ff": "FF08",
+      "status": "PASS",
+      "name": "E4 Sorted bins move part of residue into recyclables, mass conserved",
+      "detail": ""
+    },
+    {
+      "ff": "FF08",
+      "status": "PASS",
+      "name": "E4 Composter capacities add up (starter 2 kg + bucket 4 kg = 6 kg -> 3 kg compost)",
+      "detail": ""
+    },
+    {
+      "ff": "FF08",
+      "status": "PASS",
+      "name": "E4 Compost needs an installed composter (actionable message)",
+      "detail": ""
+    },
+    {
+      "ff": "FF08",
+      "status": "PASS",
+      "name": "E4 Warehouse rack adds 100 kg capacity while installed",
+      "detail": ""
+    },
+    {
+      "ff": "FF03",
+      "status": "PASS",
+      "name": "E4 Hanging scale adds 5% to processed product sales",
+      "detail": "3500 -> 3675"
+    },
+    {
+      "ff": "FF08",
+      "status": "PASS",
+      "name": "E4 Plastic shredder: 3 kg per action, 900 g per kg, mass conserved",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B10 Clean days are not earned by audit clicks alone",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "Biogas genset partner fee reduces operating profit",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "PR07 sale counted only when cumulative operating profit is positive",
+      "detail": ""
+    },
+    {
+      "ff": "FF25",
+      "status": "PASS",
+      "name": "B9 Leaderboard GET is read-only (200)",
+      "detail": ""
+    },
+    {
+      "ff": "FF26",
+      "status": "PASS",
+      "name": "N1 Small solar charges under 12 s polling (fraction carried)",
+      "detail": "223 Wh vs 223.5"
+    },
+    {
+      "ff": "FF26",
+      "status": "PASS",
+      "name": "N1 Solar produces nothing at night (19.00-23.00 WIB)",
+      "detail": ""
+    },
+    {
+      "ff": "FF26",
+      "status": "PASS",
+      "name": "N1 Daily solar ~5 peak-sun-hours (real time, not accelerated)",
+      "detail": "4.97 h"
+    },
+    {
+      "ff": "FF26",
+      "status": "PASS",
+      "name": "N1 waktu_info reports night phase",
+      "detail": ""
+    },
+    {
+      "ff": "FF26",
+      "status": "PASS",
+      "name": "N2 Saudagar Hijau badge stays unlocked after later costs",
+      "detail": ""
+    },
+    {
+      "ff": "FF26",
+      "status": "PASS",
+      "name": "N5 GT01 message has no '+0 GC'",
+      "detail": "Selamat! Tier Awaken tercapai."
+    },
+    {
       "ff": "FF24",
       "status": "PASS",
-      "name": "Perf: API p95=35.8ms (<=500ms), shell_gz=34.4KB (<=250KB), snapshot=15.5KB",
+      "name": "Perf: API p95=36.1ms (<=500ms), shell_gz=61.6KB (<=250KB), snapshot=15.7KB (<=20KB)",
       "detail": ""
     },
     {

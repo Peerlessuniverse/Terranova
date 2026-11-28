@@ -8,7 +8,7 @@ pauses, so subtitle timings are exact. Tags like [sorrowful] steer delivery and 
 with speech-to-text). Numbers are spelled out for the voice only; subtitles keep digits.
 Score = ElevenLabs Music (instrumental, 120s), ducked under speech. Master: -16 LUFS integrated.
 
-Outputs: _build/{vo.wav, music.mp3, timings.json}, runtime/audio/{opening.m4a, accept.m4a}
+Outputs: _build/{vo.wav, music.mp3, timings.json}, runtime/audio/{opening,accept}.{ogg,m4a}
 Usage (from cinematic-web/): python tools/build_audio.py
 """
 import hashlib
@@ -233,6 +233,9 @@ def main():
     out = os.path.join(RUNTIME, "opening.m4a")
     run(["ffmpeg", "-y", "-i", master, "-af", f"volume={-16.0 - lufs:.2f}dB,alimiter=limit=0.85:level=false",
          "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", out])
+    # Opus utama (~700 KB, anggaran opening); AAC di atas tetap jadi cadangan untuk browser tanpa Opus
+    run(["ffmpeg", "-y", "-i", master, "-af", f"volume={-16.0 - lufs:.2f}dB,alimiter=limit=0.85:level=false",
+         "-c:a", "libopus", "-b:a", "40k", "-vbr", "on", "-application", "audio", os.path.join(RUNTIME, "opening.ogg")])
 
     acc = decode(tts(ACCEPT, GAIA))
     acc = fx(np.pad(acc, (0, SR)), GAIA["fx"], "accept")
@@ -241,6 +244,8 @@ def main():
     run(["ffmpeg", "-y", "-f", "f32le", "-ar", str(SR), "-ac", "1", "-i", acc_raw,
          "-af", "loudnorm=I=-16:TP=-1.5", "-c:a", "aac", "-b:a", "64k", "-movflags", "+faststart",
          os.path.join(RUNTIME, "accept.m4a")])
+    run(["ffmpeg", "-y", "-i", os.path.join(RUNTIME, "accept.m4a"), "-c:a", "libopus", "-b:a", "40k",
+         os.path.join(RUNTIME, "accept.ogg")])
     print("->", out, os.path.getsize(out) // 1024, "KB")
 
 

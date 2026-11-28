@@ -9,6 +9,9 @@
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font:14px/1.45 system-ui,-apple-system,sans-serif}
 button,select,input{font:inherit;color:inherit}
+select{background:#0b1d14;color:#eaf5e4;border:1px solid #4d7a5c;border-radius:8px;padding:6px;color-scheme:dark}
+select option{background:#0b1d14;color:#eaf5e4}
+body.cel-on #sheet{max-height:min(56vh,calc(100dvh - var(--top) - var(--nav) - 130px))}
 button{cursor:pointer;min-height:44px;border-radius:10px;border:1px solid #ffffff30;background:#163d2f;padding:8px 12px}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 button:disabled{opacity:.48;cursor:not-allowed}
@@ -189,7 +192,78 @@ body.cine #top,body.cine #nav,body.cine #gaiaBar,body.cine #status,body.cine #sh
 #gaiaBar{bottom:calc(var(--nav) + 18px)}
 #sheet{bottom:calc(var(--nav) + 18px)}
 
+/* ===== Evaluasi 3: clickable HUD chips, equipment cards, river alert, livelier menus ===== */
+button.chip{min-height:0;cursor:pointer;color:#fff;text-align:left;position:relative}
+button.chip:hover{border-color:#e8c56e;transform:translateY(-1px)}
+.chip .ci{font-size:18px;width:24px;text-align:center;flex:none}
+.chip .cv{display:flex;flex-direction:column;line-height:1.05}
+.chip .cv small{font-size:10px;font-weight:600;color:#b9d4c4;letter-spacing:.02em}
+.chip[data-tip]:hover::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);right:0;z-index:40;width:max-content;max-width:240px;white-space:normal;
+  background:#0b1d14;border:1px solid #e8c56e;border-radius:8px;padding:6px 9px;font:500 12px/1.35 system-ui;color:#fdf5df;box-shadow:0 6px 16px #000a;pointer-events:none}
+#sungaiAlert{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav) + 96px);z-index:16;min-height:38px;padding:6px 16px;border-radius:22px;
+  background:linear-gradient(#2f8fc4,#1b5f8a);border:2px solid #bfe9ff;font-weight:700;color:#fff;box-shadow:0 6px 18px #000a;animation:denyut 1.6s ease-in-out infinite}
+@keyframes denyut{50%{box-shadow:0 0 0 6px #7bd8ff44,0 6px 18px #000a}}
+.grid:has(> .alat-card){grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.alat-card .alat-top{display:flex;gap:10px;align-items:center}
+.alat-card .alat-top img{width:64px;height:64px;flex:none;background:radial-gradient(#3e7a4a,#1d3f2b 70%);border-radius:12px;border:1px solid #ffffff22}
+.alat-card.besar .alat-top img{width:104px;height:104px}
+.alat-card .alat-top b{display:block}
+.alat-card .alat-top small{display:block}
+.alat-fungsi{font-size:12.5px;color:#e7f3df;background:#ffffff0a;border-radius:8px;padding:5px 8px}
+.efek{margin:0;padding:0;list-style:none;display:grid;gap:3px}
+.efek li{font-size:12.5px;line-height:1.35;color:#eaf5e4;background:#7bd88f14;border-left:3px solid #7bd88f;border-radius:4px;padding:3px 7px}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;background:#e8c56e;color:#2b2208;vertical-align:middle}
+.tips{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:5px}
+.tips li{background:#ffffff0b;border:1px solid #ffffff1c;border-radius:9px;padding:6px 10px;font-size:13px}
+.info-tbl td:last-child{text-align:right}
+/* menu tiles: grouped, coloured icon badges */
+.menu-sec{margin:12px 0 6px;font:800 12px/1 system-ui;letter-spacing:.12em;color:#f6d36b;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.menu-sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#f6d36b66,transparent)}
+.menu-sec:first-of-type{margin-top:0}
+.tile{--c:#4d7a5c;position:relative;overflow:hidden;min-height:96px;border:2px solid color-mix(in srgb,var(--c) 70%,#000);background:linear-gradient(160deg,color-mix(in srgb,var(--c) 38%,#173a2a),#132c20 70%);transition:transform .15s ease,box-shadow .15s ease}
+.tile:hover{transform:translateY(-2px);box-shadow:0 6px 16px #0008,0 0 0 1px var(--c);border-color:var(--c)}
+.tile span{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--c) 55%,#0b1d14);box-shadow:inset 0 2px 0 #ffffff30,0 2px 0 #0007;font-size:22px;margin-bottom:4px}
+.tile small{line-height:1.3}
+.tile em{position:absolute;top:8px;right:8px;font-style:normal;font-size:10px;font-weight:800;padding:1px 7px;border-radius:10px;background:#e53935;color:#fff}
+.sh-head h3{display:flex;align-items:center;gap:8px}
+.card-box > b:first-child{display:flex;align-items:center;gap:6px}
+.stok{display:flex;flex-wrap:wrap;gap:5px}
+.stok span{font-size:12px;background:#0b1d14;border:1px solid #ffffff22;border-radius:12px;padding:2px 8px;color:#eaf5e4}
+.act b{font-size:14px}
+#pasarBar{display:none;position:fixed;left:12px;top:calc(var(--top) + 8px);z-index:17;align-items:center;gap:10px;padding:6px 8px;border-radius:14px;background:rgba(9,29,22,.94);border:2px solid var(--gold);box-shadow:0 6px 18px #000a}
+#pasarBar b{font:800 16px Georgia,serif;color:var(--gold);padding:0 6px}
+#pasarBar button{min-height:36px;padding:4px 12px;font-weight:700}
+body.di-pasar #pasarBar{display:flex}
+body.di-pasar #sungaiAlert{display:none}
+.kios-sapa{display:flex;gap:12px;align-items:center;background:#ffffff0b;border:1px solid #ffffff22;border-radius:12px;padding:8px 12px;margin-bottom:10px}
+.kios-sapa img{height:72px}.kios-sapa b{color:var(--gold)}.kios-sapa p{margin:2px 0 0;font:italic 14px/1.4 Georgia,serif;color:#fdf5df}
+.prog{display:grid;gap:5px}
+.pr-row{display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:12px;color:#eaf5e4}
+.pr-row em{font-style:normal;font-weight:700;color:#f6d36b}.pr-row.ok em{color:#9be37f}
+.pr-row i{grid-column:1/-1;height:6px;border-radius:4px;background:#0b1d14;overflow:hidden}
+.pr-row i b{display:block;height:100%;background:linear-gradient(90deg,#7bd88f,#f6d36b)}
+.misi .kunci{color:#ffb4a8}.misi .saran{color:#cfe6c4}.misi .ok-t{color:#9be37f;font-weight:700}
+.card-box.ok{border-color:#7bd88f88;background:#7bd88f12}
+.kg-pick{display:flex;gap:4px;flex-wrap:wrap}
+#musToast{position:fixed;left:50%;top:74px;transform:translate(-50%,-12px);opacity:0;pointer-events:none;z-index:60;background:#0d2219ee;color:#f3e9c6;border:1px solid #4d7a5c;border-radius:999px;padding:6px 14px;font:600 13px system-ui;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;transition:opacity .4s,transform .4s}
+#musToast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:759px){#musToast{top:100px;font-size:12px}}
+.card-box.fokus{border-color:var(--gold);box-shadow:0 0 0 2px #f3d98b88,0 0 16px #f3d98b55}
+.kg-pick button{min-height:32px;padding:2px 10px;border-radius:16px;font-size:12px;background:#0b1d14}
+.kg-pick button.on{background:linear-gradient(#5aa04a,#2f6e2c);border-color:#e8f07a;font-weight:700}
+#konfirmBox{position:fixed;inset:0;z-index:70;background:#000a;display:grid;place-items:center;padding:16px}
+.konfirm-card{width:min(420px,100%);background:linear-gradient(#173f2e,#0f2c20);border:2px solid var(--gold);border-radius:16px;padding:16px 18px;box-shadow:0 12px 40px #000c}
+.konfirm-card h3{margin:0 0 6px;font:700 18px Georgia,serif;color:var(--gold)}.konfirm-card p{margin:0 0 6px;color:#eaf5e4;font-size:14px}
+
 @media(max-width:760px){
+  #pasarBar{left:8px;top:calc(var(--top) + 6px);gap:4px;padding:3px}
+  #pasarBar b{display:none}
+  #pasarBar button{min-height:32px;padding:2px 8px;font-size:12px}
+  body.di-pasar #status{top:calc(var(--top) + 48px)}
+  .chip .cv small{display:none}
+  .chip .ci{font-size:14px;width:auto}
+  .chip[data-tip]:hover::after{display:none}
+  #sungaiAlert{bottom:calc(var(--nav) + 70px);font-size:12px}
   #misiWrap{display:none}
   .lvbar{width:64px}
   #tKarma{display:none}
@@ -232,7 +306,7 @@ body.cine #top,body.cine #nav,body.cine #gaiaBar,body.cine #status,body.cine #sh
     <div><b>TERRA NOVA</b><small>Peradaban Bumi Baru</small></div>
   </div>
   <div class="pl" id="tProfil" role="button" tabindex="0" title="Profil & lencana">
-    <div class="av-dot" id="tAva"><img src="/assets/sprites/player_5.png" alt=""></div>
+    <div class="av-dot" id="tAva"><img src="/assets/sprites/player_5.webp" alt=""></div>
     <div>
       <b id="tName">Penjaga Bumi</b>
       <div class="sub"><span class="badge" id="tTier">Awaken</span><span class="lvbar" title="Karma"><i id="tKarmaBar"></i></span><span id="tKarma">Karma 0%</span><span class="bdg-count" id="tBadges">🏅 0/8</span></div>
@@ -241,13 +315,15 @@ body.cine #top,body.cine #nav,body.cine #gaiaBar,body.cine #status,body.cine #sh
   <div class="ibs">
     <button class="ib ib-menu" id="bMenu" type="button" title="Menu: misi, pencapaian, lahan, cara bermain" aria-label="Buka menu"><img src="/assets/img/ui_list.png" alt=""><span>Menu</span></button>
     <button class="ib" id="bMus" type="button" title="Musik latar" aria-label="Musik latar">🎵</button>
+    <div id="musToast" role="status" aria-live="polite"></div>
     <button class="ib" id="bSfx" type="button" title="Efek suara" aria-label="Efek suara">🔊</button>
   </div>
   <div class="chips">
-    <div class="chip" title="Gaia Coin"><img src="/assets/img/ui_coin.png" alt="Coin"><span id="tCoin">1.000.000</span></div>
-    <div class="chip" title="Vitalitas (efek manual 60–110%, tidak turun offline)"><span>⚡</span><span id="tVit">100%</span></div>
-    <div class="chip" title="Poin hijau"><img src="/assets/img/ui_leaf.png" alt="Poin"><span id="tPoin">0</span></div>
-    <div class="chip" title="Gudang"><img src="/assets/img/ui_box.png" alt="Gudang"><span id="tGudang">0/500 kg</span></div>
+    <button type="button" class="chip" data-open="info:koin" data-tip="Gaia Coin: uang dalam game. Klik untuk detail"><img src="/assets/img/ui_coin.png" alt=""><span class="cv"><span id="tCoin">1.000.000</span><small>Gaia Coin</small></span></button>
+    <button type="button" class="chip" data-open="info:vit" data-tip="Vitalitas: tenaga karaktermu. Klik untuk detail"><span class="ci">❤️</span><span class="cv"><span id="tVit">100%</span><small>Vitalitas</small></span></button>
+    <button type="button" class="chip" data-open="info:poin" data-tip="Poin Hijau: skor kontribusi lingkungan. Klik untuk detail"><img src="/assets/img/ui_leaf.png" alt=""><span class="cv"><span id="tPoin">0</span><small>Poin Hijau</small></span></button>
+    <button type="button" class="chip" data-open="info:gudang" data-tip="Gudang: isi / kapasitas penyimpanan. Klik untuk detail"><img src="/assets/img/ui_box.png" alt=""><span class="cv"><span id="tGudang">0/500 kg</span><small>Gudang</small></span></button>
+    <button type="button" class="chip" id="tWaktu" data-open="info:waktu" data-tip="Waktu nyata (WIB). Klik untuk detail"><span class="ci" id="tJamIk">☀️</span><span class="cv"><span id="tJam">--.--</span><small id="tJamFase">WIB</small></span></button>
   </div>
 </header>
 
@@ -268,6 +344,14 @@ body.cine #top,body.cine #nav,body.cine #gaiaBar,body.cine #status,body.cine #sh
   <div class="g-ava">🌿</div>
   <div class="g-txt"><b>GAIA</b><div id="gaiaMsg">Selamat datang. Dari tempat kecil inilah perjalananmu dimulai. Hilangkan sampahku.</div></div>
   <div class="g-bhi"><span>BHI (Lokal)</span><strong id="tBhi">100%</strong></div>
+</div>
+
+<div id="pasarBar"><button type="button" data-act="keluar_pasar">⬅ Lahan</button><b>🏪 Pasar Kota</b><button type="button" data-open="pasar" data-daftar="1">📋 Daftar cepat</button></div>
+<button type="button" id="sungaiAlert" hidden>🌊 Sampah terapung di sungai · <b>Lihat ↓</b></button>
+
+<div id="konfirmBox" hidden role="dialog" aria-modal="true" aria-labelledby="konfirmJudul">
+  <div class="konfirm-card"><h3 id="konfirmJudul"></h3><p id="konfirmIsi"></p>
+    <div class="menu-row"><button type="button" id="konfirmBatal">Batal</button><button type="button" id="konfirmYa" class="act hint">✓ Ya, lanjutkan</button></div></div>
 </div>
 
 <!-- Dynamic Sheet -->
@@ -297,7 +381,9 @@ body.cine #top,body.cine #nav,body.cine #gaiaBar,body.cine #status,body.cine #sh
   </div>
 </div>
 
-<script src="/assets/ff_modules.js"></script>
+<script src="/assets/tn_avatar.js?v=e4"></script>
+<script src="/assets/tn_mesin.js?v=e4"></script>
+<script src="/assets/ff_modules.js?v=r2"></script>
 <script>
 const el = id => document.getElementById(id);
 const esc = s => (window.TN_FF ? window.TN_FF.esc(s) : String(s ?? ''));
@@ -329,11 +415,23 @@ function musicTick() {
   g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.04, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .85);
   o.connect(g).connect(c.destination); o.start(t); o.stop(t + .9); step++;
 }
-el('bMus').onclick = () => {
-  musOn = window.TN_FF ? window.TN_FF.radio.toggle(sheetMode || 'pabrik') : !musOn;
+function statusMusik() {   // 🎵 button mirrors the single Gaia Radio player
+  const r = window.TN_FF && window.TN_FF.radio;
+  musOn = Boolean(r && r.playing);
   el('bMus').style.opacity = musOn ? 1 : .5;
-};
-el('bMus').style.opacity = .5;
+  el('bMus').title = musOn && r.cur ? '♪ ' + r.cur.judul + ' (ketuk untuk jeda)' : 'Musik latar';
+}
+el('bMus').onclick = () => { if (window.TN_FF) window.TN_FF.radio.toggle(window.TN_SCENE); statusMusik(); if (sheetMode === 'radio') renderSheet(); };
+window.addEventListener('tn-musik-status', statusMusik);
+window.addEventListener('tn-musik', e => {
+  statusMusik();
+  if (sheetMode === 'radio') renderSheet();
+  const t = el('musToast');
+  if (!t || cine) return;
+  t.textContent = (e.detail.sumber === 'radio' ? '📻 ' : e.detail.sumber === 'tema' ? '⭐ ' : '🎻 ') + e.detail.judul;
+  t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 3500);
+});
+statusMusik();
 el('bSfx').onclick = () => { sfxOn = !sfxOn; el('bSfx').textContent = sfxOn ? '🔊' : '🔈'; el('bSfx').style.opacity = sfxOn ? 1 : .5; };
 
 /* ===== API CLIENT (Idempotent UUID receipt) ===== */
@@ -348,7 +446,7 @@ async function send(payload) {
     if (res.status === 401) { location.href = '/'; return; }
     const data = await res.json();
     playSfx(payload.aksi, res.ok);
-    if (data.state) { state = data.state; meta = data.meta; received = Date.now(); onNewLitter(); renderUI(); }
+    if (data.state) { state = data.state; meta = hidrasiMeta(data.meta); received = Date.now(); onNewLitter(); renderUI(); }
     el('status').textContent = data.pesan || 'Selesai.';
     if (res.ok && (payload.aksi === 'panen' || payload.aksi.startsWith('jual_') || payload.aksi === 'ambil_dle')) {
       spawnBurst(av.x, av.y - 60, payload.aksi.startsWith('jual_') ? '#f4c430' : '#7bd88f');
@@ -360,27 +458,192 @@ async function send(payload) {
   }
 }
 
+// static meta (mission texts/targets, land geometry, packages) fetched once; snapshots carry only changing values
+let META_STATIS = null;
+async function muatMetaStatis() {
+  if (META_STATIS) return;
+  try { META_STATIS = await (await fetch('/meta-statis', { credentials: 'same-origin' })).json(); } catch { META_STATIS = {}; }
+}
+function hidrasiMeta(m) {
+  if (!m || !META_STATIS) return m;
+  const D = META_STATIS.misi_def || {};
+  for (const k of ['tata_lahan', 'yard_slots', 'mesin_tidak_dipasang', 'label_sampah', 'sandbox_packages', 'catalog_stats']) if (META_STATIS[k] !== undefined) m[k] = META_STATIS[k];
+  for (const x of [...(m.gt_missions || []), ...(m.pr_missions || [])]) {
+    const d = D[x.id] || { labels: [] };
+    x.desc = d.desc; x.saran = d.saran; if (d.judul) x.judul = d.judul;
+    x.progress = d.labels.map(([lbl, t, u], i) => [lbl, (x.nilai || [])[i] ?? 0, t, u]);
+  }
+  return m;
+}
+
 async function fetchState() {
+  await muatMetaStatis();
   try {
     const res = await fetch('/state', { credentials: 'same-origin' });
     if (res.status === 401) { location.href = '/'; return; }
     const data = await res.json();
     if (!data.state.diterima) { location.href = '/'; return; }  // landing page plays the cinematic first
     const first = !state;
-    state = data.state; meta = data.meta; received = Date.now();
+    state = data.state; meta = hidrasiMeta(data.meta); received = Date.now();
+    window.TN_IS_ADMIN = !!(data.akun && data.akun.admin);
     if (first && !state.intro_selesai) startCine();
     onNewLitter();
     renderUI();
-    if (first) el('status').textContent = `Lahan ${state.kota} · Modal awal 1.000 koin · kumpulkan & olah sampah`;
+    if (first) el('status').textContent = `Lahan ${state.kota} · Saldo ${state.koin.toLocaleString('id-ID')} GC · kumpulkan & olah sampah`;
   } catch {
     el('status').textContent = 'Gagal memuat state server lokal.';
   }
+}
+
+/* ===== PASAR MAP (Evaluasi 4 #1): a separate market scene with NPC vendors instead of a crowded menu =====
+   Kiosks group the NPC roles of Addendum 11 §6 (Rongsok, Organik/Tani/Benih, Sehat, Mekanik/Logistik/Daur,
+   Surya/Bayu/Tirta/WtE, Researcher). Art: assets/img/pasar_iso.webp + sprites pedagang_1..7 (tools/gen_assets_fal.py);
+   until those exist the market is drawn procedurally and the vendors use the pedestrian sprites. */
+let scene = 'lahan';
+const PW = 1600, PH = 900;
+const pasarImg = new Image();
+let pasarMuat = false;
+const pav = { x: 800, y: 830, path: [], onArrive: null, flip: false, back: true, step: 0 };
+let pcamX = 800, pcamY = 520, kiosHover = null;
+const KIOS = [
+  { id: 'pengepul', ik: '🥫', nama: 'Pak Darto', peran: 'Pengepul', judul: '🥫 Pengepul Rongsok', x: 1290, y: 470, spr: 'pedagang_1', alt: 'npc_1', kanopi: ['#8d6e4a', '#d9c39a'], barang: ['🧴', '📦', '🥫'],
+    salam: 'Kertas, logam, dan kaca terpilah? Saya beli dengan harga pengepul.' },
+  { id: 'daur', ik: '♻️', nama: 'Mbak Sari', peran: 'Daur Ulang', judul: '♻️ Kios Daur Ulang', x: 915, y: 262, spr: 'pedagang_2', alt: 'npc_3', kanopi: ['#3f8f3a', '#e8f0d0'], barang: ['🌿', '🧴', '🪴'],
+    salam: 'Kompos, pelet plastik, dan pot buatanmu laku di sini!' },
+  { id: 'tani', ik: '🌱', nama: 'Bu Tini', peran: 'Pasar Tani & Benih', judul: '🌱 Pasar Tani & Benih', x: 1105, y: 362, spr: 'pedagang_4', alt: 'npc_4', kanopi: ['#c23b32', '#f4e3c0'], barang: ['🥬', '🍅', '🌽'],
+    salam: 'Mau beli benih, atau jual sayur hasil kebunmu?', kind: 'crop', cat: '' },
+  { id: 'warung', ik: '🍚', nama: 'Bu Ijah', peran: 'Warung Sehat', judul: '🍚 Warung Sehat', x: 318, y: 462, spr: 'pedagang2_1', alt: 'npc_3', kanopi: ['#d6a92a', '#fff3c4'], barang: ['🍚', '🥚', '💧'],
+    salam: 'Makan dulu biar vitalitasmu pulih!', kind: 'food', cat: '' },
+  { id: 'bengkel', ik: '🔧', nama: 'Mas Joko', peran: 'Bengkel Alat', judul: '🔧 Bengkel Alat Daur Ulang', x: 505, y: 352, spr: 'pedagang_5', alt: 'npc_1', kanopi: ['#2f6fc0', '#dbe8f6'], barang: ['🛢️', '⚙️', '🔧'],
+    salam: 'Komposter, meja pilah, rak, pencacah... alat kerjamu ada di sini.', kind: 'machine', cat: 'pengumpulan|organik|plastik|kertas|logam|tekstil|jelantah|energi dan pengendalian' },
+  { id: 'energi', ik: '☀️', nama: 'Bu Ratna', peran: 'Toko Energi', judul: '☀️ Toko Energi Terbarukan', x: 540, y: 705, spr: 'pedagang2_2', alt: 'npc_4', kanopi: ['#e07b1f', '#fde7c8'], barang: ['☀️', '🔋', '💡'],
+    salam: 'Panel surya, mikrohidro, baterai, dan biogas untuk lahanmu.', kind: 'machine', cat: 'surya|angin|hidro|penyimpanan dan distribusi|waste-to-energy|panas dan riset|rumah tangga' },
+  { id: 'peneliti', ik: '🎓', nama: 'Prof. Hadi', peran: 'Pojok Peneliti', judul: '🎓 Pojok Peneliti', x: 1190, y: 752, spr: 'pedagang_7', alt: 'npc_1', kanopi: ['#7d4cc0', '#ece0fb'], barang: ['📚', '🔬', '📜'],
+    salam: 'Semua bahan dan mesin, termasuk yang masih terkunci, bisa kamu pelajari di sini.' },
+];
+function masukPasar() {
+  if (!pasarMuat) { pasarMuat = true; pasarImg.src = '/assets/img/pasar_iso.webp'; KIOS.forEach(k => spr(k.spr)); }
+  scene = 'pasar'; sheetMode = null; window.TN_SCENE = 'pasar';
+  if (window.TN_FF) window.TN_FF.radio.gantiScene('pasar');   // "Ikuti Tempat": crossfade to the radio songs
+  Object.assign(pav, { x: 820, y: 880, path: [[820, 640]], onArrive: null });
+  pcamX = 820; pcamY = 560;
+  document.body.classList.add('di-pasar');
+  el('status').textContent = innerWidth < 760 ? '🏪 Pasar Kota: geser layar untuk melihat 7 kios, lalu ketuk kios.' : '🏪 Selamat datang di Pasar Kota. Ketuk kios untuk berbelanja atau menjual hasilmu.';
+  renderUI();
+}
+function keluarPasar() {
+  scene = 'lahan'; window.TN_KIOS = null; document.body.classList.remove('di-pasar'); window.TN_SCENE = sheetMode || 'pabrik';
+  if (window.TN_FF) window.TN_FF.radio.gantiScene('lahan');
+}
+function kiosAktif(k) { return spr(k.spr).naturalWidth ? k.spr : k.alt; }
+function drawLapak(k) {   // procedural stall (only while the market illustration is not available)
+  const { x, y } = k, w = 92, d = 34;
+  g.fillStyle = 'rgba(0,0,0,.22)'; g.beginPath(); g.ellipse(x, y - 34, w + 16, d + 8, 0, 0, Math.PI * 2); g.fill();
+  const P = (a, b, z) => [x + a - b, y - 40 + (a + b) / 2 - z];
+  const poly = (pts, c) => { g.fillStyle = c; g.beginPath(); pts.forEach(([a, b], i) => i ? g.lineTo(a, b) : g.moveTo(a, b)); g.closePath(); g.fill(); g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = 1; g.stroke(); };
+  poly([P(-w / 2, d / 2, 0), P(w / 2, d / 2, 0), P(w / 2, d / 2, 34), P(-w / 2, d / 2, 34)], '#8a5a32');
+  poly([P(w / 2, d / 2, 0), P(w / 2, -d / 2, 0), P(w / 2, -d / 2, 34), P(w / 2, d / 2, 34)], '#6b4424');
+  poly([P(-w / 2, -d / 2, 34), P(w / 2, -d / 2, 34), P(w / 2, d / 2, 34), P(-w / 2, d / 2, 34)], '#b98a55');
+  [[-w / 2, -d / 2], [w / 2, -d / 2], [-w / 2, d / 2], [w / 2, d / 2]].forEach(([a, b]) => { const p0 = P(a, b, 34), p1 = P(a, b, 100); g.strokeStyle = '#5a3d22'; g.lineWidth = 3; g.beginPath(); g.moveTo(p0[0], p0[1]); g.lineTo(p1[0], p1[1]); g.stroke(); });
+  for (let i = 0; i < 6; i++) {   // striped canopy
+    const a0 = -w / 2 - 8 + i * (w + 16) / 6, a1 = a0 + (w + 16) / 6;
+    poly([P(a0, -d / 2 - 10, 112), P(a1, -d / 2 - 10, 112), P(a1, d / 2 + 14, 96), P(a0, d / 2 + 14, 96)], k.kanopi[i % 2]);
+  }
+  g.font = '22px system-ui'; g.textAlign = 'center';
+  k.barang.forEach((e, i) => { const [a, b] = P(-28 + i * 28, 0, 36); g.fillText(e, a, b + 2); });
+  g.textAlign = 'left';
+}
+function drawPasarDasar() {   // procedural plaza: paving, path to the gate, two planters
+  g.fillStyle = '#6f9e4a'; g.fillRect(0, 0, PW, PH);
+  g.fillStyle = '#d4c19a'; g.beginPath(); g.moveTo(800, 120); g.lineTo(1560, 500); g.lineTo(800, 880); g.lineTo(40, 500); g.closePath(); g.fill();
+  g.save(); g.beginPath(); g.moveTo(800, 120); g.lineTo(1560, 500); g.lineTo(800, 880); g.lineTo(40, 500); g.closePath(); g.clip();
+  g.strokeStyle = 'rgba(120,96,60,.28)'; g.lineWidth = 1;
+  for (let i = -24; i <= 24; i++) {   // isometric paving joints
+    g.beginPath(); g.moveTo(0, 500 + i * 38); g.lineTo(PW, 500 + i * 38 + PW / 2); g.stroke();
+    g.beginPath(); g.moveTo(0, 500 + i * 38); g.lineTo(PW, 500 + i * 38 - PW / 2); g.stroke();
+  }
+  g.restore();
+  g.fillStyle = '#c9b48a'; g.fillRect(760, 820, 80, 80);
+  for (const [x, y] of [[640, 520], [960, 520]]) {
+    g.fillStyle = '#8a5a32'; g.beginPath(); g.ellipse(x, y, 46, 22, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#3f7a32'; g.beginPath(); g.ellipse(x, y - 34, 50, 40, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#5aa04a'; g.beginPath(); g.ellipse(x - 10, y - 46, 30, 24, 0, 0, Math.PI * 2); g.fill();
+  }
+  g.font = 'bold 30px Georgia'; g.textAlign = 'center'; g.fillStyle = 'rgba(60,40,20,.55)'; g.fillText('PASAR KOTA', 800, 510); g.textAlign = 'left';
+}
+function drawPasar() {
+  if (pasarImg.complete && pasarImg.naturalWidth) { g.imageSmoothingEnabled = true; g.drawImage(pasarImg, 0, 0, PW, PH); }
+  else drawPasarDasar();
+  const seni = pasarImg.complete && pasarImg.naturalWidth;
+  const D = [];
+  KIOS.forEach(k => {
+    if (!seni) D.push({ y: k.y - 40, f: () => drawLapak(k) });
+    D.push({ y: k.y, f: () => drawSpr(kiosAktif(k), k.x, k.y, 78, false) });
+  });
+  const moving = stepObj(pav);
+  D.push({ y: pav.y, f: () => {
+    const P = pose();
+    let name = P.idle;
+    if (moving) name = pav.back ? (Math.floor(pav.step / 9) % 2 ? P.backA : P.backB) : (Math.floor(pav.step / 9) % 2 ? P.walkA : P.walkB);
+    drawSpr(name, pav.x, pav.y, PLAYER_H, pav.flip);
+  } });
+  D.sort((a, b) => a.y - b.y).forEach(d => d.f());
+  drawLangit(jamWib(), state, PW, PH, KIOS.map(k => [k.x, k.y - 110, 90, k.y]), pav);
+  KIOS.forEach(k => drawTag(`${k.ik} ${k.nama} · ${k.peran}`, k.x, k.y - 104, kiosHover === k.id || panduKios(k.id)));
+  parts = parts.filter(p => p.l-- > 0);
+  parts.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .2; g.globalAlpha = p.l / 45; px(p.x, p.y, 7, 7, p.c); });
+  g.globalAlpha = 1;
+}
+// highlight the kiosk where the player's current produce can be sold
+function panduKios(id) {
+  const s = state || {};
+  if (id === 'daur') return s.kompos_g >= 1000 || s.pelet_g >= 850 || s.pot_g >= 850;
+  if (id === 'pengepul') return s.kertas_g >= 1000 || s.logam_kaca_g >= 1000;
+  if (id === 'tani') return Object.values(s.panen_map || {}).some(v => v > 0);
+  return false;
+}
+function kiosDi(wx, wy) { return KIOS.find(k => Math.abs(wx - k.x) < 100 && wy > k.y - 150 && wy < k.y + 20); }
+function klikPasar(wx, wy) {
+  const k = kiosDi(wx, wy);
+  if (k) {
+    pav.path = [[k.x + (k.x > 800 ? -70 : 70), k.y + 30]];
+    pav.onArrive = () => { sheetMode = 'kios:' + k.id; renderUI(); };
+    if (REDUCED) { pav.x = pav.path[0][0]; pav.y = pav.path[0][1]; pav.path = []; pav.onArrive(); pav.onArrive = null; }
+    return;
+  }
+  if (wy > 840 && Math.abs(wx - 820) < 90) { keluarPasar(); renderUI(); return; }   // path at the bottom = exit
+  pav.path = [[Math.max(40, Math.min(PW - 40, wx)), Math.max(150, Math.min(PH - 20, wy))]];
+}
+// kiosk sheet: greeting + either a sell list (pengepul / daur / tani) or the catalogue locked to the kiosk
+function sheetKios(id, s, closeBtn) {
+  const k = KIOS.find(x => x.id === id);
+  if (!k) return '';
+  const back = '<button type="button" class="sh-back" data-act="tutup_kios">‹ Pasar</button>';
+  const hp = meta.harga_produk || {};
+  const sapa = `<div class="kios-sapa"><img src="/assets/sprites/${kiosAktif(k)}.webp" alt=""><div><b>${k.nama} · ${k.peran}</b><p>“${esc(k.salam)}”</p></div></div>`;
+  const jual = (list) => `<div class="grid">${list.map(([kunci, n, h, stk, ok]) => `<button class="act ${ok ? 'hint' : ''}" data-a="jual_${kunci}" ${ok ? '' : 'disabled'}><b>${n}</b><small>💰 +${h.toLocaleString('id-ID')} GC · stok ${stk}</small></button>`).join('')}</div>`;
+  if (id === 'pengepul') return `<div class="sh-head">${back}<h3>${k.judul}</h3>${closeBtn}</div>${sapa}
+    <p class="sh-note">💡 Pilah sampah campur di Pabrik dulu: kertas dan logam/kaca yang terpilah bisa dijual di sini.</p>
+    ${jual([['kertas', '📄 Kertas Terpilah (1 kg)', (hp.kertas || {}).gc || 2400, fmtKg(s.kertas_g), s.kertas_g >= 1000], ['logam', '🔩 Logam/Kaca (1 kg)', (hp.logam || {}).gc || 6500, fmtKg(s.logam_kaca_g), s.logam_kaca_g >= 1000]])}`;
+  if (id === 'daur') return `<div class="sh-head">${back}<h3>${k.judul}</h3>${closeBtn}</div>${sapa}
+    <p class="sh-note">💡 Olah organik dan plastik di Pabrik, lalu jual produknya di sini.</p>
+    ${jual([['kompos', '🌿 Kompos (1 kg)', (hp.kompos || {}).gc || 3500, fmtKg(s.kompos_g), s.kompos_g >= 1000], ['pelet', '🧴 Pelet Plastik (850 g)', (hp.pelet || {}).gc || 9500, fmtKg(s.pelet_g), s.pelet_g >= 850], ['pot', '🪴 Pot Daur Ulang (850 g)', (hp.pot || {}).gc || 14000, fmtKg(s.pot_g), s.pot_g >= 850]])}`;
+  if (id === 'peneliti') { window.TN_KIOS = null; return null; }
+  let atas = sapa;
+  if (id === 'tani') {
+    const panen = Object.entries(s.panen_map || {}).filter(([, gr]) => gr > 0);
+    atas += `<h4 class="sh-sub">🥬 Jual hasil kebun</h4>${panen.length ? `<div class="grid">${panen.map(([cid, gr]) => `<button class="act hint" data-a="jual_panen_crop" data-crop="${cid}"><b>🥬 ${esc(nm(cid))} (${gr} g)</b><small>Jual ke Pasar Tani (batas harian)</small></button>`).join('')}</div>` : '<p class="sh-note">Belum ada hasil panen. Tanam benih di Kebun dulu.</p>'}<h4 class="sh-sub">🌱 Beli benih</h4>`;
+  }
+  if (id === 'bengkel') atas += `<p class="sh-note">💡 Alat yang dibeli langsung tampil di lahanmu dan bekerja selama terpasang. <button type="button" data-open="lahan" style="min-height:30px;padding:2px 10px">🔁 Jual alat bekas</button></p>`;
+  window.TN_KIOS = { id, kind: k.kind, cat: k.cat, judul: k.judul, atas };
+  return window.TN_FF ? window.TN_FF.renderFFSheet('katalog', s, meta, closeBtn, back) : '';
 }
 
 /* ===== GAME LOGIC & UI PANELS ===== */
 const fmtKg = g => (g / 1000).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' kg';
 const plotLeft = p => Math.max(0, p.detik - (Date.now() - received) / 1000);
 const litter = () => (state && state.sampah_liar) || [];
+const nm = id => (meta && meta.nama_item && meta.nama_item[id]) || id;
 
 function nextGuidance(s) {
   if (!s || !s.diterima) return { tab: null, text: 'Terima panggilan Gaia untuk memulai.' };
@@ -398,11 +661,12 @@ function nextGuidance(s) {
   if (plots.some(p => !p.ditanam) && s.benih > 0 && s.kompos_g >= 1000) return { tab: 'kebun', text: 'Tanam benih di kebun dan pakai kompos buatanmu.' };
   if (s.panen > 0 || s.kompos_g >= 1000 || s.pelet_g >= 850 || s.pot_g >= 850 || s.kertas_g >= 1000 || s.logam_kaca_g >= 1000)
     return { tab: 'pasar', text: 'Buka Pasar untuk menjual hasil olahan atau panenmu.' };
+  if (s.koin < 50000 && !s.job) return { tab: 'angkut', text: 'Koinmu menipis. Ambil kerja angkut sampah di menu Angkut: jasa angkutnya dibayar, dan sampah yang dibawa pulang bisa diolah lalu dijual.' };
   const dalam = litter().filter(t => t.zona === 'dalam').length;
   if (dalam > 0) return { tab: null, text: `Masih ada ${dalam} tumpukan sampah di dalam pagar. Bersihkan lahanmu!` };
-  if (meta && meta.harga_petak && s.koin >= meta.harga_petak) return { tab: 'menu', text: `Koinmu cukup untuk petak tanam baru (${meta.harga_petak} koin). Buka Menu → Kembangkan Lahan.` };
-  if (litter().length) return { tab: null, text: 'Sampah baru muncul di luar pagar. Pungut, pilah, olah, lalu jual untuk menambah koin.' };
-  return { tab: 'angkut', text: 'Sekitar lahan sudah bersih. Kirim gerobak ke sumber sampah kota lewat Angkut.' };
+  if (meta && meta.harga_petak && s.koin >= meta.harga_petak) return { tab: 'menu', text: `Saldomu cukup untuk petak tanam baru (${meta.harga_petak.toLocaleString('id-ID')} GC). Buka Menu → Lahan & Mesin.` };
+  if (litter().length) return { tab: null, text: 'Sampah baru muncul di luar pagar. Pungut, pilah, olah, lalu jual untuk menambah Gaia Coin (GC).' };
+  return { tab: 'angkut', text: 'Sekitar lahan sudah bersih. Mau tambah koin? Ambil kerja angkut sampah di menu Angkut: jasa dibayar dan bahannya bisa diolah & dijual.' };
 }
 
 function missions(s) {
@@ -430,18 +694,38 @@ function renderMissions(s) {
 }
 
 const HOWTO = [
-  ['🧤', 'Pungut sampah', 'Ketuk sampah di dalam atau di luar pagar. Karaktermu berjalan dan memungutnya. Tiap sampah +2 koin, dan bahannya masuk gudang.'],
+  ['🧤', 'Pungut sampah', 'Ketuk sampah di dalam atau di luar pagar. Karaktermu berjalan dan memungutnya. Tiap sampah memberi kompensasi +100 GC (maks 2.000 GC/hari), dan bahannya masuk gudang.'],
   ['♻️', 'Pilah', 'Kantong sampah campur masuk Area Pilah dan harus dipilah menjadi 6 fraksi. Baterai (B3) diserahkan ke jalur khusus.'],
-  ['🏭', 'Olah', 'Organik menjadi kompos, plastik menjadi pelet atau pot daur ulang. Semua tercatat di neraca massa.'],
+  ['🏭', 'Olah', 'Organik menjadi kompos, plastik menjadi pelet atau pot daur ulang. Semua tercatat di catatan gudang, tidak ada sampah yang hilang.'],
   ['🏪', 'Jual', 'Jual kompos, pelet, pot, kertas, logam/kaca, dan sayur di Pasar Kota untuk Gaia Coin.'],
   ['🌱', 'Tanam', 'Tanam benih di kebun, pupuk dengan kompos buatanmu, panen, lalu jual.'],
-  ['🏗️', 'Kembangkan lahan', 'Modal awalmu hanya 1.000 koin. Tabung koin untuk petak tanam baru (250 / 500 / 750) dan perluasan gudang.'],
+  ['🏗️', 'Kembangkan lahan', 'Modal awalmu 1.000.000 GC. Gunakan dengan cermat untuk petak tanam baru (150.000 / 300.000 / 500.000 GC), perluasan gudang, dan mesin.'],
   ['🛒', 'Angkut', 'Bila sekitar lahan sudah bersih, kirim gerobak ke permukiman, pasar, atau sungai untuk bahan baru.'],
 ];
 const howtoHtml = () => `<ol class="howto">${HOWTO.map(([i, t, d]) => `<li><span>${i}</span><div><b>${t}</b><p>${d}</p></div></li>`).join('')}</ol>`;
 const badgeHtml = (p, big) => `<div class="bdg ${p.ok ? 'ok' : 'locked'}" title="${p.desk}">
   <img src="/assets/sprites/${p.ikon}" alt=""><b>${p.judul}</b>${big ? `<small>${p.desk}</small>` : ''}
   <i><em style="width:${Math.round(100 * p.nilai / p.target)}%"></em></i><small>${p.ok ? 'Tercapai' : `${p.nilai.toLocaleString('id-ID')}/${p.target.toLocaleString('id-ID')}`}</small></div>`;
+
+// Ganti isi panel tanpa menghapus teks yang sedang diketik, fokus, posisi kursor, atau posisi gulir.
+function setSheetHTML(sh, html) {
+  if (sh._html === html) return;
+  const keep = {};
+  sh.querySelectorAll('input[id],textarea[id]').forEach(x => { keep[x.id] = x.value; });
+  const act = document.activeElement && sh.contains(document.activeElement) && document.activeElement.id ? document.activeElement : null;
+  const actId = act && act.id;
+  let s0 = null, s1 = null;
+  try { s0 = act && act.selectionStart; s1 = act && act.selectionEnd; } catch {}
+  const top = sh.scrollTop;
+  sh.innerHTML = html;
+  sh._html = html;
+  for (const [id, v] of Object.entries(keep)) { const x = document.getElementById(id); if (x && sh.contains(x)) x.value = v; }
+  if (actId) {
+    const x = document.getElementById(actId);
+    if (x && sh.contains(x)) { x.focus({ preventScroll: true }); try { if (s0 != null) x.setSelectionRange(s0, s1); } catch {} }
+  }
+  sh.scrollTop = top;
+}
 
 function renderSheet() {
   const sh = el('sheet');
@@ -450,13 +734,20 @@ function renderSheet() {
   let body = '';
   const closeBtn = '<button type="button" id="shClose" class="sh-x">✕ Tutup</button>';
   const back = '<button type="button" class="sh-back" data-open="menu">‹ Menu</button>';
-  window.TN_SCENE = sheetMode || 'pabrik';
+  window.TN_SCENE = scene === 'pasar' ? 'pasar' : (sheetMode || 'pabrik');
   window.TN_STATE = s;
   window.TN_SEND = send;
 
-  const ffBody = window.TN_FF ? window.TN_FF.renderFFSheet(sheetMode, s, meta, closeBtn, back) : null;
+  if (sheetMode.startsWith('kios:')) {
+    const kb = sheetKios(sheetMode.slice(5), s, closeBtn);
+    if (kb !== null) { setSheetHTML(sh, kb); sh.hidden = false; if (el('shClose')) el('shClose').onclick = () => { sheetMode = null; window.TN_KIOS = null; renderUI(); }; return; }
+  }
+  if (!sheetMode.startsWith('kios:')) window.TN_KIOS = null;
+  const ffMode = sheetMode === 'kios:peneliti' ? 'katalog' : sheetMode;
+  const ffBack = sheetMode === 'kios:peneliti' ? '<button type="button" class="sh-back" data-act="tutup_kios">‹ Pasar</button>' : back;
+  const ffBody = window.TN_FF ? window.TN_FF.renderFFSheet(ffMode, s, meta, closeBtn, ffBack) : null;
   if (ffBody !== null) {
-    sh.innerHTML = ffBody;
+    setSheetHTML(sh, ffBody);
     sh.hidden = false;
     if (el('shClose')) el('shClose').onclick = () => { sheetMode = null; renderUI(); };
     return;
@@ -465,18 +756,21 @@ function renderSheet() {
   if (sheetMode === 'pabrik') {
     body = `<div class="sh-head"><h3>🏭 Pabrik Pengolahan (${s.kota})</h3>${closeBtn}</div>
       <div class="grid">
-        <div class="card-box"><b>Area Pilah</b><small>Campuran: ${fmtKg(s.campuran_g)}</small>
-          <button class="act" data-a="pilah">Pilah Bahan<small>Maks 10 kg → 6 fraksi</small></button>
-          <button class="act warn" data-a="serah_b3">Serah B3 Khusus<small>Stok B3: ${s.b3_g} g</small></button>
+        <div class="card-box"><b>♻️ Area Pilah</b><small>Pisahkan sampah campur menjadi 6 fraksi agar bisa diolah dan dijual.</small>
+          <div class="stok"><span>🗑️ Campuran ${fmtKg(s.campuran_g)}</span><span>☣️ B3 ${s.b3_g} g</span></div>
+          <button class="act" data-a="pilah" ${s.campuran_g >= 1000 ? '' : 'disabled'}><b>♻️ Pilah Bahan</b><small>Maks ${(meta.kap_pilah_g || 5000) / 1000} kg per aksi${(meta.kap_pilah_g || 0) <= 5000 ? ' (pasang Meja Pilah agar lebih banyak)' : ' (meja pilah terpasang)'} → 6 jenis</small></button>
+          <button class="act warn" data-a="serah_b3" ${s.b3_g > 0 ? '' : 'disabled'}><b>☣️ Serahkan B3</b><small>Baterai &amp; limbah berbahaya ke jalur khusus berizin</small></button>
         </div>
-        <div class="card-box"><b>Pengolahan Organik &amp; Plastik</b><small>Organik ${fmtKg(s.organik_g)} · Plastik ${fmtKg(s.plastik_g)}</small>
-          <button class="act" data-a="olah_kompos">Buat Kompos<small>2 kg organik → 1 kg kompos</small></button>
-          <button class="act" data-a="daur">Buat Pelet Plastik<small>1 kg plastik → 850 g pelet</small></button>
-          <button class="act" data-a="kreasi">Buat Pot Daur Ulang<small>1 kg plastik → 850 g pot</small></button>
+        <div class="card-box"><b>🏭 Pengolahan</b><small>Ubah bahan terpilah menjadi produk bernilai jual.</small>
+          <div class="stok"><span>🌿 Organik ${fmtKg(s.organik_g)}</span><span>🧴 Plastik ${fmtKg(s.plastik_g)}</span></div>
+          <button class="act" data-a="olah_kompos" ${s.organik_g >= 2000 && meta.kap_kompos_g > 0 ? '' : 'disabled'}><b>🌿 Buat Kompos</b><small>${meta.kap_kompos_g > 0 ? `Hingga ${meta.kap_kompos_g / 1000} kg organik → ${meta.kap_kompos_g / 2000} kg kompos per aksi (jual ±3.500 GC/kg)` : 'Pasang komposter di lahan dulu (Menu → Lahan & Alat)'}</small></button>
+          <button class="act" data-a="daur" ${s.plastik_g >= 1000 ? '' : 'disabled'}><b>🧴 Buat Pelet Plastik</b><small>${meta.pencacah ? 'Hingga 3 kg plastik → 900 g pelet/kg (pencacah aktif)' : '1 kg plastik → 850 g pelet'} · jual ±9.500 GC</small></button>
+          <button class="act" data-a="kreasi" ${s.plastik_g >= 1000 ? '' : 'disabled'}><b>🪴 Buat Pot Daur Ulang</b><small>${meta.pencacah ? 'Hingga 3 kg plastik → 900 g pot/kg (pencacah aktif)' : '1 kg plastik → 850 g pot'} · jual ±14.000 GC</small></button>
         </div>
-        <div class="card-box"><b>Isi Gudang</b><small>Kertas ${fmtKg(s.kertas_g)} · Logam/kaca ${fmtKg(s.logam_kaca_g)} · Residu ${fmtKg(s.residu_g)}</small>
-          <small>Kompos ${fmtKg(s.kompos_g)} · Pelet ${fmtKg(s.pelet_g)} · Pot ${fmtKg(s.pot_g)}</small>
-          <button class="act" data-open="neraca">Lihat Neraca Massa<small>Gudang ${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(s.gudang_kap_g)}</small></button>
+        <div class="card-box"><b>📦 Isi Gudang</b><small>Bahan &amp; produk yang siap dipakai atau dijual.</small>
+          <div class="stok"><span>📄 Kertas ${fmtKg(s.kertas_g)}</span><span>🔩 Logam/kaca ${fmtKg(s.logam_kaca_g)}</span><span>🚯 Residu ${fmtKg(s.residu_g)}</span>
+            <span>🌿 Kompos ${fmtKg(s.kompos_g)}</span><span>🧴 Pelet ${fmtKg(s.pelet_g)}</span><span>🪴 Pot ${fmtKg(s.pot_g)}</span></div>
+          <button class="act" data-open="neraca"><b>📒 Lihat Catatan Gudang</b><small>Gudang ${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(meta.gudang_kap_g)}</small></button>
         </div>
       </div>`;
   } else if (sheetMode === 'kebun') {
@@ -486,90 +780,120 @@ function renderSheet() {
     const panenList = Object.entries(pmap).filter(([, v]) => v > 0);
     const foodList = Object.entries(fg).filter(([, v]) => v > 0);
     body = `<div class="sh-head"><h3>🌱 Kebun 15 Tanaman &amp; Vitalitas (${s.vitality ?? 100}%)</h3>${closeBtn}</div>
-      <p class="sh-note">Benih tersedia: <b>${benihList.map(([k, v]) => `${k}×${v}`).join(', ') || 'kosong'}</b> · Kompos: <b>${fmtKg(s.kompos_g)}</b>${s.rare_boost ? ` · ✨ Bonus jual +${s.rare_boost.pct}% aktif` : ''}</p>
+      <p class="sh-note">Benih tersedia: <b>${benihList.map(([k, v]) => `${esc(nm(k))} ×${v}`).join(', ') || 'kosong'}</b> · Kompos: <b>${fmtKg(s.kompos_g)}</b>${s.rare_boost ? ` · ✨ Bonus jual +${s.rare_boost.pct}% aktif` : ''}</p>
       <div class="grid">${plots.map(({ nama, p, i }) => {
         const left = Math.ceil(plotLeft(p));
         const txt = p.ditanam ? `${esc(p.tanaman)} · ${left ? left + ' dtk lagi' : 'Siap dipanen!'}` : 'Petak kosong';
         return `<div class="card-box"><b>${nama}</b><small>${txt}${p.dipupuk ? ' · sudah dipupuk' : ''}</small>
-          ${!p.ditanam && benihList.length ? benihList.slice(0, 3).map(([cid, cnt]) => `<button class="act" data-a="tanam_crop" data-crop="${cid}" data-petak="${i}">Tanam ${cid}<small>Stok: ${cnt}</small></button>`).join('') : ''}
+          ${!p.ditanam && benihList.length ? benihList.slice(0, 3).map(([cid, cnt]) => `<button class="act" data-a="tanam_crop" data-crop="${cid}" data-petak="${i}">Tanam ${esc(nm(cid))}<small>Stok: ${cnt}</small></button>`).join('') : ''}
           ${!p.ditanam && !benihList.length ? `<button class="act" data-open="katalog">Beli Benih (15 Varietas)</button>` : ''}
           ${p.ditanam && left > 0 && !p.dipupuk ? `<button class="act" data-a="pupuk" data-petak="${i}">Pupuk 1 kg Kompos<small>-25% sisa waktu</small></button>` : ''}
           ${p.ditanam && left <= 0 ? `<button class="act hint" data-a="panen" data-petak="${i}">Panen Sayur<small>Masuk gudang</small></button>` : ''}
         </div>`;
       }).join('')}
         <div class="card-box"><b>🍽️ Makan &amp; Vitalitas</b><small>Vitalitas: ${s.vitality ?? 100}% · Kelompok hari ini: ${(s.food_groups_today || []).length}/3</small>
-          ${foodList.map(([fid, cnt]) => `<button class="act" data-a="makan" data-item="${fid}">Konsumsi ${fid}<small>Stok: ${cnt}</small></button>`).join('')}
-          ${panenList.slice(0, 2).map(([cid, gr]) => `<button class="act" data-a="makan" data-item="${cid}">Makan Panen ${cid}<small>${gr} g tersedia</small></button>`).join('')}
+          ${foodList.map(([fid, cnt]) => `<button class="act" data-a="makan" data-item="${fid}">Konsumsi ${esc(nm(fid))}<small>Stok: ${cnt}</small></button>`).join('')}
+          ${panenList.slice(0, 2).map(([cid, gr]) => `<button class="act" data-a="makan" data-item="${cid}">Makan Panen ${esc(nm(cid))}<small>${gr} g tersedia</small></button>`).join('')}
           <button class="act" data-open="katalog">Beli Benih / Pangan NPC<small>15 tanaman + beras/tempe/telur/air</small></button>
         </div>
       </div>`;
   } else if (sheetMode === 'angkut') {
     const tr = meta.tr_aktif || {};
     const jobBox = s.job ? `<div class="card-box job-box">
-      <b>🛒 Status Gerobak MCH-002 · ${esc(s.job.nama_node)} (${fmtKg(s.job.muat_g)})</b>
+      <b>🛒 Status Gerobak ·${esc(s.job.nama_node)} (${fmtKg(s.job.muat_g)})</b>
       <small>${s.job.status === 'arrived' ? 'Sudah tiba di depan gerbang! Terima untuk memindahkan ke Area Pilah.' : 'Sedang dalam perjalanan…'}</small>
       <button class="act ${s.job.status === 'arrived' ? 'hint' : ''}" data-a="terima_kargo" ${s.job.status !== 'arrived' ? 'disabled' : ''}>Terima Kargo (+${(s.job.kompensasi_gc || 0).toLocaleString('id-ID')} GC jasa)</button>
     </div>` : '';
     const trBox = tr.id ? `<div class="card-box" style="margin-bottom:8px;border-color:var(--gold)"><b>⏰ Misi Berkala Aktif: ${esc(tr.nama)}</b><small>Target: ${esc(tr.node)} ≥ ${tr.min_kg} kg · Bonus sekali/window: +${Number(tr.bonus_gc || 0).toLocaleString('id-ID')} GC</small></div>` : '';
-    const nodesHtml = Object.entries(meta.nodes_info).map(([kode, n]) => `
-      <div class="card-box"><b>${esc(n.nama)}</b>
-        <small>Stok: ${fmtKg(n.tersedia_g)} / ${fmtKg(n.kapasitas_g)} · Jarak PP ${n.jarak_km} km</small>
-        <small>Biaya 10 kg: ${(n.tarif_10kg || 0).toLocaleString('id-ID')} GC · Jasa: ${(n.kompensasi_per_kg * 10).toLocaleString('id-ID')} GC · ETA ${n.eta_detik} dtk</small>
-        <button class="act" data-node="${kode}" ${s.job ? 'disabled' : ''}>Kirim Gerobak (10 kg)<small>Komposisi fraksi asli dipertahankan</small></button>
-      </div>`).join('');
-    body = `<div class="sh-head"><h3>🛒 Angkut Realistis (5 Node &amp; Misi Berkala)</h3>${closeBtn}</div>${trBox}${jobBox}<div class="grid">${nodesHtml}</div>`;
+    const urut = Object.entries(meta.nodes_info).sort(([a], [b]) => (b === angkutFokus) - (a === angkutFokus));
+    const nodesHtml = urut.map(([kode, n]) => {
+      // lot 5–25 kg (gerobak MCH-002 25 kg/trip), limited by node stock and free warehouse space
+      const maxKg = Math.min(n.max_kg, 25, Math.floor(n.tersedia_g / 1000), Math.floor((meta.gudang_bebas_g || 0) / 1000));
+      const pilihan = [5, 10, 15, 20, 25].filter(k => k >= n.min_kg && k <= n.max_kg);
+      let kg = angkutKg[kode] || 10;
+      if (kg > maxKg) kg = pilihan.filter(k => k <= maxKg).pop() || pilihan[0];
+      const biaya = Math.round(n.fee_tetap + n.jarak_km * n.gc_per_km + kg * n.handling_per_kg), jasa = kg * n.kompensasi_per_kg;
+      const bisa = !s.job && kg <= maxKg && s.koin >= biaya;
+      const alasan = s.job ? 'Gerobak sedang dipakai' : kg > maxKg ? (n.tersedia_g < kg * 1000 ? 'Stok sumber belum cukup' : 'Gudang hampir penuh') : s.koin < biaya ? 'Saldo kurang' : `Biaya ${biaya.toLocaleString('id-ID')} GC · jasa +${jasa.toLocaleString('id-ID')} GC`;
+      return `<div class="card-box ${kode === angkutFokus ? 'fokus' : ''}"><b>${{ permukiman: '🏘️', pasar: '🏪', sungai: '🌊', sekolah: '🏫', restoran: '🍜' }[kode] || '📍'} ${esc(n.nama)}</b>
+        <div class="stok"><span>🗑️ ${fmtKg(n.tersedia_g)} / ${fmtKg(n.kapasitas_g)}</span><span>🛣️ ${n.jarak_km} km PP</span><span>⏱️ ${n.eta_detik} dtk</span></div>
+        <div class="kg-pick" role="group" aria-label="Jumlah muatan">${pilihan.map(k => `<button type="button" class="${k === kg ? 'on' : ''}" data-angkutkg="${kode}:${k}" ${k > maxKg ? 'disabled' : ''}>${k} kg</button>`).join('')}</div>
+        <button class="act ${bisa ? '' : ''}" data-node="${kode}" data-kg="${kg}" ${bisa ? '' : 'disabled'}><b>🛒 Kirim Gerobak (${kg} kg)</b><small>${alasan}</small></button>
+      </div>`;
+    }).join('');
+    body = `<div class="sh-head"><h3>🛒 Kerja Angkut Sampah</h3>${closeBtn}</div>
+      <p class="sh-note">💼 Kirim gerobak ke permukiman, pasar, atau sungai. Kamu dibayar <b>jasa angkut</b> (lebih besar dari biayanya), lalu sampah yang dibawa pulang bisa dipilah, diolah, dan dijual. Cara paling mudah menambah koin!</p>${trBox}${jobBox}<div class="grid">${nodesHtml}</div>`;
   } else if (sheetMode === 'pasar') {
     const hp = meta.harga_produk || {};
     const items = [
-      ['kompos', 'Kompos (1 kg)', (hp.kompos || {}).gc || 3500, fmtKg(s.kompos_g)],
-      ['pelet', 'Pelet Plastik (850 g)', (hp.pelet || {}).gc || 9500, fmtKg(s.pelet_g)],
-      ['pot', 'Pot Daur Ulang (850 g)', (hp.pot || {}).gc || 14000, fmtKg(s.pot_g)],
-      ['kertas', 'Kertas Terpilah (1 kg)', (hp.kertas || {}).gc || 2400, fmtKg(s.kertas_g)],
-      ['logam', 'Logam/Kaca (1 kg)', (hp.logam || {}).gc || 6500, fmtKg(s.logam_kaca_g)],
+      ['kompos', '🌿 Kompos (1 kg)', (hp.kompos || {}).gc || 3500, fmtKg(s.kompos_g), s.kompos_g >= 1000],
+      ['pelet', '🧴 Pelet Plastik (850 g)', (hp.pelet || {}).gc || 9500, fmtKg(s.pelet_g), s.pelet_g >= 850],
+      ['pot', '🪴 Pot Daur Ulang (850 g)', (hp.pot || {}).gc || 14000, fmtKg(s.pot_g), s.pot_g >= 850],
+      ['kertas', '📄 Kertas Terpilah (1 kg)', (hp.kertas || {}).gc || 2400, fmtKg(s.kertas_g), s.kertas_g >= 1000],
+      ['logam', '🔩 Logam/Kaca (1 kg)', (hp.logam || {}).gc || 6500, fmtKg(s.logam_kaca_g), s.logam_kaca_g >= 1000],
     ];
     const cropsHave = Object.entries(s.panen_map || {}).filter(([, g]) => g > 0);
-    body = `<div class="sh-head"><h3>🏪 Pasar Kota (Realistic_v1)</h3>${closeBtn}</div>
+    body = `<div class="sh-head"><h3>🏪 Pasar Kota</h3>${closeBtn}</div>
       <div class="menu-row" style="margin:0 0 10px"><button type="button" data-open="katalog">📚 Buka Pasar NPC &amp; Katalog Lengkap (589+ item)</button><button type="button" data-open="lahan">🔧 Jual Mesin Bekas / Recovery Kas</button></div>
-      <div class="grid">${items.map(([k, n, h, stk]) => `<button class="act" data-a="jual_${k}"><b>${n}</b><small>+${h.toLocaleString('id-ID')} GC · Punya ${stk}</small></button>`).join('')}
-      ${cropsHave.map(([cid, gr]) => `<button class="act" data-a="jual_panen_crop" data-crop="${cid}"><b>Panen ${cid} (${gr} g)</b><small>Jual ke NPC Pasar Tani (ber-cap harian)</small></button>`).join('')}</div>`;
+      <p class="sh-note">💡 Tombol menyala bila stokmu cukup untuk satu lot. Harga mengikuti pasar kota hari ini.</p>
+      <div class="grid">${items.map(([k, n, h, stk, ok]) => `<button class="act ${ok ? 'hint' : ''}" data-a="jual_${k}" ${ok ? '' : 'disabled'}><b>${n}</b><small>💰 +${h.toLocaleString('id-ID')} GC · stok ${stk}</small></button>`).join('')}
+      ${cropsHave.map(([cid, gr]) => `<button class="act" data-a="jual_panen_crop" data-crop="${cid}"><b>🥬 ${esc(nm(cid))} (${gr} g)</b><small>Jual ke Pasar Tani (batas harian)</small></button>`).join('')}</div>`;
   } else if (sheetMode === 'menu') {
     const gtDone = (s.gt_claimed || []).length, prDone = (s.pr_claimed || []).length;
-    const tiles = [
-      ['misi', '📋', 'Misi & Tier (GT/PR)', `GT ${gtDone}/9 · PR ${prDone}/10`],
-      ['capai', '🏅', 'Pencapaian', `${meta.pencapaian.filter(p => p.ok).length}/${meta.pencapaian.length} lencana`],
-      ['profil', '👤', 'Profil & Kota', esc(s.nama)],
-      ['energi', '⚡', 'Energy Center', `${((s.energy || {}).waste_origin_used_wh / 1000 || 0).toFixed(1)} kWh WtE`],
-      ['katalog', '📚', 'Ensiklopedia', '282 Mat · 307 Mesin'],
-      ['lahan', '🏗️', 'Lahan & Mesin', `${(s.machines_owned || []).length} alat`],
-      ['neraca', '⚖️', 'Gudang & Neraca', `${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(s.gudang_kap_g)}`],
-      ['radio', '📻', 'Gaia Radio', window.TN_FF && window.TN_FF.radio.playing ? 'Memutar' : 'Siap'],
-      ['jurnal', '📖', 'Jurnal & Kartu PNG', 'Unduh 3 ukuran'],
-      ['knowledge', '🎓', 'Knowledge Center', 'Edukasi & fakta'],
-      ['leaderboard', '🏆', 'Peringkat Lokal', 'Fixture 14 papan'],
-      ['sandbox_store', '🧪', 'Toko GC Sandbox', 'Uji lokal (bukan uang)'],
-      ['dukung', '💚', 'Dukung Terra Nova', 'Sukarela · non-bonus'],
-      ['admin', '🛠️', 'Admin Config', `v${meta.config_version || 1} lokal`],
-      ['feedback', '💬', 'Feedback', 'Kirim masukan'],
-      ['cara', '❓', 'Cara Bermain', 'Panduan singkat'],
+    const nKlaim = (meta.gt_missions || []).filter(m => m.can_claim).length + (meta.pr_missions || []).filter(m => m.can_claim).length;
+    const nAlat = (s.machines_owned || []).filter(m => m.pos).length;
+    // [mode, icon, title, live subtitle, accent colour, badge]
+    const grup = [
+      ['🎯 Progres & Prestasi', [
+        ['misi', '📋', 'Misi & Tier', `Naik tier & klaim hadiah · Tier ${gtDone}/9 · Misi ${prDone}/10`, '#d9a43a', nKlaim ? nKlaim + ' siap' : ''],
+        ['capai', '🏅', 'Pencapaian', `${meta.pencapaian.filter(p => p.ok).length}/${meta.pencapaian.length} lencana terkumpul`, '#c98a2e'],
+        ['profil', '👤', 'Profil & Kota', `${esc(s.nama)} · ganti karakter/kota`, '#4f8fc0'],
+        ['leaderboard', '🏆', 'Peringkat', 'Bandingkan poin hijaumu', '#b0648f'],
+      ]],
+      ['🏭 Lahan & Produksi', [
+        ['lahan', '🏗️', 'Lahan & Alat', `${nAlat} alat di lahan · petak & gudang`, '#5f9a3c'],
+        ['katalog', '🛒', 'Katalog & Toko', 'Beli alat, benih, pangan (307 mesin)', '#3f86c6'],
+        ['energi', '⚡', 'Pusat Energi', `Baterai ${((s.energy || {}).battery_wh || 0).toLocaleString('id-ID')} Wh · biogas & surya`, '#4a9d8f'],
+        ['neraca', '📒', 'Gudang & Catatan', `${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(meta.gudang_kap_g)} terisi`, '#946f3b'],
+      ]],
+      ['📚 Belajar & Cerita', [
+        ['cara', '❓', 'Cara Bermain', 'Langkah dasar: pungut → pilah → olah → jual', '#5aa04a'],
+        ['knowledge', '🎓', 'Pusat Pengetahuan', 'Fakta sampah & energi', '#4f8fc0'],
+        ['jurnal', '📖', 'Jurnal & Kartu', 'Catatan perjalanan · unduh kartu PNG', '#8d6bc0'],
+        ['radio', '📻', 'Gaia Radio', window.TN_FF && window.TN_FF.radio.playing ? '♪ Sedang memutar' : 'Musik latar suasana', '#c0567a'],
+      ]],
+      ['⚙️ Lainnya', [
+        ['sandbox_store', '🧪', 'Toko GC Sandbox', 'Uji lokal, bukan uang nyata', '#7d8c74'],
+        ['dukung', '💚', 'Dukung Terra Nova', 'Sukarela, tanpa bonus', '#3c9a3f'],
+        ['feedback', '💬', 'Kirim Masukan', 'Laporkan bug atau ide', '#7d8c74'],
+        ...(window.TN_IS_ADMIN ? [['admin', '🛠️', 'Admin Config', `v${meta.config_version || 1} lokal`, '#a86a3a']] : []),
+      ]],
     ];
-    body = `<div class="sh-head"><h3>☰ Menu Terpadu (Feature Freeze v1.0)</h3>${closeBtn}</div>
-      <div class="menu-grid">${tiles.map(([m, i, t, d]) => `<button type="button" class="tile" data-open="${m}"><span>${i}</span><b>${t}</b><small>${d}</small></button>`).join('')}</div>
+    body = `<div class="sh-head"><h3>☰ Menu</h3>${closeBtn}</div>
+      ${grup.map(([judul, tiles]) => `<div class="menu-sec">${judul}</div><div class="menu-grid">${tiles.map(([m, i, t, d, c, bd]) =>
+        `<button type="button" class="tile" style="--c:${c}" data-open="${m}"><span>${i}</span><b>${t}</b><small>${d}</small>${bd ? `<em>${bd}</em>` : ''}</button>`).join('')}</div>`).join('')}
       <div class="menu-row">
         <button type="button" data-act="replay_opening">🎬 Ulang Opening</button>
+        <button type="button" data-act="musik">🎵 Musik latar</button>
         <button type="button" data-act="sfx">${sfxOn ? '🔊 Suara: aktif' : '🔈 Suara: mati'}</button>
         <button type="button" data-act="reset">↺ Mulai ulang</button>
         <button type="button" data-act="keluar">⎋ Keluar</button>
       </div>`;
   } else if (sheetMode === 'misi') {
     const gts = meta.gt_missions || [], prs = meta.pr_missions || [], gsg = meta.gsg || {}, ch = meta.chosen_eval || {};
-    body = `<div class="sh-head">${back}<h3>📋 Misi Tier (GT01–09), PR01–10 &amp; GSG</h3>${closeBtn}</div>
-      <p class="sh-note">God dicapai melalui <b>GSG</b> (pulih ${gsg.pulih_kg || 0}/200 kg · waste-origin ${gsg.waste_kwh || 0}/10 kWh · ${gsg.clean_days || 0}/10 hari bersih) — tanpa syarat pabrik besar atau top-up. <i>${esc(ch.note)}</i></p>
-      <div class="grid">${gts.map(m => `<div class="card-box ${m.claimed ? 'ok' : ''}"><b>${m.id} · ${m.tier} (${m.badge})</b><small>${esc(m.desc)}</small>
-        <small>Hibah sekali: ${m.grant_gc.toLocaleString('id-ID')} GC</small>
-        ${m.claimed ? '<small>✓ Selesai</small>' : m.can_claim ? `<button class="act hint" data-a="klaim_gt" data-id="${m.id}">Klaim ${m.tier}</button>` : '<small>🔒 Belum terpenuhi</small>'}</div>`).join('')}</div>
-      <h4 class="sh-sub">Misi Tambahan (PR01–PR10)</h4>
-      <div class="grid">${prs.map(m => `<div class="card-box"><b>${m.id} · ${esc(m.judul)}</b><small>${esc(m.desc)} (+${m.grant_gc.toLocaleString('id-ID')} GC · ${esc(m.badge)})</small>
-        ${m.claimed ? '<small>✓ Selesai</small>' : m.can_claim ? `<button class="act hint" data-a="klaim_pr" data-id="${m.id}">Klaim ${m.id}</button>` : '<small>⏳ Berjalan</small>'}</div>`).join('')}</div>
+    body = `<div class="sh-head">${back}<h3>📋 Misi &amp; Tier</h3>${closeBtn}</div>
+      <p class="sh-note">Naik tier satu per satu sampai <b>God</b>. Tidak ada batas waktu: God tercapai seiring kerjamu (pulih ${gsg.pulih_kg || 0}/200 kg · listrik dari sampah ${gsg.waste_kwh || 0}/10 kWh · ${gsg.clean_days || 0}/10 hari bersih), tanpa pabrik besar atau top-up.</p>
+      <h4 class="sh-sub">🪜 Tangga Tier</h4>
+      <div class="grid">${gts.map(m => `<div class="card-box misi ${m.claimed ? 'ok' : ''}"><b>${m.claimed ? '✅' : m.can_claim ? '🎁' : m.kunci ? '🔒' : '🎯'} Tier ${Number(m.id.slice(2))} · ${m.tier}</b><small>${esc(m.desc)}</small>
+        ${m.claimed ? '' : progresMisi(m.progress)}
+        <small>🎁 Hadiah sekali: <b>${m.grant_gc.toLocaleString('id-ID')} GC</b> + lencana tier</small>
+        ${m.claimed ? '<small class="ok-t">✓ Sudah diklaim</small>' : m.can_claim ? `<button class="act hint" data-a="klaim_gt" data-id="${m.id}">🎁 Klaim ${m.tier}</button>`
+          : m.kunci ? `<small class="kunci">🔒 ${esc(m.kunci)}</small>` : `<small class="saran">💡 ${esc(m.saran)}</small>`}</div>`).join('')}</div>
+      <h4 class="sh-sub">⭐ Misi Tambahan</h4>
+      <div class="grid">${prs.map(m => `<div class="card-box misi ${m.claimed ? 'ok' : ''}"><b>${m.claimed ? '✅' : m.can_claim ? '🎁' : '🎯'} ${esc(m.judul)}</b><small>${esc(m.desc)}</small>
+        ${m.claimed ? '' : progresMisi(m.progress)}
+        <small>🎁 +${m.grant_gc.toLocaleString('id-ID')} GC · lencana ${esc(m.badge)}</small>
+        ${m.claimed ? '<small class="ok-t">✓ Sudah diklaim</small>' : m.can_claim ? `<button class="act hint" data-a="klaim_pr" data-id="${m.id}">🎁 Klaim hadiah</button>` : ''}</div>`).join('')}</div>
       <h4 class="sh-sub">Insiden &amp; Panduan Cepat</h4>` + renderMissions(s);
   } else if (sheetMode === 'capai') {
     body = `<div class="sh-head">${back}<h3>🏅 Pencapaian</h3>${closeBtn}</div>
@@ -577,52 +901,54 @@ function renderSheet() {
   } else if (sheetMode === 'profil') {
     const w = s.wallet || {};
     body = `<div class="sh-head">${back}<h3>👤 Profil Pemain</h3>${closeBtn}</div>
-      <div class="profile"><img src="/assets/sprites/${pose().idle}.png" alt="">
+      <div class="profile"><img src="${fotoPemain()}" alt="">
         <div><b class="pname">${esc(s.nama)}</b><small>${esc(s.kota)} · Tier ${esc(s.tier)} · Vitalitas ${s.vitality ?? 100}% · Self-Made: ${w.self_made_provisional ? 'Ya (Provisional)' : 'Sandbox'}</small>
         <small>Dipungut: <b>${st.pungut || 0}</b> · Sungai Apung: <b>${st.sungai_apung || 0}</b> · Pulih Unik: <b>${fmtKg(st.pulih_unik_g || 0)}</b> · Laba Operasi: <b>${(w.operating_profit_gc || 0).toLocaleString('id-ID')} GC</b></small></div></div>
-      <h4 class="sh-sub">Karakter &amp; Kota (K1)</h4>
+      <h4 class="sh-sub">🏙️ Kota</h4>
       <div class="char-pick">
-        <button type="button" class="${s.gender !== 'wanita' ? 'on' : ''}" data-a="ganti_karakter" data-gender="pria"><img src="/assets/sprites/player_5.png" alt="">Pria</button>
-        <button type="button" class="${s.gender === 'wanita' ? 'on' : ''}" data-a="ganti_karakter" data-gender="wanita"><img src="/assets/sprites/playerf_4.png" alt="">Wanita</button>
         <select id="kotaPick" style="background:#0b1d14;border:1px solid #4d7a5c;border-radius:8px;padding:6px">${['Bandung', 'Jakarta', 'Surabaya', 'Yogyakarta', 'Semarang', 'Medan', 'Makassar', 'Kota lainnya'].map(k => `<option value="${k}" ${s.kota === k ? 'selected' : ''}>${k}</option>`).join('')}</select>
       </div>
       <h4 class="sh-sub">Lencana</h4>
       <div class="badge-grid">${meta.pencapaian.map(p => badgeHtml(p, false)).join('')}</div>`;
   } else if (sheetMode === 'lahan') {
-    const np = (s.petak || []).length, owned = s.machines_owned || [], slots = meta.yard_slots || [];
+    const np = (s.petak || []).length, owned = s.machines_owned || [];
     body = `<div class="sh-head">${back}<h3>🏗️ Kembangkan Lahan &amp; Tata Mesin</h3>${closeBtn}</div>
-      <p class="sh-note">Saldo: <b>${s.koin.toLocaleString('id-ID')} GC</b> · Tempatkan alat pada slot modular tanpa overlap (jalan &amp; sungai aman).</p>
+      <p class="sh-note">Saldo: <b>${s.koin.toLocaleString('id-ID')} GC</b> · 🖐️ <b>Tekan &amp; seret</b> alat di lahan untuk memindahkannya. Area hijau = boleh, merah = terhalang. Beli alat baru di 📚 Katalog; alat langsung tampil di lahan.</p>
       <div class="grid">
-        <div class="card-box"><img class="up-img" src="/assets/sprites/garden_${np < 3 ? 4 : 3}.png" alt=""><b>Petak tanam baru</b>
+        <div class="card-box"><img class="up-img" src="/assets/sprites/garden_${np < 3 ? 4 : 3}.webp" alt=""><b>Petak tanam baru</b>
           <small>${np}/3 petak tambahan dimiliki.</small>
           ${meta.harga_petak ? `<button class="act" data-a="beli_petak">Bangun Petak<small>${meta.harga_petak.toLocaleString('id-ID')} GC</small></button>` : '<small>✓ Semua petak sudah dibangun</small>'}</div>
-        <div class="card-box"><b>📦 Perluasan gudang</b><small>Kapasitas sekarang ${fmtKg(s.gudang_kap_g)} (+250 kg/tahap).</small>
+        <div class="card-box"><b>📦 Perluasan gudang</b><small>Kapasitas sekarang ${fmtKg(meta.gudang_kap_g)} (+250 kg/tahap).</small>
           ${meta.harga_gudang ? `<button class="act" data-a="tambah_gudang">Perluas Gudang<small>${meta.harga_gudang.toLocaleString('id-ID')} GC</small></button>` : '<small>✓ Gudang maksimal</small>'}</div>
-        ${owned.map(m => `<div class="card-box"><b>${esc(m.canonical_id)} ${m.starter ? '(Starter)' : ''}</b>
-          <small>Kondisi ${m.condition}% · Slot: ${m.slot || 'Gudang'}</small>
-          ${!m.slot ? slots.slice(0, 2).map(sl => `<button class="act" data-a="pasang_mesin" data-uid="${esc(m.uid)}" data-slot="${sl.id}">Pasang di ${sl.id}</button>`).join('') : ''}
-          ${!m.starter ? `<button class="act warn" data-a="jual_mesin_bekas" data-uid="${esc(m.uid)}">Jual Bekas (Recovery Kas)</button>` : ''}</div>`).join('')}
+        ${owned.map(m => kartuAlat(m, false)).join('')}
       </div>`;
   } else if (sheetMode === 'cara') {
     body = `<div class="sh-head">${back}<h3>❓ Cara Bermain</h3>${closeBtn}</div>${howtoHtml()}`;
   } else if (sheetMode === 'neraca') {
-    body = `<div class="sh-head">${back}<h3>⚖️ Gudang &amp; Neraca Massa</h3>${closeBtn}</div>
+    body = `<div class="sh-head">${back}<h3>📒 Gudang &amp; Catatan</h3>${closeBtn}</div>
       <table class="tbl">
         <tr><th>Kategori</th><th>Massa</th><th>Keterangan</th></tr>
         <tr><td>Total Masuk</td><td><b>${fmtKg(s.total_masuk_g)}</b></td><td>Sampah dipungut, sungai apung, kargo, &amp; insiden</td></tr>
-        <tr><td>Gudang Aktif</td><td>${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(s.gudang_kap_g)}</td><td>Campuran, 6 fraksi, produk jadi &amp; panen</td></tr>
+        <tr><td>Gudang Aktif</td><td>${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(meta.gudang_kap_g)}</td><td>Campuran, 6 fraksi, produk jadi &amp; panen</td></tr>
         <tr><td>Terjual di Pasar</td><td>${fmtKg(s.terjual_g || 0)}</td><td>Keluar sah melalui penjualan NPC</td></tr>
         <tr><td>Dipakai di Kebun</td><td>${fmtKg(s.dipakai_kebun_g || 0)}</td><td>Kompos untuk pemupukan (biomassa panen: ${fmtKg(s.biomassa_panen_g || 0)})</td></tr>
-        <tr><td>Aliran Terkendali (Air/Gas)</td><td>${fmtKg(s.uap_terkendali_g)}</td><td>Tercatat dalam neraca massa, tidak hilang</td></tr>
+        <tr><td>Aliran Terkendali (Air/Gas)</td><td>${fmtKg(s.uap_terkendali_g)}</td><td>Air & uap dari proses olah, tercatat, tidak hilang</td></tr>
         <tr><td>Residu Tersimpan</td><td>${fmtKg(s.residu_g)}</td><td>Belum dimusnahkan; memengaruhi BHI</td></tr>
         <tr><td>B3 Diserahkan Khusus</td><td>${fmtKg(s.b3_serah_g)}</td><td>Jalur pengolah berizin</td></tr>
         <tr><td>Backlog Lingkungan/TPA</td><td>${fmtKg(s.backlog_tpa_g)}</td><td>Limpasan node, insiden &amp; sungai hilir kedaluwarsa</td></tr>
       </table>
-      <div class="menu-row"><button type="button" class="act hint" data-a="audit_neraca">✓ Jalankan Audit Neraca Massa (${st.neraca_valid || 0}× valid)</button></div>`;
+      <p class="sh-note">📒 <b>Cek Catatan Gudang</b> memastikan semua sampah yang masuk sama dengan hasil olahan + air/uap + sisa. Diperlukan untuk naik tier Sorter, Archon, dan God.</p>
+      <div class="menu-row"><button type="button" class="act hint" data-a="audit_neraca" ${(st.batch_sejak_audit || 0) > 0 ? '' : 'disabled'}><b>✓ Cek Catatan Gudang</b><small>${(st.batch_sejak_audit || 0) > 0 ? `${st.batch_sejak_audit} hasil olah baru siap dicek` : 'Belum ada hasil olah baru: pilah atau olah dulu'} · sudah dicek ${st.audit_neraca || 0}×</small></button></div>`;
   } else if (sheetMode === 'kota' || sheetMode === 'bumi') {
     body = `<div class="sh-head">${back}<h3>${sheetMode === 'kota' ? '🗺️ Kota Bersama' : '🌍 Bumi Global'}</h3>${closeBtn}</div>
       <div class="lock-box"><b>🔒 Fitur terkunci · fase multiplayer berikutnya</b>
       <p>Kunjungan antar pabrik, kota bersama, dan BHI/ZWM Bumi Global dibuka setelah tahap pemain tunggal.</p></div>`;
+  } else if (sheetMode.startsWith('info:')) {
+    body = infoHud(sheetMode.slice(5), s, closeBtn);
+  } else if (sheetMode.startsWith('alat:')) {
+    const m = (s.machines_owned || []).find(x => x.uid === sheetMode.slice(5));
+    if (!m) { sheetMode = null; sh.hidden = true; return; }
+    body = `<div class="sh-head"><button type="button" class="sh-back" data-open="lahan">‹ Lahan</button><h3>🧰 ${esc(infoAlat(m.canonical_id).nama)}</h3>${closeBtn}</div>${kartuAlat(m, true)}`;
   } else if (sheetMode.startsWith('dle:')) {
     const ev = (s.dle_events || []).find(e => e.id === sheetMode.slice(4));
     if (!ev) { sh.hidden = true; return; }
@@ -631,9 +957,78 @@ function renderSheet() {
         <small>Berat: <b>${ev.mass_g} g</b> · Ruang gudang bebas: ${fmtKg(meta.gudang_bebas_g)}</small>
         <button class="act warn" data-dle="${ev.id}">Ambil Sampah (+${ev.mass_g} g)</button></div>`;
   }
-  sh.innerHTML = body;
+  setSheetHTML(sh, body);
   sh.hidden = false;
   if (el('shClose')) el('shClose').onclick = () => { sheetMode = null; renderUI(); };
+}
+
+// mission progress rows: one bar per requirement (target 0 = "must be empty", e.g. B3 left over)
+function progresMisi(list) {
+  return `<div class="prog">${(list || []).map(([lbl, v, t, u]) => {
+    const ok = t === 0 ? v === 0 : v >= t, pct = t === 0 ? (v === 0 ? 100 : 0) : Math.min(100, Math.round(100 * v / t));
+    const fmt = n => Number(n).toLocaleString('id-ID', { maximumFractionDigits: 2 });
+    return `<div class="pr-row ${ok ? 'ok' : ''}"><span>${ok ? '✓' : '•'} ${esc(lbl)}</span><em>${t === 0 ? fmt(v) + (u ? ' ' + u : '') + ' (harus 0)' : `${fmt(Math.min(v, t))}/${fmt(t)}${u ? ' ' + u : ''}`}</em><i><b style="width:${pct}%"></b></i></div>`;
+  }).join('')}</div>`;
+}
+
+// HUD chip explanations (Evaluasi 3 #3): what the number means, how it goes up, and where to go next
+function infoHud(k, s, closeBtn) {
+  const w = s.wallet || {}, gc = n => (n || 0).toLocaleString('id-ID') + ' GC';
+  const baris = rows => `<table class="tbl info-tbl">${rows.map(([a, b]) => `<tr><td>${a}</td><td><b>${b}</b></td></tr>`).join('')}</table>`;
+  const tips = list => `<ul class="tips">${list.map(t => `<li>${t}</li>`).join('')}</ul>`;
+  const go = list => `<div class="menu-row">${list.map(([m, t]) => `<button type="button" class="act" data-open="${m}">${t}</button>`).join('')}</div>`;
+  const V = {
+    koin: ['🪙 Gaia Coin (GC)', 'Uang di dalam game (simulasi, bukan uang nyata). Dipakai untuk membeli mesin, benih, petak tanam, dan perluasan gudang.',
+      baris([['Saldo sekarang', gc(s.koin)], ['Total pendapatan', gc(w.earned_gc)], ['Total pengeluaran', gc(w.expenses_gc)], ['Laba operasi', gc(w.operating_profit_gc)], ['Hibah misi', gc(w.grant_gc)]]) +
+      tips(['🛒 <b>Kerja angkut sampah</b> (menu Angkut): kirim gerobak ke permukiman, pasar, atau sungai. Jasa angkutnya dibayar lebih besar dari biayanya, dan sampahnya bisa diolah lalu dijual', '🧤 Pungut sampah: +100 GC per sampah (maks 2.000 GC/hari)', '🏪 Jual kompos, pelet, pot, kertas, logam, dan sayur di Pasar', '📋 Klaim hadiah misi & tier']),
+      [['angkut', '🛒 Kerja Angkut'], ['pasar', '🏪 Buka Pasar']]],
+    vit: ['❤️ Vitalitas', 'Tenaga karaktermu (0–100%). Makin tinggi, makin efisien kerja manual: hasil poin olah 60%–110%. Vitalitas tidak turun saat kamu offline.',
+      baris([['Vitalitas sekarang', (s.vitality ?? 100) + '%'], ['Kelompok pangan hari ini', ((s.food_groups_today || []).length) + ' / 3']]) +
+      tips(['🍚 Makan pangan pokok (beras, tempe, telur, air) dari Pasar NPC', '🥬 Makan hasil panen kebunmu sendiri', '🎯 Makan 3 kelompok pangan dalam sehari menyelesaikan misi PR06']),
+      [['kebun', '🌱 Kebun & Makan'], ['katalog', '🍚 Beli Pangan']]],
+    poin: ['🍃 Poin Hijau', 'Skor kontribusi lingkunganmu. Poin tidak bisa dibelanjakan: ini catatan seberapa banyak sampah yang sudah kamu tangani, dan dipakai untuk peringkat.',
+      baris([['Poin sekarang', (s.poin || 0).toLocaleString('id-ID')], ['Sampah dipungut', ((s.stat || {}).pungut || 0) + '×'], ['Sampah sungai diamankan', ((s.stat || {}).sungai_apung || 0) + '×']]) +
+      tips(['🧤 Pungut sampah: +3', '🌊 Ambil sampah sungai: +5', '⚠️ Bersihkan insiden jalan: +15', '🌿 Olah kompos: +40 · ♻️ Olah plastik: +60 (dikali vitalitas)']),
+      [['leaderboard', '🏆 Peringkat'], ['pabrik', '🏭 Pabrik']]],
+    gudang: ['📦 Gudang', 'Semua bahan yang kamu pungut, pilah, olah, dan panen disimpan di gudang. Bila penuh, kamu tidak bisa memungut atau menerima kargo.',
+      baris([['Terisi', `${fmtKg(meta.gudang_terpakai_g)} / ${fmtKg(meta.gudang_kap_g)}`], ['Ruang bebas', fmtKg(meta.gudang_bebas_g)], ['Campuran belum dipilah', fmtKg(s.campuran_g)], ['Produk siap jual', `Kompos ${fmtKg(s.kompos_g)} · Pelet ${fmtKg(s.pelet_g)} · Pot ${fmtKg(s.pot_g)}`]]) +
+      tips(['♻️ Pilah & olah bahan di Pabrik agar lebih ringkas dan bernilai', '🏪 Jual produk di Pasar untuk mengosongkan gudang', '🏗️ Perluas gudang di Menu → Lahan & Mesin']),
+      [['neraca', '📒 Catatan Gudang'], ['lahan', '🏗️ Perluas Gudang']]],
+    waktu: ['🕒 Waktu Nyata (WIB)', 'Siang dan malam di lahanmu mengikuti jam Indonesia Barat yang sebenarnya. Matahari terbit 06.00 dan terbenam 18.00 WIB.',
+      (() => { const wi = meta.waktu_info || {}; return baris([['Jam sekarang', el('tJam').textContent + ' WIB'], ['Fase', { fajar: '🌅 Fajar', siang: '☀️ Siang', senja: '🌇 Senja', malam: '🌙 Malam' }[wi.fase] || '-'], ['Daya panel kini', `±${(wi.daya_kini_w || 0).toLocaleString('id-ID')} W dari ${((wi.surya_terpasang_w || 0) + (wi.hidro_terpasang_w || 0)).toLocaleString('id-ID')} W terpasang`]]); })() +
+      tips(['☀️ Panel surya hanya mengisi baterai saat siang (±5 jam puncak per hari)', '💧 Mikrohidro mengisi 24 jam', '🌙 Malam hari lampu jalan dan jendela menyala']),
+      [['energi', '⚡ Energy Center'], ['katalog', '☀️ Beli Panel Surya']]],
+  }[k];
+  if (!V) return '';
+  return `<div class="sh-head"><h3>${V[0]}</h3>${closeBtn}</div><p class="sh-note">${V[1]}</p>${V[2]}${go(V[3])}`;
+}
+
+// player portrait with the chosen colours (HUD + profile); falls back to the plain sprite until it has loaded
+const fotoCache = {};
+function fotoPemain() {
+  const n = pose().idle, im = spr(n), av = (state && state.avatar) || {};
+  const key = n + '|' + av.baju + '|' + av.rambut;
+  if (fotoCache[key]) return fotoCache[key];
+  if (!im.complete || !im.naturalWidth || !window.TN_AVATAR) return '/assets/sprites/' + n + '.webp';
+  const o = TN_AVATAR.warnai(im, av, state && state.gender);
+  return (fotoCache[key] = o === im ? '/assets/sprites/' + n + '.webp' : o.toDataURL('image/png'));
+}
+
+// equipment card: picture, what it does, its effect in the game, and actions (store / place / sell)
+function kartuAlat(m, besar) {
+  const I = infoAlat(m.canonical_id), mobile = (meta.mesin_tidak_dipasang || []).includes(m.canonical_id);
+  const img = window.TN_MESIN ? TN_MESIN.ikon(I.nama, I.category) : '';
+  const lokasi = mobile ? '🛒 Alat angkut (dipakai di menu Angkut)' : m.pos ? '📍 Terpasang di lahan' : '📦 Disimpan di gudang';
+  return `<div class="card-box alat-card ${besar ? 'besar' : ''}">
+    <div class="alat-top"><img src="${img}" alt=""><div><b>${esc(I.nama)} ${m.starter ? '<span class="pill">Starter</span>' : ''}</b>
+      <small>${esc(I.category || '')}${I.kapasitas ? ' · ' + esc(I.kapasitas) : ''}</small><small>${lokasi} · Kondisi ${m.condition}%</small></div></div>
+    ${I.fungsi ? `<div class="alat-fungsi">⚙️ Proses: <b>${esc(I.fungsi)}</b></div>` : ''}
+    <ul class="efek">${(I.efek || []).map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+    <div class="menu-row" style="margin-top:2px">
+      ${!mobile && !m.pos ? `<button class="act" data-a="pasang_mesin" data-uid="${esc(m.uid)}" data-slot="S1">📍 Tampilkan di lahan<small>Ditaruh di tempat kosong</small></button>` : ''}
+      ${m.pos ? `<button class="act" data-a="lepas_mesin" data-uid="${esc(m.uid)}">📦 Simpan ke gudang<small>Diangkat dari lahan</small></button>` : ''}
+      ${!m.starter ? `<button class="act warn" data-a="jual_mesin_bekas" data-uid="${esc(m.uid)}">💰 Jual bekas<small>Maks 57% harga beli</small></button>` : ''}
+    </div></div>`;
 }
 
 function renderUI() {
@@ -646,7 +1041,7 @@ function renderUI() {
   el('tCoin').textContent = s.koin.toLocaleString('id-ID');
   if (el('tVit')) el('tVit').textContent = (s.vitality ?? 100) + '%';
   el('tPoin').textContent = s.poin.toLocaleString('id-ID');
-  el('tGudang').textContent = `${Math.round(meta.gudang_terpakai_g / 1000)}/${Math.round(s.gudang_kap_g / 1000)} kg`;
+  el('tGudang').textContent = `${Math.round(meta.gudang_terpakai_g / 1000)}/${Math.round(meta.gudang_kap_g / 1000)} kg`;
   el('tBhi').textContent = meta.bhi + '%';
   // Celebration queue banner (priority God > tier > badge > coin > mission)
   const cel = (s.celebrations || [])[0];
@@ -655,11 +1050,15 @@ function renderUI() {
     el('celTitle').textContent = cel.title;
     el('celSub').textContent = cel.subtitle;
     el('celBar').hidden = false;
+    document.body.classList.add('cel-on');
     el('celSkip').onclick = () => send({ aksi: 'tutup_selebrasi', id: cel.id });
   } else if (el('celBar')) {
     el('celBar').hidden = true;
+    document.body.classList.remove('cel-on');
   }
-  const avSrc = '/assets/sprites/' + pose().idle + '.png';
+  preloadPose();
+  updateJam();
+  const avSrc = fotoPemain();
   if (el('tAva').firstElementChild.getAttribute('src') !== avSrc) el('tAva').firstElementChild.setAttribute('src', avSrc);
   const nb = meta.pencapaian.filter(p => p.ok).length;
   el('tBadges').textContent = `🏅 ${nb}/${meta.pencapaian.length}`;
@@ -667,7 +1066,7 @@ function renderUI() {
   el('gaiaMsg').textContent = g.text;
   document.querySelectorAll('#nav button').forEach(b => {
     const t = b.dataset.tab;
-    b.classList.toggle('on', sheetMode === t);
+    b.classList.toggle('on', t === 'pasar' ? scene === 'pasar' : sheetMode === t && scene === 'lahan');
     b.classList.toggle('dot', g.tab === t && sheetMode !== t);
   });
   renderSheet();
@@ -679,6 +1078,8 @@ document.addEventListener('click', e => {
   if (!btn) return;
   if (btn.dataset.tab || btn.dataset.open) {
     const t = btn.dataset.tab || btn.dataset.open;
+    if (t === 'pasar' && !btn.dataset.daftar) { if (scene === 'pasar' && btn.dataset.tab) { keluarPasar(); sheetMode = null; renderUI(); } else masukPasar(); return; }
+    if (scene === 'pasar' && btn.dataset.tab) keluarPasar();
     sheetMode = (btn.dataset.tab && sheetMode === t) ? null : t;
     if (t === 'angkut') walkTo(822, 560);
     if (t === 'pabrik') walkTo(720, 480);
@@ -692,15 +1093,28 @@ document.addEventListener('click', e => {
     if (a === 'sfx') el('bSfx').click();
     if (a === 'keluar') logout();
     if (a === 'reset') resetAkun();
+    if (a === 'tutup_kios') { sheetMode = null; window.TN_KIOS = null; renderUI(); return; }
+    if (a === 'keluar_pasar') { keluarPasar(); sheetMode = null; renderUI(); return; }
     if (a === 'replay_opening') {
       el('replayFrame').src = '/intro/?embed=1&autostart=1';
       el('replayBox').hidden = false;
       sheetMode = null;
     }
+    if (a === 'musik') renderUI();
     renderSheet();
     return;
   }
-  if (btn.dataset.a) {
+  if (btn.dataset.angkutkg) { const [k, v] = btn.dataset.angkutkg.split(':'); angkutKg[k] = Number(v); renderSheet(); return; }
+  if (btn.dataset.a) { if (!perluKonfirmasi(btn)) kirimDariTombol(btn); return; }
+  if (btn.dataset.node) { send({ aksi: 'angkut_node', node: btn.dataset.node, gram: Number(btn.dataset.kg || 10) * 1000 }); return; }
+  if (btn.dataset.dle) {
+    const ev = (state.dle_events || []).find(x => x.id === btn.dataset.dle);
+    if (ev) { const a = DLE_ANCHORS[ev.anchor] || DLE_ANCHORS.road_shoulder; walkTo(a.x, a.y - 14); }
+    sheetMode = null;
+    send({ aksi: 'ambil_dle', event_id: btn.dataset.dle });
+  }
+});
+function kirimDariTombol(btn) {   // builds the /aksi payload from the button's data-* attributes
     const p = { aksi: btn.dataset.a };
     if (btn.dataset.petak !== undefined) p.petak = Number(btn.dataset.petak);
     if (btn.dataset.gender) p.gender = btn.dataset.gender;
@@ -714,19 +1128,46 @@ document.addEventListener('click', e => {
     if (btn.dataset.id) p.id = btn.dataset.id;
     if (btn.dataset.sku) p.sku = btn.dataset.sku;
     send(p);
-    return;
+}
+// Quote & confirm (TECHNICAL_DESIGN_SYNC): large purchases and equipment sales ask first, showing price and balance
+const angkutKg = {};
+let angkutFokus = null;   // node highlighted when the player taps a signpost on the map
+function perluKonfirmasi(btn) {
+  const a = btn.dataset.a, s = state, gc = n => Number(n || 0).toLocaleString('id-ID') + ' GC';
+  let judul = null, isi = '';
+  if (a === 'beli_mesin') {
+    const h = Number(btn.dataset.harga || 0);
+    if (h > s.koin) {
+      el('konfirmJudul').textContent = '🪙 Koin belum cukup';
+      el('konfirmIsi').innerHTML = `${esc(btn.dataset.nama || 'Alat ini')} seharga <b>${gc(h)}</b>, saldomu <b>${gc(s.koin)}</b> (kurang ${gc(h - s.koin)}).<br><br>Cara menambah koin: <b>kerja angkut sampah</b> di menu Angkut, olah sampahnya, lalu jual hasilnya di Pasar.`;
+      el('konfirmBox').hidden = false; el('konfirmYa').textContent = '🛒 Buka Angkut'; el('konfirmYa').focus();
+      el('konfirmYa').onclick = () => { el('konfirmBox').hidden = true; el('konfirmYa').textContent = '✓ Ya, lanjutkan'; sheetMode = 'angkut'; walkTo(822, 560); renderUI(); };
+      el('konfirmBatal').onclick = () => { el('konfirmBox').hidden = true; el('konfirmYa').textContent = '✓ Ya, lanjutkan'; };
+      return true;
+    }
+    judul = `Beli ${btn.dataset.nama || 'alat'}?`; isi = `Harga <b>${gc(h)}</b> · saldo setelah beli <b>${gc(s.koin - h)}</b>.<br>Alat langsung tampil di lahan dan bisa diseret.`;
   }
-  if (btn.dataset.node) { send({ aksi: 'angkut_node', node: btn.dataset.node, gram: 10000 }); return; }
-  if (btn.dataset.dle) {
-    const ev = (state.dle_events || []).find(x => x.id === btn.dataset.dle);
-    if (ev) { const a = DLE_ANCHORS[ev.anchor] || DLE_ANCHORS.road_shoulder; walkTo(a.x, a.y - 14); }
-    sheetMode = null;
-    send({ aksi: 'ambil_dle', event_id: btn.dataset.dle });
-  }
-});
+  else if (a === 'sewa_mesin') { judul = `Sewa ${btn.dataset.nama || 'alat'} 24 jam?`; isi = 'Biaya sewa dipotong dari saldo sekarang. Alat sewaan kembali ke mitra setelah 24 jam.'; }
+  else if (a === 'beli_petak' && meta.harga_petak) { judul = 'Bangun petak tanam baru?'; isi = `Biaya <b>${gc(meta.harga_petak)}</b> · saldo setelahnya <b>${gc(s.koin - meta.harga_petak)}</b>.`; }
+  else if (a === 'tambah_gudang' && meta.harga_gudang) { judul = 'Perluas gudang +250 kg?'; isi = `Biaya <b>${gc(meta.harga_gudang)}</b> · saldo setelahnya <b>${gc(s.koin - meta.harga_gudang)}</b>.`; }
+  else if (a === 'jual_mesin_bekas') { judul = 'Jual alat bekas?'; isi = 'Alat dijual ke pengepul dengan harga bekas (maks 57% harga beli). Tindakan ini tidak bisa dibatalkan.'; }
+  else if (a === 'sandbox_topup') { judul = 'Tambah GC sandbox?'; isi = 'Hanya uji lokal tanpa uang nyata, tetapi akunmu tidak lagi dihitung Self-Made.'; }
+  if (!judul) return false;
+  el('konfirmJudul').textContent = judul; el('konfirmIsi').innerHTML = isi;
+  el('konfirmBox').hidden = false; el('konfirmYa').focus();
+  el('konfirmYa').onclick = () => { el('konfirmBox').hidden = true; kirimDariTombol(btn); };
+  el('konfirmBatal').onclick = () => { el('konfirmBox').hidden = true; };
+  return true;
+}
 el('bMenu').onclick = () => { sheetMode = sheetMode === 'menu' ? null : 'menu'; renderUI(); };
 el('tProfil').onclick = () => { sheetMode = sheetMode === 'profil' ? null : 'profil'; renderUI(); };
-el('replayClose').onclick = () => { el('replayBox').hidden = true; el('replayFrame').src = ''; };
+const closeReplay = () => { el('replayBox').hidden = true; el('replayFrame').src = ''; };
+el('replayClose').onclick = closeReplay;
+// Tonton Ulang: tombol "Aku menerima panggilanmu" di akhir film menutup pemutar (akun sudah diterima, tidak ada aksi server)
+addEventListener('message', e => {
+  if (e.origin !== location.origin || !e.data || el('replayBox').hidden) return;
+  if (e.data.type === 'terranova:intro-done') closeReplay();
+});
 document.addEventListener('change', e => {
   if (e.target.id === 'kotaPick') send({ aksi: 'ganti_kota', kota: e.target.value });
 });
@@ -742,19 +1183,24 @@ async function resetAkun() {
 
 /* ===== ISOMETRIC STARTER YARD (illustrated background + isometric sprites) =====
    World = the yard illustration (assets/img/yard_iso.webp, 1672 x 941 px), in image coordinates.
-   Sprites (assets/sprites/*.png, generated in the same style): player, pedestrians, vehicles, litter, garden plots. */
+   Sprites (assets/sprites/*.webp, from Asset/sumber_web/sprites_png via tools/optimize_sprites.py; generated in the same style): player, pedestrians, vehicles, litter, garden plots. */
 const cv = el('scene'), g = cv.getContext('2d');
 const WORLD_W = 1672, WORLD_H = 941;
+// Evaluasi 3 #5: the world continues 150 px below the illustration. The river keeps flowing past the picture's
+// bottom edge until its far bank (measured on the picture: (250, 860) -> (880, 941)), then grass; so the camera can
+// scroll the whole river above the Gaia bar / menu, and floating litter rides mid-stream.
+const RIVER_EXT = 150, WORLD_VIEW_H = WORLD_H + RIVER_EXT;
+const tepiSeberang = x => 860 + 0.128 * (x - 250);
 const yardImg = new Image();
 yardImg.src = '/assets/img/yard_iso.webp';
 const SPR = {};
 function spr(name) {
-  if (!SPR[name]) { const im = new Image(); im.src = '/assets/sprites/' + name + '.png'; SPR[name] = im; }
+  if (!SPR[name]) { const im = new Image(); im.src = '/assets/sprites/' + name + '.webp'; SPR[name] = im; }
   return SPR[name];
 }
-['player_1', 'player_2', 'player_4', 'player_5', 'player_6', 'player_8', 'playerf_1', 'playerf_2', 'playerf_4', 'playerf_5', 'playerf_6',
- 'playerf_7', 'playerf_8', 'npc_1', 'npc_2', 'npc_3', 'npc_4', 'npc_5', 'npc_6',
- 'vehicles2_3', 'vehicles2_4', 'veh_pikap_1', 'veh_truk_1', 'veh_becak_1', 'veh_delman_1', 'veh_gerobak_1',
+// player sprites are loaded per chosen character (see preloadPose); the rest of the scene up front
+['npc_1', 'npc_2', 'npc_3', 'npc_4', 'npc_5', 'npc_6',
+ 'veh_motor_1', 'veh_sepeda_1', 'veh_pikap_1', 'veh_truk_1', 'veh_becak_1', 'veh_delman_1', 'veh_gerobak_1',
  'pohon_1', 'pohon_2', 'pohon_3', 'pohon_4', 'pohon_5', 'pohon_6', 'pohon_7', 'pohon_8', 'garden_1', 'garden_2', 'garden_3', 'garden_4',
  'trash_1', 'trash_2', 'trash_3', 'trash_4', 'trash_5', 'trash_6', 'trash_7', 'trash_8'].forEach(spr);
 const TRASH_SPR = { botol: 'trash_1', kaleng: 'trash_2', kardus: 'trash_3', organik: 'trash_4', kaca: 'trash_5', kantong: 'trash_6', baterai: 'trash_7', sterofoam: 'trash_8',
@@ -762,16 +1208,20 @@ const TRASH_SPR = { botol: 'trash_1', kaleng: 'trash_2', kardus: 'trash_3', orga
 // player sprite set per character (male / female sheets have the same poses in a slightly different order)
 const POSE = {
   pria: { sit: 'player_1', look: 'player_2', idle: 'player_5', walkA: 'player_4', walkB: 'player_5', backA: 'player_6', backB: 'player_8' },
-  wanita: { sit: 'playerf_1', look: 'playerf_2', idle: 'playerf_4', walkA: 'playerf_5', walkB: 'playerf_6', backA: 'playerf_8', backB: 'playerf_7' },
+  // playerf_1 (sit) and playerf_6 (walk) were generated without the ponytail, so the female set reuses consistent frames
+  wanita: { sit: 'playerf_2', look: 'playerf_2', idle: 'playerf_4', walkA: 'playerf_5', walkB: 'playerf_4', backA: 'playerf_8', backB: 'playerf_7' },
 };
 const pose = () => POSE[(state && state.gender) === 'wanita' ? 'wanita' : 'pria'];
+const preloadPose = () => Object.values(pose()).forEach(spr);
 
 // draw a sprite standing on (x, y): bottom-centre anchor, given height (or width when byWidth)
 function drawSpr(name, x, y, size, flip = false, alpha = 1, byWidth = false, rot = 0) {
-  const im = spr(name);
+  let im = spr(name);
   if (!im.complete || !im.naturalWidth) return;
-  const h = byWidth ? size * im.naturalHeight / im.naturalWidth : size;
-  const w = h * im.naturalWidth / im.naturalHeight;
+  if (name.startsWith('player') && state && state.avatar && window.TN_AVATAR) im = TN_AVATAR.warnai(im, state.avatar, state.gender);   // chosen jacket & hair colour
+  const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
+  const h = byWidth ? size * ih / iw : size;
+  const w = h * iw / ih;
   g.save(); g.translate(x, y); if (rot) g.rotate(rot); if (flip) g.scale(-1, 1); g.globalAlpha = alpha;
   g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
   g.drawImage(im, -w / 2, -h, w, h); g.restore();
@@ -779,6 +1229,47 @@ function drawSpr(name, x, y, size, flip = false, alpha = 1, byWidth = false, rot
 
 let T = 0, VW = { tx: 0, y0: 0, sc: 1 }, camX = 830, camY = 470;
 let parts = [];
+
+let polaAir = null, polaRumput = null;
+function polaCermin(sx, sy, w, h) {   // seamless tile: mirror a patch of the illustration horizontally & vertically
+  const c = document.createElement('canvas');
+  c.width = w * 2; c.height = h * 2;
+  const q = c.getContext('2d');
+  for (const [fx, fy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+    q.save(); q.translate(fx < 0 ? w * 2 : 0, fy < 0 ? h * 2 : 0); q.scale(fx, fy);
+    q.drawImage(yardImg, sx, sy, w, h, 0, 0, w, h); q.restore();
+  }
+  return g.createPattern(c, 'repeat');
+}
+const tengahSungai = x => (riverTop(x) + tepiSeberang(x)) / 2;
+function drawSungaiLuas() {
+  if (!polaAir && yardImg.complete && yardImg.naturalWidth) { polaAir = polaCermin(1180, 915, 200, 24); polaRumput = polaCermin(1588, 208, 80, 40); }
+  const X0 = 880;   // left of this the far bank is already inside the picture
+  const tepi = (dy = 0) => { g.beginPath(); g.moveTo(X0 - 40, WORLD_H - 1 + dy); for (let x = X0 - 40; x <= WORLD_W; x += 24) g.lineTo(x, Math.max(WORLD_H - 1, tepiSeberang(x) + Math.sin(x / 37) * 3) + dy); };
+  g.save();
+  // grass below the picture
+  g.fillStyle = polaRumput || '#5f9c3a'; g.fillRect(0, WORLD_H - 2, X0 - 40, RIVER_EXT + 2); g.fillRect(X0 - 40, WORLD_H - 1, WORLD_W, RIVER_EXT + 1);
+  // the river continuing past the picture edge, down to the far bank
+  tepi(); g.lineTo(WORLD_W, WORLD_H - 1); g.closePath();
+  g.fillStyle = '#7a5530'; g.fill();
+  g.save(); tepi(-6); g.lineTo(WORLD_W, WORLD_H - 1); g.closePath(); g.clip();
+  g.fillStyle = polaAir || '#2f7fc4'; g.fillRect(X0 - 40, WORLD_H - 1, WORLD_W, RIVER_EXT); g.restore();
+  // soft seam where picture and extension meet
+  const gr = g.createLinearGradient(0, WORLD_H - 6, 0, WORLD_H + 6); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.5, 'rgba(0,0,0,.08)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = gr; g.fillRect(0, WORLD_H - 6, WORLD_W, 12);
+  for (let i = 0; i < 90; i++) {   // pixel tufts & a few stones on the far bank
+    const x = (i * 97.3) % WORLD_W, y = Math.max(WORLD_H + 4, tepiSeberang(x) + 12) + ((i * 53) % 90);
+    if (y > WORLD_VIEW_H - 4) continue;
+    g.fillStyle = i % 3 ? '#79b648' : '#4b8030'; g.fillRect(x, y, 4, 3); g.fillRect(x + 2, y - 3, 2, 3);
+  }
+  for (let i = 0; i < 6; i++) {
+    const x = X0 + 60 + i * 140, y = tepiSeberang(x) + 2;
+    if (y < WORLD_H) continue;
+    g.fillStyle = '#8d949a'; g.beginPath(); g.ellipse(x, y, 10, 5, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#b8bfc4'; g.beginPath(); g.ellipse(x - 2, y - 2, 4, 2, 0, 0, Math.PI * 2); g.fill();
+  }
+  g.restore();
+}
 
 // ---- geometry measured on the illustration
 const ROAD_Y = x => 611 + 0.0962 * x;   // road centre line, measured by regression on the lane markings
@@ -789,6 +1280,11 @@ const OBST = [[755, 120, 1045, 350], [500, 210, 760, 410], [420, 390, 700, 505],
 const RIVER = [[0, 752], [300, 792], [836, 852], [1100, 896], [1400, 912], [1672, 930]];
 const PLOT_POS = [[1490, 440], [1610, 520], [1490, 612]];
 const YARD_C = [790, 492];
+const PAPAN = [
+  { id: 'permukiman', x: 110, y: 575, ik: '🏘️', label: 'Permukiman · Kerja Angkut', papan: '#8a5a32' },
+  { id: 'pasar', x: 1590, y: 712, ik: '🏪', label: 'Pasar Kota', papan: '#6b4424' },
+];
+const KE_KIRI = { permukiman: 1, sungai: 1 };   // gerobak drives toward its destination (left = settlement/river)
 const DLE_ANCHORS = { road_shoulder: { x: 960, y: 652 }, river_bank: { x: 330, y: 772 } };
 const HOTSPOTS = [
   { id: 'gudang', x: 760, y: 80, w: 290, h: 270, tab: 'pabrik', ax: 880, ay: 380, label: 'GUDANG / KANTOR', lx: 1075, ly: 112 },
@@ -865,18 +1361,19 @@ function walkTo(x, y, onArrive = null) {
   if (REDUCED) { const p = av.path[av.path.length - 1]; av.x = p[0]; av.y = p[1]; av.path = []; if (onArrive) onArrive(); }
 }
 function moveAvatar(x, y) { walkTo(x, y); }
-function stepAvatar() {
-  if (!av.path.length) return false;
-  const [tx, ty] = av.path[0], dx = tx - av.x, dy = ty - av.y, d = Math.hypot(dx, dy), sp = 3.6;
-  if (Math.abs(dx) > 0.5) av.flip = dx > 0;
-  av.back = dy < -Math.abs(dx) * 0.35;
+function stepObj(o) {
+  if (!o.path.length) return false;
+  const [tx, ty] = o.path[0], dx = tx - o.x, dy = ty - o.y, d = Math.hypot(dx, dy), sp = 3.6 * DT;
+  if (Math.abs(dx) > 0.5) o.flip = dx > 0;
+  o.back = dy < -Math.abs(dx) * 0.35;
   if (d <= sp) {
-    av.x = tx; av.y = ty; av.path.shift();
-    if (!av.path.length && av.onArrive) { const f = av.onArrive; av.onArrive = null; f(); }
-  } else { av.x += dx / d * sp; av.y += dy / d * sp; }
-  av.step++;
+    o.x = tx; o.y = ty; o.path.shift();
+    if (!o.path.length && o.onArrive) { const f = o.onArrive; o.onArrive = null; f(); }
+  } else { o.x += dx / d * sp; o.y += dy / d * sp; }
+  o.step += DT;
   return true;
 }
+const stepAvatar = () => stepObj(av);
 function spawnBurst(x, y, col) {
   if (REDUCED) return;
   for (let i = 0; i < 16; i++) parts.push({ x, y, vx: (Math.random() - .5) * 6, vy: -3 - Math.random() * 4, l: 45, c: col });
@@ -892,10 +1389,12 @@ function pickUp(item) {
 }
 
 // ---- cosmetic pedestrians & vehicles (DLE pools, capped at 4 NPC + 2 vehicles per DESIGN_SPEC v1.3 §18)
+// Evaluasi 3 #4: the walk frames now advance by distance walked (one frame per step length), so feet never
+// slide and the gait cannot read as walking backwards; speeds are realistic (~1.3 m/s) and frame-rate independent.
 const NPCS = [
-  { x: 80, off: 70, vx: 0.55, fr: ['npc_1', 'npc_2'], h: 68 },
-  { x: 900, off: 72, vx: -0.45, fr: ['npc_3', 'npc_4'], h: 66 },
-  { x: 1400, off: 69, vx: 0.4, fr: ['npc_5', 'npc_6'], h: 58 },
+  { x: 80, off: 70, vx: 0.9, fr: ['npc_1', 'npc_2'], h: 68, step: 22, d: 0 },
+  { x: 900, off: 72, vx: -0.8, fr: ['npc_3', 'npc_4'], h: 66, step: 21, d: 0 },
+  { x: 1400, off: 69, vx: 0.85, fr: ['npc_5', 'npc_6'], h: 58, step: 18, d: 0 },
 ];
 // Vehicles are strict side-profile sprites. `face` is the direction the sprite's front points to in the PNG
 // (1 = right); a vehicle is mirrored only when it drives against that direction, so it always moves forwards.
@@ -903,9 +1402,11 @@ const NPCS = [
 const VEH = {
   pikap: { s: 'veh_pikap_1', w: 150, v: 1.6, face: 1, lanes: 'RL' },
   truk: { s: 'veh_truk_1', w: 172, v: 1.35, face: 1, lanes: 'RL' },
-  motor: { s: 'vehicles2_3', w: 84, v: 2.3, face: 1, lanes: 'RL' },
-  sepeda: { s: 'vehicles2_4', w: 74, v: 0.95, face: 1, lanes: 'RL', bob: 1 },
-  becak: { s: 'veh_becak_1', w: 104, v: 0.8, face: 1, lanes: 'RL', bob: 1 },
+  // Evaluasi 4: motor & sepeda were 3/4-view sprites (wheel line ~20 deg), so they looked tilted on the road; they are now
+  // strict side-profile sprites like the others. The becak sprite's rider faces LEFT (front = left), hence face: -1.
+  motor: { s: 'veh_motor_1', w: 96, v: 2.3, face: 1, lanes: 'RL' },
+  sepeda: { s: 'veh_sepeda_1', w: 80, v: 0.95, face: 1, lanes: 'RL', bob: 1 },
+  becak: { s: 'veh_becak_1', w: 112, v: 0.8, face: -1, lanes: 'RL', bob: 1 },
   delman: { s: 'veh_delman_1', w: 196, v: 1.05, face: 1, lanes: 'RL', bob: 1.5 },
 };
 const LANE = { R: { off: -12, dir: 1 }, L: { off: 30, dir: -1 } };   // wheel line of each lane
@@ -950,33 +1451,67 @@ function makeLeaf(crown, ground, delay = 0) {
 const PLAYER_H = 80;
 
 // ---- drag to look around (the river bank can sit under the Gaia bar / menu); a new walk re-centres the camera
+// press on a placed item and drag it to rearrange the land (Evaluasi 3 #6); elsewhere dragging pans the camera
 let drag = null, dragMoved = false, camFree = false;
-cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, cx: camX, cy: camY }; dragMoved = false; });
+function keDunia(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left - VW.tx) / VW.sc, (e.clientY - r.top - VW.y0) / VW.sc]; }
+cv.addEventListener('pointerdown', e => {
+  const [wx, wy] = keDunia(e);
+  const a = state && state.diterima && !cine && scene === 'lahan' ? alatDi(wx, wy) : null;
+  drag = { x: e.clientX, y: e.clientY, cx: camX, cy: camY, pcx: pcamX, pcy: pcamY, alat: a, ox: a ? a.x - wx : 0, oy: a ? a.y - wy : 0 };
+  dragMoved = false;
+  if (a) cv.setPointerCapture(e.pointerId);
+});
 addEventListener('pointermove', e => {
-  if (!drag || cine) return;
+  if (!drag) {   // hover feedback on desktop
+    if (e.target !== cv || !state) return;
+    if (scene === 'pasar') { const [wx, wy] = keDunia(e), k = kiosDi(wx, wy); kiosHover = k ? k.id : null; cv.style.cursor = k ? 'pointer' : ''; return; }
+    const [wx, wy] = keDunia(e), a = alatDi(wx, wy);
+    alatHover = a ? a.uid : null;
+    cv.style.cursor = a ? 'move' : '';
+    return;
+  }
+  if (cine) return;
   const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
   if (!dragMoved && Math.hypot(dx, dy) < 8) return;
-  dragMoved = true; camFree = true;
+  dragMoved = true;
+  if (drag.alat) {
+    const [wx, wy] = keDunia(e), x = Math.round(wx + drag.ox), y = Math.round(wy + drag.oy);
+    seret = { a: drag.alat, x, y, ok: posisiSah(drag.alat, x, y) };
+    return;
+  }
+  camFree = true;
+  if (scene === 'pasar') { pcamX = Math.min(Math.max(drag.pcx - dx / VW.sc, 0), PW); pcamY = Math.min(Math.max(drag.pcy - dy / VW.sc, 0), PH); return; }
   camX = Math.min(Math.max(drag.cx - dx / VW.sc, 0), WORLD_W);
-  camY = Math.min(Math.max(drag.cy - dy / VW.sc, 0), WORLD_H);
+  camY = Math.min(Math.max(drag.cy - dy / VW.sc, 0), WORLD_VIEW_H);
 });
-addEventListener('pointerup', () => { drag = null; });
+addEventListener('pointerup', () => {
+  if (seret) {
+    const sr = seret, m = sr.a.m;
+    seret = null;
+    if (sr.ok) { m.pos = [sr.x, sr.y]; send({ aksi: 'pindah_mesin', uid: m.uid, x: sr.x, y: sr.y }); }
+    else el('status').textContent = '❌ Tidak bisa ditaruh di situ: harus di lahanmu, tidak di atas bangunan, kebun, pohon, jalan, atau alat lain.';
+  }
+  drag = null;
+});
 
 // ---- canvas click: litter > incidents > plots > hotspots > walk
 cv.addEventListener('click', e => {
   if (dragMoved) { dragMoved = false; return; }
   if (!state || !state.diterima || cine) return;
+  if (scene === 'pasar') { const [wx, wy] = keDunia(e); camFree = false; klikPasar(wx, wy); return; }
   const r = cv.getBoundingClientRect();
   const wx = (e.clientX - r.left - VW.tx) / VW.sc;
   const wy = (e.clientY - r.top - VW.y0) / VW.sc;
   const item = litter().find(t => Math.hypot(wx - t.x, wy - (t.y - 20)) <= 48);
+  const alatKlik = alatDi(wx, wy);
+  if (alatKlik && !item) { sheetMode = 'alat:' + alatKlik.uid; renderUI(); return; }
   if (item) { if (picking !== item.id) pickUp(item); return; }
   // Floating river trash: safe riverbank pickup (avatar stays on bank, never enters water)
   const srvNow = (meta ? meta.server_time : 0) + (Date.now() - received) / 1000;
   for (const rv of (state.sampah_sungai || [])) {
     const prog = Math.max(0, Math.min(1, (srvNow - rv.start_at) / Math.max(1, rv.end_at - rv.start_at)));
-    const rx = 60 + prog * (WORLD_W - 120), ry = riverTop(rx) + 28;
-    if (Math.hypot(wx - rx, wy - ry) <= 58) {
+    const rx = 60 + prog * (WORLD_W - 120), ry = tengahSungai(rx) + 14;
+    if (Math.hypot(wx - rx, wy - (ry - 14)) <= 60) {
       walkTo(Math.min(Math.max(rx, 40), WORLD_W - 40), riverTop(rx) - 18, async () => {
         spawnBurst(rx, ry - 10, '#7bd8ff');
         await send({ aksi: 'pungut_sungai', id: rv.id });
@@ -997,6 +1532,11 @@ cv.addEventListener('click', e => {
       renderUI(); return;
     }
   }
+  const papan = PAPAN.find(b => Math.abs(wx - b.x) < 50 && wy > b.y - 140 && wy < b.y + 10);
+  if (papan) {
+    if (papan.id === 'pasar') { walkTo(Math.min(papan.x - 30, WORLD_W - 40), ROAD_Y(papan.x) - 50, () => masukPasar()); return; }
+    angkutFokus = 'permukiman'; sheetMode = 'angkut'; walkTo(822, 560); renderUI(); return;
+  }
   for (const h of HOTSPOTS) {
     if (wx >= h.x && wx <= h.x + h.w && wy >= h.y && wy <= h.y + h.h) { walkTo(h.ax, h.ay); sheetMode = h.tab; renderUI(); return; }
   }
@@ -1004,6 +1544,16 @@ cv.addEventListener('click', e => {
   else if (!inYard(wx, wy) && wy >= riverTop(wx) - 12) { walkTo(Math.min(Math.max(wx, 30), WORLD_W - 30), riverTop(wx) - 16); sheetMode = null; renderUI(); }
 });
 
+function drawPapan(b, hot) {   // wooden signpost with an icon board and a name tag
+  const bob = hot && !REDUCED ? Math.sin(T / 9) * 4 : 0;
+  g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(b.x, b.y + 2, 22, 7, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#5a3d22'; g.fillRect(b.x - 3, b.y - 62, 6, 64);
+  g.fillStyle = b.papan; g.strokeStyle = '#3a2614'; g.lineWidth = 3;
+  g.beginPath(); g.roundRect(b.x - 30, b.y - 96 + bob, 60, 44, 8); g.fill(); g.stroke();
+  g.font = '28px system-ui'; g.textAlign = 'center'; g.fillText(b.ik, b.x, b.y - 63 + bob); g.textAlign = 'left';
+  drawTag(b.label, b.x + (b.x < 400 ? 70 : -60), b.y - 118 + bob, hot);
+  if (hot) bubble('!', b.x + 30, b.y - 96 + bob);
+}
 function px(x, y, w, h, c) { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
 function drawTag(txt, x, y, hot) {
   g.font = 'bold 19px system-ui';
@@ -1035,7 +1585,7 @@ function startCine() {
 const CINE_LINES = [
   'Tenanglah, Penjaga Bumi. Akulah Gaia. Aku membawamu ke lahan kecil ini.',
   'Lihat sekelilingmu: sampah berserakan di dalam dan di luar pagar. Inilah luka yang kubicarakan.',
-  'Pungut sampahnya, pilah, olah, lalu jual hasilnya. Dari situlah koinmu bertambah. Modalmu hanya 1.000 koin, jadi bekerjalah dengan cermat.',
+  'Pungut sampahnya, pilah, olah, lalu jual hasilnya. Dari situlah Gaia Coin-mu bertambah. Modal awalmu 1.000.000 GC, jadi gunakan dengan cermat.',
 ];
 function showCineDialog() {
   if (cine.dialog) return;
@@ -1096,11 +1646,12 @@ function drawWorld() {
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
     g.drawImage(yardImg, 0, 0, WORLD_W, WORLD_H);
   } else px(0, 0, WORLD_W, WORLD_H, '#5f9c45');
+  drawSungaiLuas();
 
   // 2. river shimmer
   if (!REDUCED) {
     g.fillStyle = 'rgba(200,240,255,.35)';
-    for (let i = 0; i < 12; i++) { const rx = (i * 151 + T * 0.7) % WORLD_W; g.fillRect(rx, riverTop(rx) + 30 + (i % 3) * 22, 26, 3); }
+    for (let i = 0; i < 16; i++) { const rx = (i * 151 + T * 0.7) % WORLD_W; g.fillRect(rx, riverTop(rx) + 24 + (i % 4) * ((tepiSeberang(rx) - riverTop(rx) - 30) / 4), 26, 3); }
   }
 
   // 3. depth-sorted scene: plots, litter, incidents, pedestrians, vehicles, avatar
@@ -1125,7 +1676,7 @@ function drawWorld() {
   }
   if (s.diterima && np < 3) {
     const [x, y] = PLOT_POS[np];
-    D.push({ y, f: () => { drawSpr('garden_4', x, y, 140, false, 0.92, true); if (meta && meta.harga_petak) drawTag(`Petak baru · ${meta.harga_petak} koin`, x, y - 112, s.koin >= meta.harga_petak); } });
+    D.push({ y, f: () => { drawSpr('garden_4', x, y, 140, false, 0.92, true); if (meta && meta.harga_petak) drawTag(`Petak baru · ${meta.harga_petak.toLocaleString('id-ID')} GC`, x, y - 112, s.koin >= meta.harga_petak); } });
   }
   const nowMs = performance.now();
   litter().forEach(t => {
@@ -1148,13 +1699,24 @@ function drawWorld() {
     } });
   });
   if (!REDUCED && !document.hidden) {
-    NPCS.forEach(n => { n.x += n.vx; if (n.x > WORLD_W + 40) n.x = -40; if (n.x < -40) n.x = WORLD_W + 40; });
+    NPCS.forEach(n => { n.x += n.vx * DT; n.d += Math.abs(n.vx) * DT; if (n.x > WORLD_W + 40) n.x = -40; if (n.x < -40) n.x = WORLD_W + 40; });
+    // keep a safe gap: a vehicle never drives into the one ahead of it in the same lane (it slows to follow)
+    const semua = [...CARS.map(c => ({ c, v: VEH[c.k].v * LANE[c.lane].dir })), ...dropCars.map(c => ({ c, v: c.vx }))];
+    const jarakAman = (a, b) => (VEH[a.k].w + VEH[b.k].w) / 2 + 24;
+    semua.forEach(o => {
+      const dir = Math.sign(o.v), depan = semua.filter(p => p !== o && p.c.lane === o.c.lane && (p.c.x - o.c.x) * dir > 0);
+      const dekat = depan.reduce((m, p) => Math.abs(p.c.x - o.c.x) < Math.abs(m ? m.c.x - o.c.x : Infinity) ? p : m, null);
+      let langkah = o.v * DT;
+      if (dekat && Math.abs(dekat.c.x - o.c.x) - Math.abs(langkah) < jarakAman(o.c, dekat.c)) langkah = Math.sign(langkah) * Math.min(Math.abs(langkah), Math.abs(dekat.v) * DT);
+      o.c.x += langkah;
+    });
     CARS.forEach((c, i) => {
-      c.x += VEH[c.k].v * LANE[c.lane].dir;
-      if (c.x > WORLD_W + 240 || c.x < -240) CARS[i] = newCar(c.lane);
+      if (c.x > WORLD_W + 240 || c.x < -240) {
+        const baru = newCar(c.lane);   // re-enter only when the lane entrance is clear
+        if (!semua.some(p => p.c !== c && p.c.lane === baru.lane && Math.abs(p.c.x - baru.x) < 260)) CARS[i] = baru;
+      }
     });
     dropCars.forEach(c => {
-      c.x += c.vx;
       if (!c.dropped && (c.vx > 0 ? c.x >= c.item.x : c.x <= c.item.x)) {
         c.dropped = true; hiddenUntil[c.item.id] = performance.now();
         spawnBurst(c.item.x, c.item.y - 18, '#e0c078');
@@ -1164,7 +1726,11 @@ function drawWorld() {
     // ambient: now and then a single leaf drifts down from a random tree
     if (T % 50 === 0 && leaves.length < 24) { const [b, c] = TREES[Math.floor(Math.random() * TREES.length)]; leaves.push(makeLeaf(c, [b[0], b[1] + 10])); }
   }
-  NPCS.forEach(n => { const y = ROAD_Y(n.x) + n.off; D.push({ y, f: () => drawSpr(n.fr[Math.floor(T / 14) % 2], n.x, y, n.h, n.vx < 0) }); });
+  NPCS.forEach(n => {
+    const y = ROAD_Y(n.x) + n.off, k = Math.floor(n.d / n.step) % 2;
+    const bob = REDUCED ? 0 : Math.abs(Math.sin(n.d / n.step * Math.PI)) * 1.6;   // body rises mid-stride
+    D.push({ y, f: () => drawSpr(n.fr[k], n.x, y - bob, n.h, n.vx < 0) });
+  });
   [...CARS, ...dropCars].forEach(c => {
     const V = VEH[c.k], L = LANE[c.lane], y = ROAD_Y(c.x) + L.off;
     const bob = V.bob && !REDUCED ? Math.abs(Math.sin(c.x / 9)) * V.bob : 0;   // pedalling / horse gait
@@ -1174,7 +1740,7 @@ function drawWorld() {
   const srvNowR = (meta ? meta.server_time : 0) + (Date.now() - received) / 1000;
   (s.sampah_sungai || []).forEach(rv => {
     const prog = Math.max(0, Math.min(1, (srvNowR - rv.start_at) / Math.max(1, rv.end_at - rv.start_at)));
-    const rx = 60 + prog * (WORLD_W - 120), ry = riverTop(rx) + 28 + (REDUCED ? 0 : Math.sin(T / 8 + rx / 40) * 3);
+    const rx = 60 + prog * (WORLD_W - 120), ry = tengahSungai(rx) + 14 + (REDUCED ? 0 : Math.sin(T / 8 + rx / 40) * 3);
     D.push({ y: ry, f: () => {
       const sprName = TRASH_SPR[rv.jenis] || 'trash_6';
       drawSpr(sprName, rx, ry, 58, false, 0.96, true);
@@ -1182,18 +1748,17 @@ function drawWorld() {
       g.beginPath(); g.ellipse(rx, ry + 2, 24, 7, 0, 0, Math.PI * 2); g.stroke();
     } });
   });
-  // Placed modular machines on yard slots
-  const slotsMap = Object.fromEntries(((meta && meta.yard_slots) || []).map(sl => [sl.id, sl]));
-  (s.machines_owned || []).forEach(m => {
-    if (!m.slot || !slotsMap[m.slot]) return;
-    const sl = slotsMap[m.slot];
-    D.push({ y: sl.y, f: () => drawTag('⚙️ ' + m.canonical_id, sl.x, sl.y - 12, false) });
-  });
+  // Placed equipment (free placement, drag & drop)
+  const alat = alatDiLahan();
+  alat.forEach(a => D.push({ y: a.y, f: () => drawAlat(a) }));
   if (s.job && s.job.status === 'in_transit') {
-    const p = Math.max(0, Math.min(1, 1 - (s.job.tiba_pada - srvNowR) / Math.max(1, 30)));
-    const cx = p < 0.5 ? (860 + p * 2 * 760) : (1620 - (p - 0.5) * 2 * 760);
-    const cy = ROAD_Y(cx) + (p < 0.5 ? -8 : 26);
-    D.push({ y: cy, f: () => drawSpr('veh_gerobak_1', cx, cy, 120, p >= 0.5, 1, true, ROAD_ANGLE) });
+    const etaJob = Math.max(1, s.job.berangkat_pada ? s.job.tiba_pada - s.job.berangkat_pada : 30);
+    const p = Math.max(0, Math.min(1, 1 - (s.job.tiba_pada - srvNowR) / etaJob));
+    const kiri = KE_KIRI[s.job.node], jauh = kiri ? 800 : 760;
+    const cx = kiri ? (p < 0.5 ? 820 - p * 2 * jauh : 20 + (p - 0.5) * 2 * jauh) : (p < 0.5 ? (860 + p * 2 * jauh) : (1620 - (p - 0.5) * 2 * jauh));
+    const pergi = p < 0.5, hadapKiri = kiri ? pergi : !pergi;
+    const cy = ROAD_Y(cx) + (hadapKiri ? 26 : -8);
+    D.push({ y: cy, f: () => { drawSpr('veh_gerobak_1', cx, cy, 120, hadapKiri, 1, true, ROAD_ANGLE); bubble(pergi ? '🛒→' : '♻️', cx, cy - 52); } });
   }
   if (cine) {
     const e = (performance.now() - cine.t0) / 1000;
@@ -1210,10 +1775,15 @@ function drawWorld() {
   }
   D.sort((a, b) => a.y - b.y).forEach(d => d.f());
 
+  // 3b. day-night lighting (real WIB time; solar panels only produce during daylight)
+  drawLangit(jamWib(), s);
+  alat.forEach(a => drawAlatTag(a));
+
   // 4. area labels (hidden during the arrival sequence)
   if (!cine) {
     const guide = nextGuidance(s);
     HOTSPOTS.forEach(h => drawTag(h.label, h.lx, h.ly, guide.tab === h.tab));
+    PAPAN.forEach(b => drawPapan(b, (b.id === 'permukiman' && guide.tab === 'angkut' && !s.job) || (b.id === 'pasar' && guide.tab === 'pasar')));
   }
 
   // 5. falling leaves (tree litter + ambient)
@@ -1234,7 +1804,124 @@ function drawWorld() {
   g.globalAlpha = 1;
 }
 
-function frame() {
+// ---- placed equipment: procedural isometric drawing per item type (assets/tn_mesin.js), draggable
+let seret = null;   // { a, x, y, ok } while an item is being dragged
+function infoAlat(cid) { return (meta && meta.info_mesin && meta.info_mesin[cid]) || { nama: nm(cid), category: '', r: 24, efek: [] }; }
+function alatDiLahan() {
+  return ((state && state.machines_owned) || []).filter(m => m.pos).map(m => {
+    const I = infoAlat(m.canonical_id);
+    const J = window.TN_MESIN ? TN_MESIN.jenis(I.nama, I.category) : { key: 'mesin', pal: {} };
+    const drag = seret && seret.a.uid === m.uid;
+    return { uid: m.uid, m, I, J, r: I.r || 24, x: drag ? seret.x : m.pos[0], y: drag ? seret.y : m.pos[1], drag };
+  });
+}
+function drawAlat(a) {
+  if (a.drag) {   // footprint preview: green = can be placed, red = blocked
+    g.fillStyle = seret.ok ? 'rgba(123,216,143,.45)' : 'rgba(229,57,53,.45)';
+    g.strokeStyle = seret.ok ? '#c8f7a0' : '#ffb4a8'; g.lineWidth = 2;
+    g.beginPath(); g.ellipse(a.x, a.y, a.r * 1.25, a.r * 0.62, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.globalAlpha = 0.85;
+  }
+  if (window.TN_MESIN) TN_MESIN.gambar(g, a.J, a.x, a.y - (a.drag ? 6 : 0), a.r, REDUCED ? 0 : T, a.I.nama);
+  g.globalAlpha = 1;
+}
+function drawAlatTag(a) {   // drawn after all sprites so litter never covers the name
+  if (cine) return;
+  const hover = alatHover === a.uid || a.drag;
+  if (!hover && !(sheetMode === 'lahan' || sheetMode === 'alat:' + a.uid)) return;
+  g.font = 'bold 13px system-ui'; g.textAlign = 'center';
+  const t = a.I.nama, tw = Math.min(180, g.measureText(t).width + 14), y = a.y + 8;
+  g.fillStyle = hover ? 'rgba(201,126,24,.95)' : 'rgba(12,32,23,.78)'; g.beginPath(); g.roundRect(a.x - tw / 2, y, tw, 20, 6); g.fill();
+  g.fillStyle = '#fff'; g.save(); g.beginPath(); g.rect(a.x - tw / 2 + 4, y, tw - 8, 20); g.clip();
+  g.fillText(t, a.x, y + 14); g.restore(); g.textAlign = 'left';
+}
+let alatHover = null;
+function alatDi(wx, wy) {   // topmost item under a world point
+  return alatDiLahan().sort((p, q) => q.y - p.y).find(a => Math.abs(wx - a.x) <= a.r * 1.1 && wy <= a.y + a.r * 0.5 && wy >= a.y - a.r * 2.4);
+}
+// client-side mirror of the server rule (engine/gameplay.py cek_posisi) for the live green/red preview
+function posisiSah(a, x, y) {
+  const TL = meta && meta.tata_lahan; if (!TL) return true;
+  const atap = TL.atap, atapOk = !!a.I.surya;
+  const boleh = (px, py) => {
+    if (atapOk && px >= atap[0] && px <= atap[2] && py >= atap[1] && py <= atap[3]) return true;
+    if (!inPoly(px, py, TL.lahan)) return false;
+    if (TL.larangan.some(r => px > r[0] && px < r[2] && py > r[1] && py < r[3])) return false;
+    return !TL.pohon.some(([tx, ty, tr]) => (px - tx) ** 2 + (py - ty) ** 2 < tr * tr);
+  };
+  const r = a.r;
+  const sampel = [[0, 0], [-r, 0], [r, 0], [0, -r / 2], [0, r / 2]];
+  if (!sampel.every(([dx, dy]) => boleh(x + dx, y + dy))) return false;
+  const diAtap = atapOk && x >= atap[0] && x <= atap[2] && y >= atap[1] && y <= atap[3];
+  if (!diAtap && new Set(sampel.map(([dx, dy]) => inPoly(x + dx, y + dy, TL.pagar))).size > 1) return false;
+  return alatDiLahan().every(b => b.uid === a.uid || (x - b.m.pos[0]) ** 2 + (2 * (y - b.m.pos[1])) ** 2 >= (r + b.r) ** 2);
+}
+
+// ---- real-time day/night (WIB). Server clock is the reference; sunrise 06:00, sunset 18:00.
+function srvNow() { return (meta ? meta.server_time : Date.now() / 1000) + (Date.now() - received) / 1000; }
+// ?jam=21 previews the lighting at another hour (visual only; the server still uses real time)
+const JAM_PRATINJAU = (() => { const v = parseFloat(new URLSearchParams(location.search).get('jam')); return v >= 0 && v < 24 ? v : null; })();
+function jamWib() { if (JAM_PRATINJAU !== null) return JAM_PRATINJAU; const off = (meta && meta.waktu_info && meta.waktu_info.zona_offset_jam) || 7; return (((srvNow() + off * 3600) % 86400) + 86400) % 86400 / 3600; }
+const clamp01 = v => Math.max(0, Math.min(1, v));
+function gelapPada(h) {   // 0 = full daylight, 1 = deep night
+  if (h >= 6.5 && h <= 17.3) return 0;
+  if (h > 17.3 && h < 19.3) return clamp01((h - 17.3) / 2);
+  if (h > 4.7 && h < 6.5) return clamp01((6.5 - h) / 1.8);
+  return 1;
+}
+const LAMPU = [   // [x, y, radius, ground-pool y or 0]
+  [395, 312, 120, 585], [1420, 478, 120, 690],        // street lamps
+  [612, 322, 70, 0],                                  // shed lamp (sorting area)
+  [812, 222, 40, 0], [858, 214, 40, 0], [905, 300, 34, 0],   // office windows
+];
+function drawLangit(h, s, BW = WORLD_W, BH = WORLD_VIEW_H, lampu = LAMPU, pemain = av) {
+  const d = gelapPada(h);
+  const hangat = clamp01(1 - Math.abs(h - 6.2) / 1.1) + clamp01(1 - Math.abs(h - 17.8) / 1.3);
+  if (d <= 0.001 && hangat <= 0.001) return;
+  g.save();
+  if (hangat > 0) {   // golden-hour wash
+    g.globalCompositeOperation = 'soft-light';
+    g.fillStyle = `rgba(255,140,60,${0.45 * Math.min(1, hangat)})`; g.fillRect(0, 0, BW, BH);
+  }
+  if (d > 0) {        // moonlit blue multiply
+    g.globalCompositeOperation = 'multiply';
+    const r = Math.round(255 - 185 * d), gg = Math.round(255 - 170 * d), b = Math.round(255 - 95 * d);
+    g.fillStyle = `rgb(${r},${gg},${b})`; g.fillRect(0, 0, BW, BH);
+    // warm lights switch on as it gets dark
+    g.globalCompositeOperation = 'lighter';
+    const a = clamp01((d - 0.25) / 0.5);
+    const glow = (x, y, rad, k) => {
+      const gr = g.createRadialGradient(x, y, 0, x, y, rad);
+      gr.addColorStop(0, `rgba(255,214,140,${0.55 * k})`); gr.addColorStop(1, 'rgba(255,214,140,0)');
+      g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill();
+    };
+    if (a > 0) {
+      lampu.forEach(([x, y, rad, gy]) => {
+        glow(x, y, rad * 0.45, a);
+        if (gy) { g.save(); g.translate(x, gy); g.scale(1, 0.38); glow(0, 0, rad * 1.3, a * 0.8); g.restore(); }
+        else glow(x, y, rad, a * 0.6);
+      });
+      if (s && s.diterima && !cine) { g.save(); g.translate(pemain.x, pemain.y - 4); g.scale(1, 0.5); glow(0, 0, 90, a * 0.5); g.restore(); }
+    }
+  }
+  g.restore();
+}
+function updateJam() {
+  if (!el('tJam') || !meta) return;
+  const h = jamWib(), hh = Math.floor(h), mm = Math.floor((h - hh) * 60);
+  const d = gelapPada(h), ik = d >= 0.6 ? '🌙' : (h < 9 && d > 0) || (h >= 16.5) ? '🌅' : '☀️';
+  el('tJam').textContent = `${String(hh).padStart(2, '0')}.${String(mm).padStart(2, '0')}`;
+  el('tJamIk').textContent = ik;
+  el('tJamFase').textContent = d >= 0.6 ? 'Malam' : ik === '🌅' ? (h < 12 ? 'Fajar' : 'Senja') : 'Siang';
+  const wi = meta.waktu_info || {};
+  el('tWaktu').title = `Waktu lokal WIB · ${d >= 0.6 ? 'malam: panel surya tidak menghasilkan listrik' : 'siang: panel surya mengisi baterai'}` +
+    (wi.surya_terpasang_w ? ` · daya DRES kini ±${(wi.daya_kini_w || 0).toLocaleString('id-ID')} W` : '');
+}
+
+let DT = 1, lastFrameMs = 0;   // DT = elapsed time in 60 fps frames (movement stays equal on 60/120/144 Hz screens)
+function frame(now) {
+  DT = lastFrameMs ? Math.min(3, (now - lastFrameMs) / 16.667) : 1;
+  lastFrameMs = now;
   if (!document.hidden) {
     T++;
     const W = innerWidth, H = innerHeight, dpr = Math.min(W < 760 ? 1 : 1.5, devicePixelRatio || 1);
@@ -1244,6 +1931,22 @@ function frame() {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.imageSmoothingEnabled = false;
     const y0 = el('top').offsetHeight, y1 = H - el('nav').offsetHeight, hh = Math.max(200, y1 - y0);
+    if (scene === 'pasar') {
+      // whole market visible when the screen allows it (desktop); on narrow phones cover + follow the avatar
+      const scFit = Math.min(hh / PH, W / PW), sc = scFit >= 0.55 ? scFit : Math.max(hh / PH, W / PW);
+      if (!camFree) { pcamX += (pav.x - pcamX) * .06; pcamY += (pav.y - 120 - pcamY) * .06; }
+      let tx = (W - PW * sc) / 2, ty = (hh - PH * sc) / 2;
+      if (PW * sc > W) tx = Math.min(0, Math.max(W - PW * sc, W / 2 - pcamX * sc));
+      if (PH * sc > hh) ty = Math.min(0, Math.max(hh - PH * sc, hh / 2 - pcamY * sc));
+      VW = { tx, y0: y0 + ty, sc };
+      px(0, 0, W, H, '#12362a');
+      g.save(); g.beginPath(); g.rect(0, y0, W, hh); g.clip();
+      g.translate(tx, y0 + ty); g.scale(sc, sc);
+      drawPasar();
+      g.restore();
+      requestAnimationFrame(frame);
+      return;
+    }
     // cover the play area with the illustration; pan with the avatar where it overflows
     const sc = Math.max(hh / WORLD_H, W / WORLD_W);
     const fx = cine ? YARD_C[0] : camFree ? camX : av.x, fy = cine ? YARD_C[1] - 40 : camFree ? camY : av.y;
@@ -1252,7 +1955,7 @@ function frame() {
     let tx = (W - WORLD_W * sc) / 2;
     if (WORLD_W * sc > W) tx = Math.min(0, Math.max(W - WORLD_W * sc, W / 2 - camX * sc));
     let ty = (hh - WORLD_H * sc) / 2;
-    if (WORLD_H * sc > hh) ty = Math.min(0, Math.max(hh - WORLD_H * sc, hh / 2 - camY * sc));
+    if (WORLD_H * sc > hh || camY > WORLD_H - hh / 2 / sc) ty = Math.min(0, Math.max(hh - WORLD_VIEW_H * sc, hh / 2 - camY * sc));
     VW = { tx, y0: y0 + ty, sc };
 
     px(0, 0, W, H, '#12362a');
@@ -1260,9 +1963,34 @@ function frame() {
     g.translate(tx, y0 + ty); g.scale(sc, sc);
     drawWorld();
     g.restore();
+    cekSungaiTerlihat();
   }
   requestAnimationFrame(frame);
 }
+
+// floating river litter hidden under the Gaia bar / menu (or off-screen): offer a button that pans the camera to it
+let sungaiTarget = null;
+function cekSungaiTerlihat() {
+  const list = (state && state.sampah_sungai) || [];
+  let target = null;
+  if (list.length && !cine && T % 10 === 0) {
+    const batas = Math.min(el('gaiaBar').getBoundingClientRect().top, el('sheet').hidden ? 1e9 : el('sheet').getBoundingClientRect().top) - 10;
+    const now = srvNow();
+    for (const rv of list) {
+      const prog = Math.max(0, Math.min(1, (now - rv.start_at) / Math.max(1, rv.end_at - rv.start_at)));
+      const rx = 60 + prog * (WORLD_W - 120), ry = tengahSungai(rx) + 14;
+      const sx = VW.tx + rx * VW.sc, sy = VW.y0 + ry * VW.sc;
+      if (sy > batas || sy < el('top').offsetHeight || sx < 0 || sx > innerWidth) { target = [rx, ry]; break; }
+    }
+    sungaiTarget = target;
+    el('sungaiAlert').hidden = !target;
+  } else if (!list.length) el('sungaiAlert').hidden = true;
+}
+el('sungaiAlert').onclick = () => {
+  if (!sungaiTarget) return;
+  camFree = true; camX = sungaiTarget[0]; camY = sungaiTarget[1];
+  el('status').textContent = '🌊 Ketuk sampah yang terapung. Karaktermu mengambilnya dari tepi sungai dengan aman.';
+};
 
 function syncBars() {
   document.documentElement.style.setProperty('--top', el('top').offsetHeight + 'px');
@@ -1272,6 +2000,7 @@ addEventListener('resize', syncBars);
 let pollTick = 0;
 setInterval(() => {
   syncBars();
+  updateJam();
   if (state && !document.hidden) {
     // Auto-refresh saat kargo tiba atau kebun matang
     const nowS = (meta ? meta.server_time : 0) + (Date.now() - received) / 1000;

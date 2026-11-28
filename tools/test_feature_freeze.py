@@ -12,12 +12,14 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import urllib.parse
 import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 import server  # noqa: E402
+from engine import gameplay as G  # noqa: E402
 from engine.catalog import load_seed, resolve_machine_id  # noqa: E402
 from engine.gameplay import TITIK_DALAM, TITIK_LUAR, TITIK_POHON, road_y, settle_waktu  # noqa: E402
 
@@ -36,6 +38,9 @@ def main():
     orig_db = server.DB_PATH
     server.DB_PATH = test_db
     server.siapkan_db()
+    orig_admins = set(server.ADMIN_USERS)
+    server.ADMIN_USERS = {"ff_tester"}
+    G.TEST_MODE = True  # izinkan _test_eta hanya di suite ini
 
     httpd = server.ThreadingHTTPServer(("127.0.0.1", 0), server.Layanan)
     port = httpd.server_address[1]
@@ -75,11 +80,15 @@ def main():
         st2, raw2, _, _ = req("POST", "/aksi", {"key": k1, "aksi": "terima", "nama": "FF Tester", "gender": "wanita", "kota": "Bandung"})
         check("FF01", "Idempotent replay grant once", st2 == 200 and json.loads(raw2)["state"]["koin"] == 1_000_000)
 
-        # Verify v0.9 account migration preserves old balance
-        old_v09 = {"versi": 2, "diterima": True, "koin": 1350, "benih": 3, "stat": {"pungut": 4}}
+        # Keputusan pemilik (B6): akun v0.9 direset ke Realistic_v1, identitas dipertahankan
+        old_v09 = {"versi": 2, "diterima": True, "koin": 1350, "benih": 3, "nama": "Lama", "kota": "Medan", "stat": {"pungut": 4}}
         mig = server.migrasi_state(old_v09)
-        check("FF01", "Existing v0.9 account balance preserved without forced overwrite",
-              mig["koin"] == 1350 and mig["economy_mode"] == "historical_v09_preserved")
+        check("FF01", "v0.9 account reset to Realistic_v1 (1.000.000 GC) keeping name & city",
+              mig["koin"] == 1_000_000 and mig["economy_mode"] == "realistic_v1" and mig["nama"] == "Lama"
+              and mig["kota"] == "Medan" and mig["stat"]["pungut"] == 0 and len(mig["sampah_liar"]) == 21)
+        mig2 = server.migrasi_state({**json.loads(json.dumps(s)), "economy_mode": "historical_v09_preserved", "koin": 1000})
+        check("FF01", "Already-migrated historical_v09_preserved account is also reset",
+              mig2["koin"] == 1_000_000 and mig2["economy_mode"] == "realistic_v1")
 
         # FF02: Catalog 282 materials, 307 machines (288 canonical + 19 aliases)
         seed = load_seed()
@@ -90,6 +99,10 @@ def main():
         st, raw, _, _ = req("GET", "/catalog?kind=machine&page=1&per_page=24")
         cd = json.loads(raw)
         check("FF02", "Paginated /catalog returns 24 items/page", st == 200 and len(cd["items"]) == 24 and cd["total"] == 307)
+        check("FF16", "K1 Catalog lists categories for the filter", len(cd.get("categories", [])) >= 10)
+        st, raw, _, _ = req("GET", "/catalog?kind=machine&cat=" + urllib.parse.quote("Surya") + "&page=1&per_page=24")
+        cdf = json.loads(raw)
+        check("FF16", "K1 Category filter returns only that category", st == 200 and cdf["total"] == 16 and all(i["category"] == "Surya" for i in cdf["items"]))
         # Verify locked machine rejected on buy
         st, _, _, _ = req("POST", "/aksi", {"key": str(uuid.uuid4()), "aksi": "beli_mesin", "machine_id": "WTE-001"})
         check("FF02", "Educational risk machine WTE-001 rejected for purchase", st == 400)
@@ -190,10 +203,35 @@ def main():
         # FF13 & FF17: Buy/place/sell used machine (no overlap, anti-arbitrage)
         st, raw, _, _ = req("POST", "/aksi", {"key": str(uuid.uuid4()), "aksi": "beli_mesin", "machine_id": "DRE-001"})
         uid_solar = json.loads(raw)["state"]["machines_owned"][-1]["uid"]
-        st_ov, _, _, _ = req("POST", "/aksi", {"key": str(uuid.uuid4()), "aksi": "pasang_mesin", "uid": uid_solar, "slot": "S1"})
-        check("FF13", "Modular placement blocks overlap on occupied slot S1", st_ov == 400)
-        st_ok, _, _, _ = req("POST", "/aksi", {"key": str(uuid.uuid4()), "aksi": "pasang_mesin", "uid": uid_solar, "slot": "S5"})
-        check("FF13", "Modular placement succeeds on free slot S5", st_ok == 200)
+        d_buy = json.loads(raw)
+        solar = d_buy["state"]["machines_owned"][-1]
+        check("FF13", "E3 Purchased item is auto-placed on the land (visible immediately)", bool(solar.get("pos")))
+        kompos = next(m for m in d_buy["state"]["machines_owned"] if m["uid"] == "starter-kompos")
+        check("FF13", "E3 Starter komposter has a valid on-land position", bool(kompos.get("pos")))
+        kx, ky = kompos["pos"]
+        st_ov, _, _, _ = req("POST", "/aksi", {"key": str(uuid.uuid4()), "aksi": "pindah_mesin", "uid": uid_solar, "x": kx + 5, "y": ky})
+        check("FF13", "E3 Drag onto another item is rejected (no overlap)", st_ov == 400)
+        st_rd, _, _, _ = req("POST", "/aksi", {"key": str(uuid.uuid4()), "aksi": "pindah_mesin", "uid": uid_solar, "x": 900, "y": 700})
+        check("FF13", "E3 Drag onto the road is rejected", st_rd == 400)
+        st_bd, _, _, _ = req("POST", "/aksi", {"key": str(uuid.uuid4()), "aksi": "pindah_mesin", "uid": uid_solar, "x": 600, "y": 300})
+        check("FF13", "E3 Drag onto the sorting shed is rejected", st_bd == 400)
+        st_ok, raw_ok, _, _ = req("POST", "/aksi", {"key": str(uuid.uuid4()), "aksi": "pindah_mesin", "uid": uid_solar, "x": 900, "y": 140})
+        check("FF13", "E3 Solar panel may be dragged onto the office roof", st_ok == 200 and next(m for m in json.loads(raw_ok)["state"]["machines_owned"] if m["uid"] == uid_solar)["pos"] == [900, 140])
+        st_ok2, _, _, _ = req("POST", "/aksi", {"key": str(uuid.uuid4()), "aksi": "pindah_mesin", "uid": "starter-kompos", "x": 1250, "y": 560})
+        check("FF13", "E3 Komposter may be dragged to free grass inside the land", st_ok2 == 200)
+        st_rf, _, _, _ = req("POST", "/aksi", {"key": str(uuid.uuid4()), "aksi": "pindah_mesin", "uid": "starter-kompos", "x": 900, "y": 140})
+        check("FF13", "E3 Non-solar item cannot be placed on the roof", st_rf == 400)
+        st_fc, _, _, _ = req("POST", "/aksi", {"key": str(uuid.uuid4()), "aksi": "pindah_mesin", "uid": "starter-kompos", "x": 1150, "y": 556})
+        check("FF13", "E3 Item cannot straddle the yard fence", st_fc == 400)
+        gts_meta = json.loads(raw_ok)["meta"]["gt_missions"]
+        check("FF10", "K1 Mission cards carry measurable progress, lock reason and suggestion",
+              all("nilai" in m for m in gts_meta) and gts_meta[2].get("kunci") is not None and "saran" not in gts_meta[3])
+        st_ms, raw_ms, _, _ = req("GET", "/meta-statis")
+        ms = json.loads(raw_ms)
+        check("FF24", "K1 Static meta (mission texts/targets, land geometry) served once via /meta-statis",
+              st_ms == 200 and len(ms["misi_def"]["GT03"]["labels"]) == 3 and bool(ms["misi_def"]["GT04"]["saran"]) and "pagar" in ms["tata_lahan"])
+        check("FF03", "K1 Server messages use Indonesian thousands separator", "450.000" in json.loads(raw)["pesan"] and "450,000" not in json.loads(raw)["pesan"])
+        check("FF13", "E3 Card data lists in-game effect of owned items", "efek" in json.loads(raw_ok)["meta"]["info_mesin"]["DRE-001"])
         st_sell, raw_sell, _, _ = req("POST", "/aksi", {"key": str(uuid.uuid4()), "aksi": "jual_mesin_bekas", "uid": uid_solar})
         check("FF17", "Used machine buyback < buy price (no arbitrage)",
               st_sell == 200 and json.loads(raw_sell)["state"]["koin"] < 1_000_000)
@@ -221,6 +259,196 @@ def main():
         st, _, _, _ = req("GET", "/assets/../../server.py")
         check("FF24", "Security: path traversal blocked (404)", st == 404)
 
+        # FF25: regresi bug yang ditemukan uji mandiri (B1–B10)
+        opener2 = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+
+        def req2(method, path, body=None):
+            data = json.dumps(body).encode() if body is not None else None
+            r = urllib.request.Request(base + path, data=data, headers={"Content-Type": "application/json"} if data else {}, method=method)
+            try:
+                with opener2.open(r, timeout=5) as resp:
+                    return resp.status, json.loads(resp.read() or b"{}")
+            except urllib.error.HTTPError as e:
+                return e.code, json.loads(e.read() or b"{}")
+
+        def aksi2(**p):
+            return req2("POST", "/aksi", dict(key=str(uuid.uuid4()), **p))
+
+        req2("POST", "/daftar", {"username": "ff_biasa", "email": "biasa@teranova.local", "password": "Password123!"})
+        st, d = aksi2(aksi="terima", nama="Biasa", gender="pria", kota="Bandung", avatar="bukan-objek")
+        check("FF25", "B9 Malformed avatar payload returns 400 JSON (no dropped connection)", st == 400 and "pesan" in d)
+        aksi2(aksi="terima", nama="Biasa", gender="pria", kota="Bandung")
+        st, d = req2("POST", "/market/quote", {"kind": "machine", "id": ["x"], "side": "buy"})
+        check("FF25", "B9 Quote with list id returns 4xx JSON", st == 400)
+        st, d = req2("POST", "/admin/config", {"updates": {"price_multiplier": 0.5}, "reason": "serang"})
+        check("FF25", "B1 Non-admin player cannot publish global config (403)", st == 403)
+        st, d = req2("GET", "/admin/config")
+        check("FF25", "B1 Non-admin GET hides audit log & reports is_admin=false", st == 200 and d["is_admin"] is False and d["audit"] == [])
+
+        G.TEST_MODE = False
+        st, d = aksi2(aksi="angkut_node", node="pasar", gram=10000, _test_eta=-5)
+        st2, _ = aksi2(aksi="terima_kargo")
+        check("FF25", "B4 _test_eta from client ignored outside test mode", st == 200 and st2 == 400
+              and d["state"]["job"]["tiba_pada"] - d["state"]["job"]["berangkat_pada"] == G.NODE_TEMPLATE["pasar"]["eta_detik"])
+        G.TEST_MODE = True
+
+        st, d = aksi2(aksi="audit_neraca")
+        check("FF25", "B5 Audit neraca rejected without new processed batch", st == 400)
+        ok_spam = all(aksi2(aksi="audit_neraca")[0] == 400 for _ in range(5))
+        st, _ = aksi2(aksi="klaim_pr", id="PR10")
+        check("FF25", "B5 Audit spam cannot unlock PR10", ok_spam and st == 400)
+
+        aksi2(aksi="sandbox_topup", sku="TOPUP_CIVILIZATION")
+        st, d = aksi2(aksi="beli_mesin", machine_id="DRE-077")
+        cap_beli = d["state"]["energy"]["battery_cap_wh"]
+        uid = d["state"]["machines_owned"][-1]["uid"]
+        st, d = aksi2(aksi="jual_mesin_bekas", uid=uid)
+        check("FF25", "B3 Selling LFP battery removes its capacity", st == 200 and cap_beli == 6000 and d["state"]["energy"]["battery_cap_wh"] == 1000)
+
+        req("POST", "/admin/config", {"updates": {"price_multiplier": 0.5}, "reason": "uji arbitrase"})
+        k0 = req2("GET", "/state")[1]["state"]["koin"]
+        for _ in range(3):
+            st, d = aksi2(aksi="beli_mesin", machine_id="DRE-077")
+            uid = d["state"]["machines_owned"][-1]["uid"]
+            st, d = aksi2(aksi="jual_mesin_bekas", uid=uid)
+        req("POST", "/admin/config", {"updates": {"price_multiplier": 2.0}, "reason": "uji arbitrase naik"})
+        st, d = aksi2(aksi="beli_mesin", machine_id="DRE-076")
+        uid = d["state"]["machines_owned"][-1]["uid"]
+        paid = d["state"]["machines_owned"][-1]["paid_gc"]
+        k_mid = d["state"]["koin"]
+        req("POST", "/admin/config", {"rollback_to": 1, "reason": "kembalikan"})
+        st, d = aksi2(aksi="jual_mesin_bekas", uid=uid)
+        check("FF25", "B2 Buy/sell-used loop never profits (×0,5 and ×2,0 swings)",
+              d["state"]["koin"] < k0 and d["state"]["koin"] - k_mid <= int(round(paid * 0.57)),
+              f"saldo {k0:,} → {d['state']['koin']:,}")
+
+        # B7: PR09 bisa dicapai — gerobak ditolak, 3 alat di slot bebas, lepas tersedia
+        st, _ = aksi2(aksi="pasang_mesin", uid="starter-gerobak", slot="S2")
+        check("FF25", "B7 Mobile cart (gerobak) cannot be placed in a yard slot", st == 400)
+        aksi2(aksi="pasang_mesin", uid="starter-meja", slot="S2")
+        st, d = aksi2(aksi="beli_mesin", machine_id="DRE-001")
+        uid = d["state"]["machines_owned"][-1]["uid"]
+        aksi2(aksi="pasang_mesin", uid=uid, slot="S6")
+        st, d = aksi2(aksi="klaim_pr", id="PR09")
+        check("FF25", "B7 PR09 claimable with komposter S1 + meja S2 + solar S6", st == 200)
+        st, d = aksi2(aksi="lepas_mesin", uid=uid)
+        check("FF25", "B7 lepas_mesin stores the item in the warehouse", st == 200 and not next(m for m in d["state"]["machines_owned"] if m["uid"] == uid).get("pos"))
+
+        # E4 #4: karakter dipilih sekali sebelum prolog (warna jaket & rambut), gender tidak bisa diganti di profil
+        ka = G.state_awal(); tk0 = time.time()
+        G.aksi(ka, {"aksi": "terima", "nama": "Uji", "gender": "wanita", "kota": "Bandung", "avatar": {"baju": "biru", "rambut": "pirang"}}, tk0)
+        try:
+            G.aksi(ka, {"aksi": "ganti_karakter", "gender": "pria"}, tk0); ganti = True
+        except ValueError:
+            ganti = False
+        check("FF01", "E4 Character setup stores gender + jacket/hair colour; gender cannot be changed later",
+              ka["avatar"] == {"baju": "biru", "rambut": "pirang"} and ka["gender"] == "wanita" and not ganti)
+        try:
+            G.aksi(G.state_awal(), {"aksi": "terima", "nama": "X", "gender": "pria", "kota": "Bandung", "avatar": {"baju": "emas"}}, tk0); salah = True
+        except ValueError:
+            salah = False
+        check("FF01", "E4 Unknown appearance option rejected", not salah)
+
+        # E4: efek produksi nyata alat dasar (hanya alat terpasang yang bekerja; massa tetap)
+        e4 = G.state_awal(); G.tata_ulang_mesin(e4); e4["diterima"] = True; tk = time.time()
+        def massa(x):
+            return G.gudang_terpakai_g(x) + x["uap_terkendali_g"] + x["terjual_g"] + x["b3_serah_g"]
+        e4["campuran_g"] = 30_000; e4["campuran_fraksi"] = {"organik": 15_000, "plastik": 6_000, "kertas": 3_000, "logam_kaca": 2_000, "residu": 3_700, "B3": 300}
+        m0 = massa(e4); G.aksi(e4, {"aksi": "pilah"}, tk)
+        check("FF08", "E4 Starter sorting table sorts 10 kg per action (5 kg base + 5 kg table)", e4["stat"]["pilah_g"] == 10_000 and massa(e4) == m0)
+        meja = next(m for m in e4["machines_owned"] if m["canonical_id"] == "MCH-005"); simpan = meja.pop("pos")
+        G.aksi(e4, {"aksi": "pilah"}, tk)
+        check("FF08", "E4 Without an installed table sorting drops to 5 kg", e4["stat"]["pilah_g"] == 15_000)
+        meja["pos"] = simpan
+        e4["machines_owned"].append({"uid": "t-tong", "canonical_id": "MCH-001", "condition": 100, "pos": [1, 1]})
+        r0 = e4["residu_g"]; m0 = massa(e4); G.aksi(e4, {"aksi": "pilah"}, tk)
+        check("FF08", "E4 Sorted bins move part of residue into recyclables, mass conserved", e4["residu_g"] - r0 < 3_700 * 10 // 30 and massa(e4) == m0)
+        e4["organik_g"] = 20_000
+        e4["machines_owned"].append({"uid": "t-ember", "canonical_id": "MCH-022", "condition": 100, "pos": [2, 2]})
+        k0 = e4["kompos_g"]; m0 = massa(e4); G.aksi(e4, {"aksi": "olah_kompos"}, tk)
+        check("FF08", "E4 Composter capacities add up (starter 2 kg + bucket 4 kg = 6 kg -> 3 kg compost)", e4["kompos_g"] - k0 == 3_000 and massa(e4) == m0)
+        for m in e4["machines_owned"]:
+            if m["canonical_id"] in G.KOMPOS_BATCH_G:
+                m.pop("pos", None)
+        try:
+            G.aksi(e4, {"aksi": "olah_kompos"}, tk); ok_k = False
+        except ValueError as ex:
+            ok_k = "komposter" in str(ex).lower()
+        check("FF08", "E4 Compost needs an installed composter (actionable message)", ok_k)
+        kap0 = G.kap_gudang(e4)
+        e4["machines_owned"].append({"uid": "t-rak", "canonical_id": "MCH-006", "condition": 100, "pos": [3, 3]})
+        check("FF08", "E4 Warehouse rack adds 100 kg capacity while installed", G.kap_gudang(e4) == kap0 + 100_000)
+        e4["kompos_g"] = 5_000; h0 = e4["koin"]; G.aksi(e4, {"aksi": "jual_kompos"}, tk); tanpa = e4["koin"] - h0
+        e4["machines_owned"].append({"uid": "t-timb", "canonical_id": "MCH-003", "condition": 100, "pos": [4, 4]})
+        h0 = e4["koin"]; G.aksi(e4, {"aksi": "jual_kompos"}, tk); dengan = e4["koin"] - h0
+        check("FF03", "E4 Hanging scale adds 5% to processed product sales", dengan == tanpa + tanpa * 5 // 100, f"{tanpa} -> {dengan}")
+        e4["plastik_g"] = 5_000
+        e4["machines_owned"].append({"uid": "t-cacah", "canonical_id": "MCH-044", "condition": 100, "pos": [5, 5]})
+        p0 = e4["pelet_g"]; m0 = massa(e4); G.aksi(e4, {"aksi": "daur"}, tk)
+        check("FF08", "E4 Plastic shredder: 3 kg per action, 900 g per kg, mass conserved", e4["pelet_g"] - p0 == 2_700 and massa(e4) == m0)
+
+        # B10: hari bersih hanya dari pengolahan nyata
+        sim = G.state_awal(); sim["diterima"] = True
+        t0 = time.time()
+        for hari in range(10):
+            sim["stat"]["batch_sejak_audit"] = 0
+            try:
+                G.aksi(sim, {"aksi": "audit_neraca"}, t0 + hari * 86400)
+            except ValueError:
+                pass
+        check("FF25", "B10 Clean days are not earned by audit clicks alone", len(sim["stat"]["hari_bersih"]) == 0)
+
+        # Biaya genset mitra masuk laba operasi; PR07 butuh laba positif
+        sim = G.state_awal(); sim["diterima"] = True; sim["energy"]["biogas_m3_x100"] = 50
+        G.aksi(sim, {"aksi": "jalankan_energi", "sumber": "biogas"}, time.time())
+        check("FF25", "Biogas genset partner fee reduces operating profit", sim["wallet"]["operating_profit_gc"] == -2000)
+        sim["kompos_g"] = 2000
+        sim["wallet"]["operating_profit_gc"] = -10_000  # mis. biaya angkut besar
+        G.aksi(sim, {"aksi": "jual_kompos"}, time.time())
+        rugi_tidak_dihitung = sim["stat"]["lot_jual_laba"] == 0
+        sim["wallet"]["operating_profit_gc"] = 0
+        G.aksi(sim, {"aksi": "jual_kompos"}, time.time())
+        check("FF25", "PR07 sale counted only when cumulative operating profit is positive",
+              rugi_tidak_dihitung and sim["stat"]["lot_jual_laba"] == 1)
+
+        st, raw, _, _ = req("GET", "/leaderboard?board=wealthiest")
+        check("FF25", "B9 Leaderboard GET is read-only (200)", st == 200)
+
+        # ---- FF26: N1 surya waktu nyata + siang/malam, N2 lencana menetap, N5 pesan GT01
+        tengah_malam = 1_798_761_600 - 7 * 3600  # 00.00 WIB
+        def sim_surya(cid="DRE-001"):
+            x = G.state_awal(); x["diterima"] = True
+            x["machines_owned"].append({"uid": "uji", "canonical_id": cid, "slot": None})
+            x["energy"]["battery_cap_wh"] = 100_000
+            return x
+        x = sim_surya(); t = tengah_malam + 6 * 3600; x["waktu"] = t
+        while t < tengah_malam + 18 * 3600:
+            t += 12; G.settle_waktu(x, t); x["waktu"] = t
+        ideal = G.watt_dres(x, G.active_dynamic_event(t))[0] * G.jam_surya_efektif(tengah_malam, tengah_malam + 86400)
+        check("FF26", "N1 Small solar charges under 12 s polling (fraction carried)",
+              x["energy"]["battery_wh"] > 0 and abs(x["energy"]["battery_wh"] - ideal) <= 1,
+              f"{x['energy']['battery_wh']} Wh vs {ideal:.1f}")
+        x = sim_surya("DRE-003"); x["waktu"] = tengah_malam + 19 * 3600
+        G.settle_waktu(x, tengah_malam + 23 * 3600)
+        check("FF26", "N1 Solar produces nothing at night (19.00-23.00 WIB)", x["energy"]["battery_wh"] == 0)
+        psh = G.jam_surya_efektif(tengah_malam, tengah_malam + 86400)
+        check("FF26", "N1 Daily solar ~5 peak-sun-hours (real time, not accelerated)", 4.5 <= psh <= 5.5, f"{psh:.2f} h")
+        wi = G.info_waktu(x, tengah_malam + 21 * 3600)
+        check("FF26", "N1 waktu_info reports night phase", wi["fase"] == "malam" and wi["faktor_surya"] == 0)
+
+        x = G.state_awal(); x["diterima"] = True
+        x["wallet"]["operating_profit_gc"] = 2500; G.update_wealth_and_milestones(x, time.time())
+        x["wallet"]["operating_profit_gc"] = 900   # biaya angkut menggerus laba
+        saud = next(p for p in G.daftar_pencapaian(x) if p["id"] == "saudagar")
+        check("FF26", "N2 Saudagar Hijau badge stays unlocked after later costs", saud["ok"])
+
+        x = G.state_awal(); x["diterima"] = True; x["intro_selesai"] = True
+        try:
+            pesan = G.aksi(x, {"aksi": "klaim_gt", "id": "GT01"}, time.time())
+        except ValueError as e:
+            pesan = str(e)
+        check("FF26", "N5 GT01 message has no '+0 GC'", "+0 GC" not in pesan, pesan)
+
         # Performance: API p95 latency (60 requests) + snapshot & shell JS bytes
         for _ in range(60):
             st_p, raw_p, _, ms = req("GET", "/state")
@@ -228,10 +456,10 @@ def main():
             snapshot_bytes = len(raw_p)
         perf_latencies.sort()
         p95 = perf_latencies[int(len(perf_latencies) * 0.95)]
-        shell_raw = (ROOT / "web" / "index.html").read_bytes() + (ROOT / "web" / "assets" / "ff_modules.js").read_bytes()
+        shell_raw = (ROOT / "web" / "index.html").read_bytes() + (ROOT / "web" / "assets" / "ff_modules.js").read_bytes() + (ROOT / "web" / "assets" / "tn_mesin.js").read_bytes()
         shell_gz = len(gzip.compress(shell_raw))
-        check("FF24", f"Perf: API p95={p95:.1f}ms (<=500ms), shell_gz={shell_gz/1024:.1f}KB (<=250KB), snapshot={snapshot_bytes/1024:.1f}KB",
-              p95 <= 500 and shell_gz <= 250 * 1024)
+        check("FF24", f"Perf: API p95={p95:.1f}ms (<=500ms), shell_gz={shell_gz/1024:.1f}KB (<=250KB), snapshot={snapshot_bytes/1024:.1f}KB (<=20KB)",
+              p95 <= 500 and shell_gz <= 250 * 1024 and snapshot_bytes <= 20 * 1024)
 
         # JS syntax checks
         for f in ["web/landing.html", "web/index.html"]:
@@ -249,6 +477,8 @@ def main():
         httpd.shutdown()
         httpd.server_close()
         server.DB_PATH = orig_db
+        server.ADMIN_USERS = orig_admins
+        G.TEST_MODE = False
         shutil.rmtree(tmpdir, ignore_errors=True)
 
     passed = sum(1 for r in RESULTS if r["status"] == "PASS")

@@ -235,6 +235,7 @@ manifest = dict(
     title="TERRA NOVA - Opening Cinematic", chapter="Chapter I - The Calling of Gaia", version="1.3-web.1",
     duration=120.0, width=1920, height=1080, renderer="canvas2d-realtime",
     audio="audio/opening.m4a", accept_audio="audio/accept.m4a",
+    audio_opus="audio/opening.ogg", accept_audio_opus="audio/accept.ogg",
     captions={"id": "subtitle-id.vtt", "en": "subtitle-en.vtt"}, transcript="transcript-id.md",
     ending_still="img/ending-gaia.webp", poster="img/A01.webp",
     scenes=timeline,

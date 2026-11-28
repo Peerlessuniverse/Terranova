@@ -4,64 +4,126 @@
   const fmtGC = n => Number(n || 0).toLocaleString('id-ID') + ' GC';
   const fmtKg = g => (Number(g || 0) / 1000).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' kg';
 
-  // ---- Gaia Radio (Single WebAudio Player, Auto/Manual/Shuffle/Mute, ducks on celebration)
-  const RADIO_TRACKS = [
-    { id: 'pabrik', title: 'Harmoni Daur Ulang', scene: 'pabrik', notes: [261.6, 293.7, 329.6, 392, 440, 392, 329.6, 293.7], tempo: 520 },
-    { id: 'kebun', title: 'Embun Kebun Gaia', scene: 'kebun', notes: [293.7, 349.2, 440, 523.3, 440, 392, 349.2, 329.6], tempo: 640 },
-    { id: 'pasar', title: 'Semangat Pasar Nusantara', scene: 'pasar', notes: [329.6, 392, 440, 523.3, 587.3, 523.3, 440, 392], tempo: 380 },
-    { id: 'angkut', title: 'Langkah Gerobak Pagi', scene: 'angkut', notes: [246.9, 293.7, 370, 440, 370, 293.7, 329.6, 246.9], tempo: 440 },
-    { id: 'jurnal', title: 'Refleksi Bumi Baru', scene: 'menu', notes: [220, 261.6, 329.6, 392, 329.6, 261.6, 246.9, 220], tempo: 720 },
-  ];
+  // ---- Gaia Radio: ONE <audio> element for the whole game (owner's songs in /assets/musik, list in daftar.json).
+  // Sources: 'latar' = instrumental background, 'radio' = songs with vocals, 'tema' = the Terra Nova theme.
+  // Mode 'auto' follows the scene (Lahan → instrumental, Pasar → radio songs) with a soft crossfade; 'latar' / 'radio'
+  // keep one source everywhere. Ducks to 35% during celebrations, pauses while the tab is hidden, and if the browser
+  // blocks autoplay it starts on the player's first tap (autoplay fallback).
+  const ls = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { } };
+  const MUSIK = { tema: [], latar: [], radio: [] };
+  const SUMBER_LABEL = { latar: '🎻 Musik Latar', radio: '📻 Lagu Radio', tema: '⭐ Lagu Tema' };
+  const fmtDur = d => `${Math.floor(d / 60)}:${String(Math.round(d % 60)).padStart(2, '0')}`;
   const radio = {
-    mode: localStorage.getItem('tn_radio_mode') || 'auto', // auto | manual | shuffle
-    trackId: localStorage.getItem('tn_radio_track') || 'pabrik',
+    mode: ['auto', 'latar', 'radio'].includes(ls('tn_musik_mode', 'auto')) ? ls('tn_musik_mode', 'auto') : 'auto',
+    acak: ls('tn_musik_acak', '1') === '1',
+    vol: Math.min(1, Math.max(0, Number(ls('tn_musik_vol', '0.6')) || 0.6)),
+    ingin: ls('tn_musik_on', '1') === '1',   // the player's preference; actual playback waits for a user gesture
     playing: false,
-    step: 0,
-    timer: null,
-    ac: null,
-    getTrack(scene) {
-      if (this.mode === 'manual') return RADIO_TRACKS.find(t => t.id === this.trackId) || RADIO_TRACKS[0];
-      if (this.mode === 'shuffle') return RADIO_TRACKS[Math.floor(this.step / 16) % RADIO_TRACKS.length];
-      return RADIO_TRACKS.find(t => t.scene === scene) || RADIO_TRACKS[0];
+    sumber: null, idx: -1, cur: null,
+    el: null, fade: 0, fadeTo: 1, nanti: null, siap: null, terblokir: false,
+    muat() {
+      return this.siap || (this.siap = fetch('/assets/musik/daftar.json').then(r => r.json()).then(d => { Object.assign(MUSIK, d); }).catch(() => { }));
     },
+    sumberUntuk(scene) {
+      if (this.mode !== 'auto') return this.mode;
+      return scene === 'pasar' ? 'radio' : 'latar';
+    },
+    pilihIdx(src, kecuali) {
+      const n = MUSIK[src].length;
+      if (n <= 1) return 0;
+      if (!this.acak) return ((kecuali ?? -1) + 1) % n;
+      let i; do { i = Math.floor(Math.random() * n); } while (i === kecuali);
+      return i;
+    },
+    audio() {
+      if (this.el) return this.el;
+      const a = this.el = new Audio();
+      a.preload = 'auto';
+      a.addEventListener('ended', () => this.berikut());
+      a.addEventListener('error', () => { if (this.playing) setTimeout(() => this.berikut(), 1500); });
+      setInterval(() => this.tick(), 80);
+      document.addEventListener('visibilitychange', () => {
+        if (!this.playing) return;
+        if (document.hidden) a.pause(); else a.play().catch(() => { });
+      });
+      return a;
+    },
+    tick() {   // smooth fades + celebration ducking
+      const a = this.el;
+      if (!a) return;
+      this.fade += Math.sign(this.fadeTo - this.fade) * Math.min(Math.abs(this.fadeTo - this.fade), 0.08);
+      if (this.fade <= 0 && this.nanti) { const f = this.nanti; this.nanti = null; f(); }
+      const target = this.vol * this.fade * (window.TN_DUCK ? 0.35 : 1);
+      a.volume = Math.max(0, Math.min(1, a.volume + (target - a.volume) * 0.35));
+    },
+    async putar(src, idx, crossfade = true) {
+      await this.muat();
+      if (!MUSIK[src] || !MUSIK[src].length) return;
+      const a = this.audio();
+      const mulai = () => {
+        this.sumber = src; this.idx = idx; this.cur = MUSIK[src][idx];
+        a.src = this.cur.src;
+        this.fade = 0; this.fadeTo = 1;
+        if (!this.playing) return;
+        a.play().then(() => { this.terblokir = false; }).catch(() => { this.terblokir = true; });
+        this.umumkan();
+      };
+      if (crossfade && this.playing && !a.paused && this.fade > 0) { this.fadeTo = 0; this.nanti = mulai; } else mulai();
+    },
+    berikut() { const src = this.sumber || this.sumberUntuk(window.TN_SCENE); this.putar(src, this.pilihIdx(src, this.idx), false); },
+    sebelum() { const src = this.sumber || 'latar', n = MUSIK[src].length; if (n) this.putar(src, (this.idx - 1 + n) % n); },
+    gantiScene(scene) {   // called by the game when the scene changes
+      if (!this.playing) return;
+      const src = this.sumberUntuk(scene);
+      if (src !== this.sumber) this.putar(src, this.pilihIdx(src));
+    },
+    async mulai(scene) {
+      this.playing = true;
+      await this.muat();
+      const a = this.audio();
+      const src = this.sumberUntuk(scene || window.TN_SCENE);
+      if (this.cur && this.sumber === src) { this.fadeTo = 1; a.play().then(() => { this.terblokir = false; }).catch(() => { this.terblokir = true; }); this.umumkan(); }
+      else this.putar(src, this.pilihIdx(src), false);
+    },
+    henti() { this.playing = false; if (this.el) { this.el.pause(); } },
     toggle(scene) {
-      this.playing = !this.playing;
-      clearInterval(this.timer);
-      if (this.playing) {
-        this.ac = this.ac || new (window.AudioContext || window.webkitAudioContext)();
-        this.ac.resume().catch(() => {});
-        this.startLoop(scene);
-      }
+      if (this.playing) this.henti(); else this.mulai(scene);
+      this.ingin = this.playing; lsSet('tn_musik_on', this.playing ? '1' : '0');
       return this.playing;
     },
-    startLoop(scene) {
-      clearInterval(this.timer);
-      if (!this.playing) return;
-      const tr = this.getTrack(scene);
-      this.timer = setInterval(() => {
-        if (!this.playing || document.hidden) return;
-        const cur = this.getTrack(window.TN_SCENE || 'pabrik');
-        const c = this.ac, t = c.currentTime;
-        const duck = (window.TN_DUCK ? 0.35 : 1.0);
-        const o = c.createOscillator(), g = c.createGain();
-        o.type = 'triangle';
-        o.frequency.setValueAtTime(cur.notes[this.step % cur.notes.length], t);
-        g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(0.035 * duck, t + 0.03);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.75);
-        o.connect(g).connect(c.destination);
-        o.start(t); o.stop(t + 0.8);
-        this.step++;
-      }, tr.tempo);
+    setMode(m) {
+      this.mode = m; lsSet('tn_musik_mode', m);
+      if (this.playing) this.gantiScene(window.TN_SCENE);
     },
-    setMode(m, tid) {
-      this.mode = m;
-      if (tid) this.trackId = tid;
-      localStorage.setItem('tn_radio_mode', this.mode);
-      localStorage.setItem('tn_radio_track', this.trackId);
-      if (this.playing) this.startLoop(window.TN_SCENE || 'pabrik');
-    }
+    setAcak(v) { this.acak = v; lsSet('tn_musik_acak', v ? '1' : '0'); },
+    setVol(v) { this.vol = v; lsSet('tn_musik_vol', String(v)); },
+    pilihLagu(src, id) {   // manual pick: lock to that source so the next song continues from the same list
+      const i = MUSIK[src].findIndex(t => t.id === id);
+      if (i < 0) return;
+      if (src !== 'tema') this.setMode(src);
+      this.playing = true; this.ingin = true; lsSet('tn_musik_on', '1');
+      this.putar(src, i);
+    },
+    umumkan() {
+      if (!this.cur) return;
+      window.dispatchEvent(new CustomEvent('tn-musik', { detail: { judul: this.cur.judul, sumber: this.sumber } }));
+      if ('mediaSession' in navigator && window.MediaMetadata) {
+        navigator.mediaSession.metadata = new MediaMetadata({ title: this.cur.judul, artist: this.cur.artis || 'Ukolabs', album: 'Terra Nova · ' + SUMBER_LABEL[this.sumber] });
+        try { navigator.mediaSession.setActionHandler('nexttrack', () => this.berikut()); navigator.mediaSession.setActionHandler('previoustrack', () => this.sebelum()); } catch (e) { }
+      }
+    },
+    getTrack() { return this.cur ? { title: this.cur.judul } : { title: '—' }; },
   };
+  // autoplay fallback: browsers only allow sound after a user gesture, so honour the saved preference on the first tap
+  const pertamaKali = () => {
+    window.removeEventListener('pointerdown', pertamaKali, true); window.removeEventListener('keydown', pertamaKali, true);
+    if (radio.ingin && !radio.playing) { radio.mulai(window.TN_SCENE); window.dispatchEvent(new CustomEvent('tn-musik-status')); }
+    else if (radio.playing && radio.terblokir && radio.el) radio.el.play().catch(() => { });
+  };
+  window.addEventListener('pointerdown', pertamaKali, true);
+  window.addEventListener('keydown', pertamaKali, true);
+  radio.muat();
 
   // ---- Async data caches (on-demand, never preloaded at boot!)
   const catState = { kind: 'machine', cat: '', q: '', page: 1, active: false, data: null, loading: false };
@@ -69,14 +131,18 @@
   const adminState = { data: null };
   const fbState = { data: null };
 
+  let catReq = 0;
   async function loadCatalog() {
+    const my = ++catReq;   // a newer request (e.g. switching kiosks quickly) wins; stale responses are ignored
     catState.loading = true;
     const qs = new URLSearchParams({
       kind: catState.kind, cat: catState.cat, q: catState.q,
       page: String(catState.page), per_page: '24', active: catState.active ? '1' : '0'
     });
     const r = await fetch('/catalog?' + qs.toString(), { credentials: 'same-origin' });
-    catState.data = await r.json();
+    const data = await r.json();
+    if (my !== catReq) return;
+    catState.data = data;
     catState.loading = false;
     window.renderSheet && window.renderSheet();
   }
@@ -122,8 +188,8 @@
     ctx.fillText(`Tier: ${state.tier} · ${state.kota}`, W / 2, H * 0.50);
     const st = state.stat || {};
     ctx.fillStyle = '#e7f3df'; ctx.font = '28px system-ui';
-    ctx.fillText(`Massa Pulih: ${(st.pulih_unik_g / 1000).toFixed(1)} kg · Lencana GT: ${(state.gt_claimed || []).length}/9 · PR: ${(state.pr_claimed || []).length}/10`, W / 2, H * 0.60);
-    ctx.fillText(`Energi Waste-Origin: ${((state.energy || {}).waste_origin_used_wh / 1000 || 0).toFixed(2)} kWh · Self-Made: ${(state.wallet || {}).self_made_provisional ? 'Ya (Provisional)' : 'Sandbox Top-Up'}`, W / 2, H * 0.66);
+    ctx.fillText(`Sampah Dipulihkan: ${(st.pulih_unik_g / 1000).toFixed(1)} kg · Tier: ${(state.gt_claimed || []).length}/9 · Misi Tambahan: ${(state.pr_claimed || []).length}/10`, W / 2, H * 0.60);
+    ctx.fillText(`Listrik dari Sampah: ${((state.energy || {}).waste_origin_used_wh / 1000 || 0).toFixed(2)} kWh · Self-Made: ${(state.wallet || {}).self_made_provisional ? 'Ya (Provisional)' : 'Sandbox Top-Up'}`, W / 2, H * 0.66);
     ctx.fillStyle = '#9fb6a6'; ctx.font = '22px system-ui';
     ctx.fillText(`Tanggal: ${new Date().toISOString().slice(0, 10)} · Chapter I: The Calling of Gaia · teranova.id`, W / 2, H - 80);
     const a = document.createElement('a');
@@ -139,70 +205,91 @@
       const en = s.energy || {};
       const ev = meta.event_aktif || {};
       const gsg = meta.gsg || {};
-      return `<div class="sh-head">${back}<h3>⚡ Energy Center (WtE &amp; DRES)</h3>${closeBtn}</div>
+      return `<div class="sh-head">${back}<h3>⚡ Pusat Energi</h3>${closeBtn}</div>
         <p class="sh-note">Cuaca hari ini: <b>${esc(ev.nama)}</b> — ${esc(ev.efek)} · Batas uji DRES rumah tangga: 100 kW / 200 kWh.</p>
         <div class="grid">
-          <div class="card-box"><b>Digester Biogas (WTE-002)</b>
+          <div class="card-box"><b>🔥 Biogas dari Sampah Organik</b>
             <small>Stok organik: ${fmtKg(s.organik_g)} · Biogas: ${(en.biogas_m3_x100 / 100).toFixed(2)} m³</small>
             <button class="act" data-a="olah_biogas">Olah 5 kg Organik → Biogas<small>Digester sendiri gratis / mitra 2.500 GC</small></button>
-            <button class="act" data-a="jalankan_energi" data-sumber="biogas">Jalankan Genset Biogas (1,2 kWh)<small>Listrik net waste-origin (mitra 2.000 GC)</small></button>
+            <button class="act" data-a="jalankan_energi" data-sumber="biogas">Jalankan Genset Biogas (1,2 kWh)<small>Listrik dari sampah (sewa genset mitra 2.000 GC)</small></button>
           </div>
           <div class="card-box"><b>Energi Terbarukan (DRES)</b>
             <small>Baterai: ${en.battery_wh} / ${en.battery_cap_wh} Wh (Terbarukan: ${en.battery_renew_wh} Wh)</small>
+            ${(() => {
+              const wi = meta.waktu_info || {};
+              const malam = !(wi.faktor_surya > 0);
+              if (!wi.surya_terpasang_w && !wi.hidro_terpasang_w) return '<small>Belum ada panel surya/mikrohidro. Beli Solar Kit di Pasar → Katalog, lalu baterai terisi sendiri di siang hari.</small>';
+              return `<small>${malam ? '🌙 Malam (WIB): panel surya istirahat' : '☀️ Siang (WIB): panel surya mengisi'} · daya kini ±${(wi.daya_kini_w || 0).toLocaleString('id-ID')} W dari ${((wi.surya_terpasang_w || 0) + (wi.hidro_terpasang_w || 0)).toLocaleString('id-ID')} W terpasang</small>
+                <small>Waktu nyata: matahari terbit 06.00, terbenam 18.00 WIB; ±5 jam puncak per hari${wi.hidro_terpasang_w ? '; mikrohidro mengalir 24 jam' : ''}.</small>`;
+            })()}
             <small>Rugi baterai tercatat: ${en.battery_loss_wh} Wh (10% round-trip)</small>
             <button class="act" data-a="jalankan_energi" data-sumber="renewable">Salurkan Listrik Terbarukan<small>Hitung provenance tanpa kredit ganda</small></button>
           </div>
-          <div class="card-box"><b>Neraca &amp; Audit Energi</b>
-            <small>Waste-Origin terpakai: <b>${(en.waste_origin_used_wh / 1000).toFixed(2)} kWh</b></small>
+          <div class="card-box"><b>📒 Catatan Listrik</b>
+            <small>Listrik dari sampah terpakai: <b>${(en.waste_origin_used_wh / 1000).toFixed(2)} kWh</b></small>
             <small>Terbarukan terpakai: <b>${(en.renewable_used_wh / 1000).toFixed(2)} kWh</b></small>
-            <small>Target GT06: 1 kWh · GT08/GSG: 10 kWh</small>
-            <button class="act hint" data-a="audit_energi">Lakukan Audit Energi<small>Syarat GT06 &amp; GSG (${st.audit_energi || 0}× selesai)</small></button>
+            <small>Target: 1 kWh untuk tier Ascendant · 10 kWh untuk Archon &amp; God</small>
+            <button class="act hint" data-a="audit_energi"><b>✓ Cek Catatan Listrik</b><small>Syarat tier Ascendant &amp; God · sudah dicek ${st.audit_energi || 0}×</small></button>
           </div>
         </div>`;
     }
 
     if (mode === 'katalog') {
+      // Pasar map (Evaluasi 4): each kiosk shows the catalogue locked to its own kind/categories
+      const kios = window.TN_KIOS || null;
+      if (kios && catState.kios !== kios.id) Object.assign(catState, { kios: kios.id, kind: kios.kind, cat: kios.cat, page: 1, q: '', active: kios.active !== false, data: null, loading: false });
+      if (!kios && catState.kios) Object.assign(catState, { kios: null, cat: '', page: 1, data: null, loading: false });
       if (!catState.data && !catState.loading) loadCatalog();
       const d = catState.data;
       const stats = (d && d.stats) || meta.catalog_stats || {};
       const listHtml = !d ? '<p class="sh-note">Memuat katalog canonical…</p>' : d.items.map(it => {
         if (it.catalog_kind === 'machine') {
           const isAct = it.status === 'active';
-          return `<div class="card-box ${isAct ? '' : 'locked-box'}">
-            <b>${esc(it.id)} · ${esc(it.nama)}</b>
-            <small>${esc(it.category)} · F${it.f_stage} · ${it.is_alias ? 'Alias → ' + esc(it.canonical_id) : 'Canonical'}</small>
-            <small>Harga: ${fmtGC(it.harga_gc)} · Kap: ${esc(it.kapasitas)}</small>
-            <small>${esc(it.fungsi)}</small>
+          const img = window.TN_MESIN ? window.TN_MESIN.ikon(it.nama, it.category) : '';
+          return `<div class="card-box alat-card ${isAct ? '' : 'locked-box'}">
+            <div class="alat-top"><img src="${img}" alt=""><div><b>${esc(it.nama)}</b>
+            <small>${esc(it.category)} · ${['', 'skala rumah', 'skala usaha kecil', 'skala industri', 'skala industri besar'][it.f_stage] || 'tahap ' + it.f_stage}</small>
+            <small>💰 ${fmtGC(it.harga_gc)} · 📦 ${esc(it.kapasitas)}</small></div></div>
+            <div class="alat-fungsi">⚙️ Proses: <b>${esc(it.fungsi)}</b></div>
+            ${isAct && it.efek ? `<ul class="efek">${it.efek.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
             ${isAct && it.harga_gc > 0 ? `<div class="menu-row" style="margin-top:4px">
-              <button class="act" data-a="beli_mesin" data-mid="${esc(it.id)}">Beli</button>
-              <button class="act" data-a="sewa_mesin" data-mid="${esc(it.id)}">Sewa 24j</button>
-            </div>` : `<small>🔒 ${esc(it.status)} (hanya edukasi)</small>`}
+              <button class="act" data-a="beli_mesin" data-mid="${esc(it.id)}" data-harga="${it.harga_gc}" data-nama="${esc(it.nama)}">🛒 Beli<small>${/angkut/i.test((it.efek || [])[0] || '') ? 'Dipakai di menu Angkut' : 'Langsung tampil di lahan'}</small></button>
+              <button class="act" data-a="sewa_mesin" data-mid="${esc(it.id)}" data-nama="${esc(it.nama)}">⏱️ Sewa 24 jam</button>
+            </div>` : `<small>🔒 ${it.status === 'active' ? 'Tidak dijual' : 'Belum dibuka (menunggu validasi resep)'} · hanya untuk dipelajari</small>`}
           </div>`;
         }
         if (it.catalog_kind === 'material') {
           return `<div class="card-box ${it.hazardous ? 'locked-box' : ''}">
-            <b>${esc(it.id)} · ${esc(it.nama)}</b>
+            <b>${esc(it.nama)}</b>
             <small>${esc(it.category)} (${esc(it.unit)}) · Output: ${esc(it.output_id)} (${it.yield_pct}%)</small>
             <small>Bank: ${fmtGC(it.bank_gc)} · Pengepul: ${fmtGC(it.pengepul_gc)} · Bandar: ${fmtGC(it.bandar_gc)}</small>
             ${it.hazardous ? `<small>⚠️ B3/Khusus · Biaya disposal ${fmtGC(it.disposal_fee)}</small>` : ''}
           </div>`;
         }
         if (it.catalog_kind === 'crop') {
-          return `<div class="card-box"><b>${esc(it.id)} · ${esc(it.nama)} ${it.rare ? '✨' : ''}</b>
+          return `<div class="card-box"><b>${it.rare ? '✨ ' : '🌱 '}${esc(it.nama)}${it.rare ? ' (langka)' : ''}</b>
             <small>Tumbuh ${it.detik} dtk · Hasil ${it.hasil_g} g · ${fmtGC(it.gc_per_kg)}/kg · +${it.vitality} Vit</small>
             <button class="act" data-a="beli_benih" data-crop="${esc(it.id)}">Beli Benih (${fmtGC(it.benih_gc)})</button>
           </div>`;
         }
-        return `<div class="card-box"><b>${esc(it.id)} · ${esc(it.nama)}</b>
+        return `<div class="card-box"><b>${esc(it.nama)}</b>
           <small>${fmtGC(it.harga_gc)}/${esc(it.unit)} · +${it.vitality} Vitalitas (${esc(it.group)})</small>
           <button class="act" data-a="beli_pangan" data-food="${esc(it.id)}">Beli 1 ${esc(it.unit)}</button>
         </div>`;
       }).join('');
+      if (kios) return `<div class="sh-head">${back}<h3>${kios.judul}</h3>${closeBtn}</div>${kios.atas || ''}
+        <div class="menu-row" style="margin:0 0 8px">
+          <input id="catSearch" placeholder="Cari di kios ini…" value="${esc(catState.q)}" style="flex:2;min-width:140px;background:#0b1d14;border:1px solid #4d7a5c;border-radius:8px;padding:6px 10px">
+          ${kios.kind === 'machine' ? `<button type="button" id="catActiveOnly">${catState.active ? '✓ Yang bisa dibeli' : 'Semua (termasuk terkunci)'}</button>` : ''}
+        </div>
+        <div class="grid">${listHtml}</div>
+        ${d && d.pages > 1 ? `<div class="menu-row"><button type="button" id="catPrev" ${d.page <= 1 ? 'disabled' : ''}>‹ Sebelumnya</button><button type="button" disabled>Hal ${d.page} / ${d.pages}</button><button type="button" id="catNext" ${d.page >= d.pages ? 'disabled' : ''}>Berikutnya ›</button></div>` : ''}`;
       return `<div class="sh-head">${back}<h3>📚 Ensiklopedia &amp; Pasar Katalog</h3>${closeBtn}</div>
         <p class="sh-note">Total canonical: <b>${stats.materials_total || 282}</b> material, <b>${stats.machines_rows || 307}</b> mesin (${stats.machines_canonical || 288} canonical + ${stats.machines_aliases || 19} alias), <b>15</b> tanaman, <b>4</b> pangan pokok. Mesin tanpa resep tervalidasi terkunci aman.</p>
         <div class="menu-row" style="margin:0 0 8px">
           <select id="catKind"><option value="machine" ${catState.kind === 'machine' ? 'selected' : ''}>Mesin &amp; Energi (307)</option><option value="material" ${catState.kind === 'material' ? 'selected' : ''}>Material &amp; Produk (282)</option><option value="crop" ${catState.kind === 'crop' ? 'selected' : ''}>Benih 15 Tanaman</option><option value="food" ${catState.kind === 'food' ? 'selected' : ''}>Pangan Pokok NPC</option></select>
           <input id="catSearch" placeholder="Cari nama / ID…" value="${esc(catState.q)}" style="flex:2;min-width:140px;background:#0b1d14;border:1px solid #4d7a5c;border-radius:8px;padding:6px 10px">
+          ${d && (d.categories || []).length ? `<select id="catCat"><option value="">Semua kategori</option>${d.categories.map(c => `<option value="${esc(c)}" ${catState.cat === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>` : ''}
           <button type="button" id="catActiveOnly">${catState.active ? '✓ Aktif saja' : 'Semua (termasuk terkunci)'}</button>
         </div>
         <div class="grid">${listHtml}</div>
@@ -210,16 +297,34 @@
     }
 
     if (mode === 'radio') {
-      const cur = radio.getTrack(window.TN_SCENE || 'pabrik');
+      radio.muat().then(() => { if (!MUSIK.radio.length) return; const sh = document.querySelector('[data-radio-list]'); if (sh && sh.dataset.radioList === '0') window.renderSheet && window.renderSheet(); });
+      const c = radio.cur, on = radio.playing;
+      const daftar = src => MUSIK[src].map(t => {
+        const aktif = c && radio.sumber === src && c.id === t.id;
+        return `<button type="button" class="act ${aktif ? 'hint' : ''}" data-radio="lagu" data-src="${src}" data-val="${esc(t.id)}"><b>${aktif && on ? '🔊' : src === 'radio' ? '🎤' : src === 'tema' ? '⭐' : '🎻'} ${esc(t.judul)}</b><small>${esc(t.artis || 'Ukolabs')} · ${fmtDur(t.durasi || 0)}</small></button>`;
+      }).join('');
+      const modeBtn = (m, lbl, ket) => `<button type="button" class="${radio.mode === m ? 'hint' : ''}" data-radio="mode" data-val="${m}" title="${ket}">${radio.mode === m ? '✓ ' : ''}${lbl}</button>`;
       return `<div class="sh-head">${back}<h3>📻 Gaia Radio</h3>${closeBtn}</div>
-        <p class="sh-note">Pemutar audio tunggal lintas-scene. Status: <b>${radio.playing ? 'Memutar — ' + esc(cur.title) : 'Mati'}</b> · Mode: <b>${esc(radio.mode)}</b></p>
-        <div class="menu-row">
-          <button type="button" data-radio="toggle">${radio.playing ? '⏸ Jeda Radio' : '▶ Putar Radio'}</button>
-          <button type="button" data-radio="mode" data-val="auto">Auto per Scene</button>
-          <button type="button" data-radio="mode" data-val="shuffle">Acak (Shuffle)</button>
+        <div class="card-box" data-radio-list="${MUSIK.radio.length ? 1 : 0}" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="font-size:34px">${on ? '🎶' : '📻'}</div>
+          <div style="flex:1;min-width:160px"><small>${on && c ? SUMBER_LABEL[radio.sumber] : 'Radio mati'}</small><br><b>${on && c ? esc(c.judul) : 'Tekan ▶ untuk memutar'}</b>${on && radio.terblokir ? '<br><small>Ketuk layar sekali agar suara diizinkan browser.</small>' : ''}</div>
+          <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:6px;width:100%">
+            <button type="button" data-radio="prev" aria-label="Lagu sebelumnya" ${c ? '' : 'disabled'}>⏮</button>
+            <button type="button" data-radio="toggle" aria-label="${on ? 'Jeda' : 'Putar'}">${on ? '⏸ Jeda' : '▶ Putar'}</button>
+            <button type="button" data-radio="next" aria-label="Lagu berikutnya">⏭</button>
+          </div>
         </div>
-        <h4 class="sh-sub">Pilih Lagu Manual</h4>
-        <div class="grid">${RADIO_TRACKS.map(t => `<button type="button" class="act ${radio.mode === 'manual' && radio.trackId === t.id ? 'hint' : ''}" data-radio="track" data-val="${t.id}"><b>🎵 ${esc(t.title)}</b><small>Scene: ${esc(t.scene)}</small></button>`).join('')}</div>`;
+        <div class="menu-row">
+          ${modeBtn('auto', '🗺️ Ikuti Tempat', 'Lahan: musik latar · Pasar: lagu radio')}
+          ${modeBtn('latar', '🎻 Musik Latar', 'Instrumental tenang di mana saja')}
+          ${modeBtn('radio', '📻 Lagu Radio', 'Lagu bervokal di mana saja')}
+          <button type="button" data-radio="acak">${radio.acak ? '🔀 Acak' : '🔁 Berurutan'}</button>
+        </div>
+        <label class="sh-note" style="display:flex;align-items:center;gap:8px">🔉 Volume <input type="range" id="radioVol" min="0" max="1" step="0.05" value="${radio.vol}" style="flex:1"> 🔊</label>
+        <h4 class="sh-sub">⭐ Lagu Tema</h4><div class="grid">${daftar('tema')}</div>
+        <h4 class="sh-sub">📻 Lagu Radio (${MUSIK.radio.length})</h4><div class="grid">${daftar('radio') || '<p class="sh-note">Memuat daftar lagu…</p>'}</div>
+        <h4 class="sh-sub">🎻 Musik Latar (${MUSIK.latar.length})</h4><div class="grid">${daftar('latar')}</div>
+        <p class="sh-note">Semua lagu karya Ukolabs untuk Terra Nova. Di mode “Ikuti Tempat”, musik berganti halus saat kamu pindah dari Lahan ke Pasar.</p>`;
     }
 
     if (mode === 'jurnal') {
@@ -239,8 +344,8 @@
     if (mode === 'knowledge') {
       return `<div class="sh-head">${back}<h3>🎓 Knowledge Center</h3>${closeBtn}</div>
         <div class="grid">
-          <div class="card-box"><b>Neraca Massa Konservatif</b><small>Sumber: Prinsip Pengelolaan Sampah &amp; Simulasi TERRA NOVA (2026). Tidak ada sampah yang hilang; semua menjadi produk olahan, uap/air terkendali, residu, B3 berizin, atau backlog TPA.</small></div>
-          <div class="card-box"><b>Jalur Rumah Tangga vs Industri</b><small>Prinsip Constitution v2.0: Tier God (GSG) dapat dicapai tanpa pabrik besar dan tanpa top-up uang nyata. Kompos, biogas mikro, panel surya, dan akses mitra setara dengan pabrik industri.</small></div>
+          <div class="card-box"><b>Tidak Ada Sampah yang Hilang</b><small>Sumber: Prinsip Pengelolaan Sampah &amp; Simulasi TERRA NOVA (2026). Tidak ada sampah yang hilang; semua menjadi produk olahan, uap/air terkendali, residu, B3 berizin, atau backlog TPA.</small></div>
+          <div class="card-box"><b>Jalur Rumah Tangga vs Industri</b><small>Prinsip Constitution v2.0: Tier God dapat dicapai tanpa pabrik besar dan tanpa top-up uang nyata. Kompos, biogas mikro, panel surya, dan akses mitra setara dengan pabrik industri.</small></div>
           <div class="card-box"><b>Keamanan Limbah B3</b><small>Baterai bekas, limbah medis, dan elektronik rusak tidak boleh dicampur ke gerobak atau pengolahan umum — wajib diserahkan melalui jalur pengolah berizin.</small></div>
           <div class="card-box"><b>Ekonomi Realistis (1 GC ≈ Rp1)</b><small>Angka 1 GC ≈ Rp1 adalah skala edukasi simulasi, bukan konversi uang tunai atau penawaran harga pasar nyata.</small></div>
         </div>`;
@@ -280,6 +385,10 @@
       if (!adminState.data) loadAdmin();
       const d = adminState.data;
       const c = (d && d.config) || {};
+      if (d && !d.is_admin) {
+        return `<div class="sh-head">${back}<h3>🛠️ Admin Config</h3>${closeBtn}</div>
+          <div class="lock-box"><b>🔒 Khusus akun pemilik</b><p>Pengaturan global (modal awal, pengali harga, tautan) hanya bisa diubah oleh akun admin.</p></div>`;
+      }
       return `<div class="sh-head">${back}<h3>🛠️ Admin Config Lokal (v${c.version || 1})</h3>${closeBtn}</div>
         <p class="sh-note">Hanya untuk review lokal loopback. Setiap perubahan tercatat di <code>admin_audit</code> dan dapat di-rollback.</p>
         <div class="grid">
@@ -313,7 +422,8 @@
 
   // Event wiring for Feature Freeze controls
   document.addEventListener('change', e => {
-    if (e.target.id === 'catKind') { catState.kind = e.target.value; catState.page = 1; loadCatalog(); }
+    if (e.target.id === 'catKind') { catState.kind = e.target.value; catState.cat = ''; catState.page = 1; loadCatalog(); }
+    if (e.target.id === 'catCat') { catState.cat = e.target.value; catState.page = 1; loadCatalog(); }
     if (e.target.id === 'lbSelect') { loadLeaderboard(e.target.value); }
   });
   let searchDebounce = null;
@@ -323,6 +433,7 @@
       clearTimeout(searchDebounce); searchDebounce = setTimeout(loadCatalog, 220);
     }
   });
+  document.addEventListener('input', e => { if (e.target.id === 'radioVol') radio.setVol(Number(e.target.value)); });
   document.addEventListener('click', async e => {
     const b = e.target.closest('button');
     if (!b) return;
@@ -330,9 +441,14 @@
     if (b.id === 'catPrev' && catState.page > 1) { catState.page--; loadCatalog(); return; }
     if (b.id === 'catNext') { catState.page++; loadCatalog(); return; }
     if (b.dataset.radio) {
-      if (b.dataset.radio === 'toggle') radio.toggle(window.TN_SCENE || 'pabrik');
-      if (b.dataset.radio === 'mode') radio.setMode(b.dataset.val);
-      if (b.dataset.radio === 'track') radio.setMode('manual', b.dataset.val);
+      const r = b.dataset.radio;
+      if (r === 'toggle') radio.toggle(window.TN_SCENE);
+      if (r === 'mode') radio.setMode(b.dataset.val);
+      if (r === 'acak') radio.setAcak(!radio.acak);
+      if (r === 'lagu') radio.pilihLagu(b.dataset.src, b.dataset.val);
+      if (r === 'next') { if (radio.playing) radio.berikut(); else radio.mulai(window.TN_SCENE); radio.playing = true; }
+      if (r === 'prev') radio.sebelum();
+      window.dispatchEvent(new CustomEvent('tn-musik-status'));
       window.renderSheet && window.renderSheet();
       return;
     }
@@ -365,7 +481,7 @@
       const res = await fetch('/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category: cat, message: msg, rating: 5, consent: true }) });
       const d = await res.json();
       if (document.getElementById('status')) document.getElementById('status').textContent = d.pesan || 'Terkirim.';
-      if (res.ok) loadFeedback();
+      if (res.ok) { document.getElementById('fbMsg').value = ''; loadFeedback(); }
       return;
     }
   });

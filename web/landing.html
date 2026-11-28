@@ -106,6 +106,29 @@ button,input{font:inherit}
 footer{margin-top:64px;padding:22px 16px 30px;text-align:center;color:#9fb6a6;font-size:13px;border-top:1px solid #ffffff12}
 
 /* ---------- opening cinematic overlay ---------- */
+#setupBox{position:fixed;inset:0;z-index:90;overflow:auto;background:radial-gradient(circle at 25% 15%,#2a6b4a 0,#12362a 50%,#091b15 100%);display:grid;place-items:center;padding:16px}
+#setupBox[hidden]{display:none}
+#temaBtn{position:fixed;top:14px;right:14px;z-index:91;width:44px;height:44px;border-radius:50%;border:2px solid #4d7a5c;background:#0d2219cc;color:#fff;font-size:18px;cursor:pointer}
+#temaBtn.off{opacity:.5}
+.setup{width:min(860px,100%);display:grid;grid-template-columns:1fr 1.1fr;gap:0;background:rgba(10,31,24,.94);border:2px solid #e8c56e;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px #000b;color:#fbf5df}
+.setup .pv{position:relative;display:grid;place-items:center;min-height:420px;background:radial-gradient(ellipse at 50% 85%,#5f9c45 0,#3f7a32 35%,#1d4a2c 70%)}
+.setup .pv canvas{image-rendering:auto;max-width:100%}
+.setup .pv .nm{position:absolute;bottom:18px;left:0;right:0;text-align:center;font:800 18px system-ui;text-shadow:0 2px 0 #0b1d14}
+.setup .bd{padding:24px 26px;display:flex;flex-direction:column;gap:14px}
+.setup h2{margin:0;font:800 26px Georgia,serif;color:#f6d36b}
+.setup .lead{margin:0;color:#cfe6c4;font-size:14px}
+.setup .t{display:block;margin-bottom:6px;font-size:12px;font-weight:800;letter-spacing:.1em;color:#f6d36b;text-transform:uppercase}
+.setup input{width:100%;min-height:44px;background:#ffffff14;color:#fff;border:1px solid #ffffff40;border-radius:10px;padding:8px 12px;font:inherit}
+.gpick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gpick button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;border-radius:12px;border:2px solid #ffffff30;background:#ffffff0d;color:#fff;font-weight:800;cursor:pointer}
+.gpick button img{height:78px}
+.gpick button[aria-checked="true"]{border-color:#e8f07a;background:#5aa04a44;box-shadow:0 0 0 2px #e8f07a55}
+.sw{display:flex;gap:8px;flex-wrap:wrap}
+.sw button{width:40px;height:40px;border-radius:50%;border:3px solid #ffffff40;cursor:pointer;padding:0}
+.sw button[aria-checked="true"]{border-color:#fff;box-shadow:0 0 0 3px #e8c56e}
+.setup .mulai{min-height:52px;border-radius:12px;border:2px solid #e8f07a;background:linear-gradient(#3fa163,#1f6e43);color:#fff;font:800 17px system-ui;cursor:pointer}
+.setup .note{font-size:12px;color:#b9d4c4;margin:0}
+@media(max-width:760px){.setup{grid-template-columns:1fr}.setup .pv{min-height:240px}.setup .bd{padding:16px}}
 #introBox{position:fixed;inset:0;z-index:100;background:#030808;transition:opacity .8s ease}
 #introBox[hidden]{display:none}
 #introBox iframe{transition:opacity .7s ease}
@@ -170,11 +193,6 @@ footer{margin-top:64px;padding:22px 16px 30px;text-align:center;color:#9fb6a6;fo
           <input id="dPass" name="password" type="password" autocomplete="new-password" placeholder="Kata Sandi (min. 8 karakter)" aria-label="Kata sandi" required minlength="8" maxlength="128">
           <button class="eye" type="button" data-eye="dPass" aria-label="Tampilkan kata sandi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
         </div>
-        <div class="pick" role="radiogroup" aria-label="Pilih karakter">
-          <span>Karakter:</span>
-          <button type="button" role="radio" aria-checked="true" data-gender="pria"><img src="/assets/sprites/player_5.png" alt="">Pria</button>
-          <button type="button" role="radio" aria-checked="false" data-gender="wanita"><img src="/assets/sprites/playerf_4.png" alt="">Wanita</button>
-        </div>
         <p class="msg" id="dMsg" role="alert"></p>
         <button class="go" id="dGo" type="submit">Daftar Sekarang ›</button>
         <div class="or">atau</div>
@@ -237,22 +255,102 @@ footer{margin-top:64px;padding:22px 16px 30px;text-align:center;color:#9fb6a6;fo
 <footer>TERRA NOVA · Peradaban Bumi Baru · Chapter I — The Calling of Gaia</footer>
 
 <!-- opening cinematic: plays right after sign-up, ends with "Aku menerima panggilanmu" / "Ulangi cinematic" -->
+<div id="setupBox" hidden role="dialog" aria-modal="true" aria-labelledby="setupTitle">
+  <button type="button" id="temaBtn" aria-label="Matikan lagu tema" title="Lagu tema Terra Nova">🎵</button>
+  <div class="setup">
+    <div class="pv"><canvas id="setupPv" width="260" height="360" aria-label="Pratinjau karakter"></canvas><div class="nm" id="setupNm"></div></div>
+    <div class="bd">
+      <h2 id="setupTitle">Siapkan Penjaga Bumi-mu</h2>
+      <p class="lead">Pilih karakter dan tampilannya. Pilihan ini dipakai sepanjang permainan, jadi pilih dengan senang hati!</p>
+      <div><label class="t" for="setupNama">Nama karakter</label><input id="setupNama" maxlength="24" autocomplete="off"></div>
+      <div><span class="t">Karakter</span>
+        <div class="gpick" role="radiogroup" aria-label="Pilih karakter">
+          <button type="button" role="radio" data-g="pria" aria-checked="true"><img src="/assets/sprites/player_5.webp" alt="">Pria</button>
+          <button type="button" role="radio" data-g="wanita" aria-checked="false"><img src="/assets/sprites/playerf_4.webp" alt="">Wanita</button>
+        </div></div>
+      <div><span class="t">Warna jaket</span><div class="sw" id="swBaju" role="radiogroup" aria-label="Warna jaket"></div></div>
+      <div><span class="t">Warna rambut</span><div class="sw" id="swRambut" role="radiogroup" aria-label="Warna rambut"></div></div>
+      <button type="button" class="mulai" id="setupGo">▶ Mulai & Tonton Prolog</button>
+      <p class="note">Setelah prolog, Gaia membawamu ke lahan pertamamu di Bandung.</p>
+    </div>
+  </div>
+</div>
 <div id="introBox" hidden></div>
+<script src="/assets/tn_avatar.js?v=e4"></script>
 
 <script>
 const $ = id => document.getElementById(id);
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() :
   'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
 let username = '';
-let gender = sessionStorage.getItem('tn_gender') || 'pria';
-document.querySelectorAll('.pick button').forEach(b => {
-  b.setAttribute('aria-checked', String(b.dataset.gender === gender));
-  b.onclick = () => {
-    gender = b.dataset.gender;
-    sessionStorage.setItem('tn_gender', gender);
-    document.querySelectorAll('.pick button').forEach(x => x.setAttribute('aria-checked', String(x === b)));
-  };
-});
+// ---- Setting Karakter (Evaluasi 4): sebelum prolog, sekali per akun
+const setup = JSON.parse(sessionStorage.getItem('tn_setup') || 'null') || { gender: 'pria', baju: 'hijau', rambut: 'coklat', nama: '' };
+let gender = setup.gender;
+const PV_POSE = { pria: ['player_5', 'player_4', 'player_5', 'player_6'], wanita: ['playerf_4', 'playerf_5', 'playerf_4', 'playerf_5'] };
+const pvImg = {};
+const muat = n => pvImg[n] || (pvImg[n] = Object.assign(new Image(), { src: '/assets/sprites/' + n + '.webp' }));
+Object.values(PV_POSE).flat().forEach(muat);
+function simpanSetup() { setup.gender = gender; sessionStorage.setItem('tn_setup', JSON.stringify(setup)); }
+function gambarPratinjau(t) {
+  const c = $('setupPv'), g = c.getContext('2d');
+  g.clearRect(0, 0, c.width, c.height);
+  g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(130, 318, 62, 16, 0, 0, Math.PI * 2); g.fill();
+  const pose = PV_POSE[gender][Math.floor(t / 900) % 4], im = muat(pose);
+  if (im.complete && im.naturalWidth && window.TN_AVATAR) {
+    const o = TN_AVATAR.warnai(im, setup, gender), w = o.naturalWidth || o.width, h = o.naturalHeight || o.height;
+    const H = 280, W = H * w / h, bob = Math.abs(Math.sin(t / 450)) * 3;
+    g.imageSmoothingQuality = 'high'; g.drawImage(o, 130 - W / 2, 318 - H - bob, W, H);
+  }
+  $('setupNm').textContent = ($('setupNama').value || 'Penjaga Bumi').slice(0, 24);
+  if (!$('setupBox').hidden) requestAnimationFrame(gambarPratinjau);
+}
+function isiSwatch(id, daftar, key) {
+  $(id).innerHTML = Object.entries(daftar).map(([k, v]) => `<button type="button" role="radio" aria-label="${k}" title="${k}" data-k="${k}" style="background:${v.sw}" aria-checked="${setup[key] === k}"></button>`).join('');
+  $(id).querySelectorAll('button').forEach(b => b.onclick = () => {
+    setup[key] = b.dataset.k; simpanSetup();
+    $(id).querySelectorAll('button').forEach(x => x.setAttribute('aria-checked', String(x === b)));
+  });
+}
+/* theme song "Terra Nova" plays softly while the player sets up the character (the sign-up click allows sound) */
+const tema = { a: null, h: null,
+  mulai() {
+    try { if (localStorage.getItem('tn_musik_on') === '0') { $('temaBtn').classList.add('off'); return; } } catch (e) { }
+    const a = this.a || (this.a = Object.assign(new Audio('/assets/musik/tema_terra_nova.m4a'), { loop: true, volume: 0 }));
+    a.play().then(() => this.ke(0.5)).catch(() => $('temaBtn').classList.add('off'));
+  },
+  ke(v, lalu) {   // fade
+    clearInterval(this.h);
+    this.h = setInterval(() => { const a = this.a; a.volume = Math.max(0, Math.min(1, a.volume + Math.sign(v - a.volume) * 0.04));
+      if (Math.abs(a.volume - v) < 0.04) { a.volume = v; clearInterval(this.h); lalu && lalu(); } }, 50);
+  },
+  henti() { if (this.a && !this.a.paused) this.ke(0, () => this.a.pause()); },
+};
+$('temaBtn').onclick = () => {
+  const mati = tema.a && !tema.a.paused;
+  if (mati) { tema.henti(); $('temaBtn').classList.add('off'); } else { $('temaBtn').classList.remove('off'); try { localStorage.setItem('tn_musik_on', '1'); } catch (e) { } tema.mulai(); }
+  if (mati) try { localStorage.setItem('tn_musik_on', '0'); } catch (e) { }
+  $('temaBtn').setAttribute('aria-label', mati ? 'Putar lagu tema' : 'Matikan lagu tema');
+};
+function showSetup() {
+  tema.mulai();
+  $('setupNama').value = setup.nama || username || '';
+  document.querySelectorAll('.gpick button').forEach(b => {
+    b.setAttribute('aria-checked', String(b.dataset.g === gender));
+    b.onclick = () => { gender = b.dataset.g; simpanSetup(); document.querySelectorAll('.gpick button').forEach(x => x.setAttribute('aria-checked', String(x === b))); };
+  });
+  isiSwatch('swBaju', TN_AVATAR.BAJU, 'baju');
+  isiSwatch('swRambut', TN_AVATAR.RAMBUT, 'rambut');
+  $('setupBox').hidden = false;
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(gambarPratinjau);
+  $('setupNama').focus({ preventScroll: true });
+}
+$('setupGo').onclick = () => {   // the click starts the film, so the browser lets it play with sound
+  setup.nama = ($('setupNama').value || '').trim().slice(0, 24); simpanSetup();
+  $('setupBox').hidden = true;
+  tema.henti();   // the prologue has its own narration and score
+  openIntro();
+};
 
 async function postJSON(url, body) {
   const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) });
@@ -288,13 +386,12 @@ $('formDaftar').onsubmit = async e => {
   if (!/^[A-Za-z0-9_.]{3,24}$/.test(u)) { msg.textContent = 'Nama pengguna 3–24 karakter: huruf, angka, titik atau garis bawah.'; $('dUser').focus(); return; }
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(m)) { msg.textContent = 'Alamat email tidak valid.'; $('dEmail').focus(); return; }
   if (p.length < 8) { msg.textContent = 'Kata sandi minimal 8 karakter.'; $('dPass').focus(); return; }
-  // open the cinematic inside this click so the browser lets it play with sound
-  openIntro();
   $('dGo').disabled = true;
   const { ok, data } = await postJSON('/daftar', { username: u, email: m, password: p });
   $('dGo').disabled = false;
-  if (!ok) { closeIntro(); msg.textContent = data.pesan || 'Pendaftaran gagal. Coba lagi.'; return; }
+  if (!ok) { msg.textContent = data.pesan || 'Pendaftaran gagal. Coba lagi.'; return; }
   username = data.username;
+  showSetup();   // character setup first, then the "Mulai" button plays the prologue
 };
 
 /* ---- log in: returning players go straight to their yard ---- */
@@ -308,7 +405,7 @@ $('formLogin').onsubmit = async e => {
   if (!ok) { msg.textContent = data.pesan || 'Gagal masuk. Coba lagi.'; return; }
   username = data.username;
   if (data.diterima) { location.href = '/'; return; }
-  openIntro();   // signed up earlier but never accepted Gaia's call
+  showSetup();   // signed up earlier but never accepted Gaia's call
 };
 
 /* ---- opening cinematic ---- */
@@ -326,9 +423,9 @@ function closeIntro() {
 }
 let accepted = null;
 async function acceptCall() {
-  // "Langsung ke lahan": the starter character and city use the defaults; the name is the username
-  return postJSON('/aksi', { key: uuid(), aksi: 'terima', nama: (username || 'Penjaga Bumi').slice(0, 24), gender,
-    avatar: { rambut: 'pendek', baju: 'hijau', topi: 'rimba', aksesori: 'tanpa' }, kota: 'Bandung' });
+  // character from the setup screen; city starts in Bandung (K1: can be changed later in the profile)
+  return postJSON('/aksi', { key: uuid(), aksi: 'terima', nama: (setup.nama || username || 'Penjaga Bumi').slice(0, 24), gender: setup.gender,
+    avatar: { baju: setup.baju, rambut: setup.rambut }, kota: 'Bandung' });
 }
 addEventListener('message', async e => {
   if (e.origin !== location.origin || !e.data) return;
@@ -343,7 +440,7 @@ addEventListener('message', async e => {
 
 /* ---- a signed-in player who has not accepted yet (e.g. reloaded during the film) sees the cinematic again ---- */
 fetch('/akun', { credentials: 'same-origin' }).then(r => r.json()).then(a => {
-  if (a.masuk && !a.diterima) { username = a.username; openIntro(); }
+  if (a.masuk && !a.diterima) { username = a.username; showSetup(); }
   else if (a.masuk && a.diterima) location.href = '/';
 }).catch(() => {});
 

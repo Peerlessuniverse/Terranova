@@ -158,6 +158,8 @@
  "bytes": {
   "audio/accept.m4a": 75392,
   "audio/opening.m4a": 1493115,
+  "audio/opening.ogg": 708327,
+  "audio/accept.ogg": 47070,
   "captions.json": 3922,
   "css/player.css": 10308,
   "img/A01.webp": 62652,
@@ -189,5 +191,7 @@
   "subtitle-en.vtt": 1929,
   "subtitle-id.vtt": 2035,
   "transcript-id.md": 1560
- }
+ },
+ "audio_opus": "audio/opening.ogg",
+ "accept_audio_opus": "audio/accept.ogg"
 }

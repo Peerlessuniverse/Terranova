@@ -111,6 +111,10 @@ def run_scenario(name, starter_gc, days=180, mode="modest", sandbox_topup=0):
             if s["plastik_g"] >= 1000:
                 safe_act(s, {"aksi": "daur" if day % 2 == 0 else "kreasi"}, t)
 
+        # Audit neraca setelah ada batch baru (sejak perbaikan B5 audit wajib untuk GT03/GT08/GSG, tidak dihitung otomatis)
+        if s["stat"].get("batch_sejak_audit", 0) > 0:
+            safe_act(s, {"aksi": "audit_neraca"}, t)
+
         # 4. Garden & Vitality
         if not s["ditanam"]:
             if s["benih_map"].get("CR01", 0) == 0 and s["koin"] >= 1000:

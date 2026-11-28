@@ -356,5 +356,78 @@
    "w": 296,
    "h": 172
   }
+ ],
+ "pedagang": [
+  {
+   "file": "pedagang_1.png",
+   "w": 74,
+   "h": 150
+  },
+  {
+   "file": "pedagang_2.png",
+   "w": 65,
+   "h": 150
+  },
+  {
+   "file": "pedagang_3.png",
+   "w": 65,
+   "h": 150
+  },
+  {
+   "file": "pedagang_4.png",
+   "w": 114,
+   "h": 150
+  },
+  {
+   "file": "pedagang_5.png",
+   "w": 86,
+   "h": 150
+  },
+  {
+   "file": "pedagang_6.png",
+   "w": 65,
+   "h": 150
+  },
+  {
+   "file": "pedagang_7.png",
+   "w": 69,
+   "h": 150
+  }
+ ],
+ "pedagang2": [
+  {
+   "file": "pedagang2_1.png",
+   "w": 87,
+   "h": 150
+  },
+  {
+   "file": "pedagang2_2.png",
+   "w": 59,
+   "h": 150
+  },
+  {
+   "file": "pedagang2_3.png",
+   "w": 184,
+   "h": 96
+  },
+  {
+   "file": "pedagang2_4.png",
+   "w": 144,
+   "h": 112
+  }
+ ],
+ "veh_sepeda": [
+  {
+   "file": "veh_sepeda_1.png",
+   "w": 360,
+   "h": 340
+  }
+ ],
+ "veh_motor": [
+  {
+   "file": "veh_motor_1.png",
+   "w": 308,
+   "h": 252
+  }
  ]
 }
